@@ -495,7 +495,7 @@ const Listingrow = (props) => {
           <img src={bathIcon} alt="" />
           {property?.bathrooms}
         </div>
-        <div className="property-box-footer-left-icon">
+        <div className="property-box-footer-right-icon">
           {/* <img src={bedsIcon} alt="" /> */}
           {property.bedrooms} bedrooms
         </div>

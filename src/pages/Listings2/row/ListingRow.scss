@@ -48,18 +48,18 @@
   .property-box-footer-left-icon {
     display: flex;
     flex-direction: column;
-    align-items: left;
+    align-items: center;
     font-size: 15px;
     font-weight: 500;
     color: #AAAAAA;
   }
 
-  .property-box-footer-left-icon-small {
-    width: 40px;
+  .property-box-footer-right-icon {
+    width: 140px;
     display: flex;
     flex-direction: column;
     align-items: right;
-    font-size: 10px;
+    font-size: 20px;
     font-weight: 500;
     color: #AAAAAA;
   }
