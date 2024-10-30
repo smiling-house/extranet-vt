@@ -109,10 +109,8 @@ const Sidebar = ({ activeMenu, setActiveMenu, handleToggleMenu }) => {
           className="sidebar-logo-container"
           onClick={() => history.push(PATH_HOME)}
         >
-          <div style={{ width: "180px", cursor: "pointer" }}>
-          <img
-              src={Logo2} 
-              />
+          <div style={{ width: "180px", cursor: "pointer", color:"#0000FF" }}>
+          <h1>Villa Tracker Extranet</h1>
           </div>
         </div>
       )

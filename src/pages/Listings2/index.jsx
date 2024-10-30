@@ -353,87 +353,19 @@ const headerSearchRow = () => {
 
 const columns = [
     {
-        id: 'firstName',
-        name: 'ID',
-        headerStyle: { paddingLeft: '50px', backgroundColor: '#F5F5F2' },
-        selector: row => row.firstName,
-        cell: row => <div className="link18" onClick={() => setSelectedClientToEdit(row)}>{row.firstName}</div>,
-        width: '1fr'
-    }, {
-        id: 'nickName',
-        name: 'Assign Channel',
-        sortable: true,
-        selector: row => row.nick,
-        cell: row => <div>{row.nickName}</div>,
-        width: '1fr'
-    }, {
-        id: 'nickName',
-        name: 'days',
-        sortable: true,
-        selector: row => row.nick,
-        cell: row => <div>{row.nickName}</div>,
-        width: '1fr'
-    },  {
-        id: 'nickName',
-        name: 'collections',
-        sortable: true,
-        selector: row => row.nick,
-        cell: row => <div>{row.nickName}</div>,
-        width: '250px'
-    }, {
-        id: 'phone',
-        name: 'Action',
-        sortable: true,
-        selector: row => row.phone,
-        cell: row => <div>{row.phone}</div>,
-        width: '200px'
-    }, {
-        id: 'offers',
-        name: 'Location',
-        width: '1fr',
-        header: (column, index) => (
-            <div key={index} style={{ color: '#1B9C5D', backgroundColor: '#F5F5F2', fontSize: '22px', fontWeight: 500 }}>
-                Location
-            </div>
-        ),
-        headerStyle: { backgroundColor: '#F5F5F2' },
-        sortable: true,
-        selector: row => row.offers,
-        cell: (row) => (
-            <div onClick={() => setSelectedClientToShowOffers(row)} style={{ display: 'flex', width: '100%', height: '100%', alignItems: 'center', backgroundColor: '#F9F9F8', justifyContent: 'center' }}>
-                <Icon
-                    name='calendar-check'
-                    font='MaterialCommunityIcons'
-                    color='#1B9C5D'
-                    size={26}
-                    style={{ cursor: 'pointer' }}
-                />
-            </div>
-        ),
-        width: '450px'
-    }, {
-        id: 'savedSearch',
-        name: 'agent',
-        header: (column, index) => (
-            <div key={index} style={{ color: '#1B9C5D', backgroundColor: '#F5F5F2', fontSize: '21px', lineHeight: '21px', fontWeight: 500 }}>
-                Agent
-            </div>
-        ),
-        headerStyle: { backgroundColor: '#F5F5F2' },
-        sortable: true,
-        selector: row => row.savedSearch,
-        cell: (row) => (
-            <div onClick={() => setSelectedClientToShowSavedSearch(row)} style={{ display: 'flex', width: '100%', height: '100%', alignItems: 'center', backgroundColor: '#F9F9F8', justifyContent: 'center' }}>
-                <Icon
-                    name='search'
-                    font='MaterialIcons'
-                    color='#1B9C5D'
-                    size={26}
-                    style={{ cursor: 'pointer' }}
-                />
-            </div>
-        ),
-        width: '150px'
+        name: 'property',
+    },   
+    {
+      
+        name: 'Status',
+    }, 
+     {
+    
+        name: 'Special Collections'
+     }, {
+       
+        name: 'Geo-Location',
+       
     }
 ]
 
@@ -448,7 +380,7 @@ return (
     
     <div className="page-container">
         
-        <div className="page-header">S-Hub Control Panel</div>
+        <div className="page-header">Villa Tracker Extranet</div>
         <Sidebar
             agency={agency}
             agent={agent}

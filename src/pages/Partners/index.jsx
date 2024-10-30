@@ -349,10 +349,7 @@ const Partners = (props) => {
 		{
 			name: 'partner Name',
 			width: '350px'
-		}, {
-			name: 'Source',
-			width: '80px'
-		}, {
+		},  {
 			name: 'Account ID',
 			width: '250px'
 		}, {
@@ -369,29 +366,8 @@ const Partners = (props) => {
 			name: 'DECLINED',
 			width: '150px'
 		}, {
-			name: 'uploading agent',
-			width: '350px'
-		}, {
-			name: 'Basic Channels',
-			width: '250px'
-		}, {
-			name: 'Person',
-			width: '350px'
-		}, {
-			name: 'phone',
-			width: '350px'
-		}, {
-			name: 'email',
-			width: '350px'
-		}, {
-			name: 'provider',
-			width: '150px'
-		}, {
 			name: 'Updated at',
 			width: '300px'
-		}, {
-			name: 'clientId',
-			width: '180px'
 		}
 	];
 
@@ -438,7 +414,7 @@ const Partners = (props) => {
 	};
 	return (
 		<div className="page-container">
-			<div className="page-header">S-Hub Control Panel : PMs</div>
+			<div className="page-header">Villa Tracker Extranet : PMs</div>
 			<Sidebar
 				agency={agency}
 				agent={agent}
@@ -539,21 +515,12 @@ const Partners = (props) => {
 											<tr >
 												<td className="pmName px-4 p-3  text-primary  cst-cursor" ><h4>{totalPartners - partnersPagingFrom - index + 1}</h4></td>
 												<td className="pmName px-4 p-3  text-primary  cst-cursor" ><h4>{item.pmName != null ? item.pmName : ""}</h4></td>
-												<td className="Source px-4 p-3  text-primary  cst-cursor" ><h4>{item.source != null ? item.source : "SH"}</h4></td>
 												<td className="accountId px-4 p-3 text-primary text-decoration-underline cst-cursor"><h4 onClick={() => onEditPartner(item._id, item)}>{item.accountId !== null ? item.accountId : ""}</h4></td>
 												<td className="Listings px-4 p-3 text-primary text-decoration-underline cst-cursor"><h4 onClick={() => GoToPartnerListings(item, item.accountId)}>{item.offsetRead ? item.offsetRead : "No listings"}/({item.count ? item.count : ""})</h4></td>
 												<td className="VT provider px-4 p-3 text-primary  cst-cursor"><h4>{(Object.prototype.hasOwnProperty.call(item, 'approved')) && item.approved?.length}</h4></td>
 												<td className="SH provider px-4 p-3 text-primary  cst-cursor"><h4>{(Object.prototype.hasOwnProperty.call(item, 'pending')) && item.pending?.length}</h4></td>
 												<td className="SH provider px-4 p-3 text-primary  cst-cursor"><h4>{(Object.prototype.hasOwnProperty.call(item, 'declined')) && item.declined?.length}</h4></td>
-												<td className="SH provider px-4 p-3 text-primary  cst-cursor"><h4>{(Object.prototype.hasOwnProperty.call(item, 'agent')) && item?.agent}</h4></td>
-												<td className="BasicChannels px-4 p-3"><h4>{item.basicChannels !== null && item.basicChannels !== "" ? renderChannels(item) : "-"}</h4></td>
-												<td className="contactName px-4 p-3  text-primary  cst-cursor" ><h4>{item.contactName != null ? item.contactName : ""}</h4></td>
-												<td className="pmPhone px-4 p-3  text-primary  cst-cursor" ><h4>{item.pmPhone != null ? item.pmPhone : ""}</h4></td>
-												<td className="email px-4 p-3  text-primary  cst-cursor" ><h4>{item.email != null ? item.email : ""}</h4></td>
-												<td className="provider px-4 p-3 text-primary  cst-cursor"><h4>{item.provider !== null ? item.provider : ""}</h4></td>
 												<td className="Updated px-4 p-3"><h4>{item.updatedAt !== null && item.updatedAt !== "" ? item.updatedAt.slice(0, 10) : ""}</h4></td>
-												<td className="clientId px-4 p-3 text-primary cst-cursor"><h4>{item.accountId ? "" : item.clientId ? item.clientId : ""}</h4>
-												</td>
 											</tr >
 										</>
 									})}

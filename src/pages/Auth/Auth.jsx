@@ -40,23 +40,23 @@ export const SignIn = () => {
 	const [chkAgreeToTerms, setChkAgreeToTerms] = useState(false);
 	const [email, setEmail] = useState('');
 	const [password, setPassword] = useState('');
-	const partnerLogin=getStorageValue('partnerLogin')
+	const partnerLogin = getStorageValue('partnerLogin')
 	const [state, setState] = useState({
 		loading: false
 	});
 
 	const signupCallback = result => {
-		console.log("result",result)
+		console.log("result", result)
 		if (result === 'ok') {
 			window.open("/home", "_self")
 		}
 	};
 
 	const signupExCallback = result => {
-		console.log("EX result",result)
+		console.log("EX result", result)
 		if (result === 'ok') {
 			window.open("/home", "_self")
-			console.log('partnerLogin',partnerLogin)
+			console.log('partnerLogin', partnerLogin)
 		}
 	};
 
@@ -212,7 +212,7 @@ export const SignIn = () => {
 								<Logo />
 							</div>
 						</div>
-						<h1>Log to the SHub - SmilingHouse Backend control PANEL</h1>
+						<h1>EXTRANET</h1>
 
 						<div className="row justify-content-center mt-4">
 							<div className="col-8">
@@ -232,9 +232,9 @@ export const SignIn = () => {
 									onSubmit={handleSubmit}
 									value={password}
 									setValue={setPassword}
-									label="Password/accountID*"
+									label="your Guesty account ID*"
 									inputName="password"
-									placeholder="Password/accountID (for EXTRANET)"
+									placeholder="guesty Account ID"
 									error={state?.error}
 									showLoginLink="none"
 								/>
@@ -253,26 +253,7 @@ export const SignIn = () => {
 							</div>
 						</div>
 						<div className="row mt-4 d-flex justify-content-center">
-						<div className="col-8">
-								<button
-									style={{
-										height: "66px",
-										borderRadius: '6px',
-										fontWeight: "100",
-										fontSize: "22px",
-										color: "#fff",
-										backgroundColor: "#165093",
-									}}
-									className="btn btn-primary p-3 col-12"
-									fullwidth={true}
-									loading={state.loading}
-									text="Sign Up!"
-									onClick={(e) => {
-										setState({ ...state, error: undefined });
-										handleSubmit(e);
-									}}
-								>Sign In</button>
-							</div>
+
 							<div className="col-8">
 								<button
 									style={{

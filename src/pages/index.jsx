@@ -352,7 +352,7 @@ function MainPage(props) {
           />
         </Route>
         <div className="page-container">
-          <div className="page-header">S-Hub Control Panel</div>
+          <div className="page-header">Villa Tracker Extranet</div>
           <Sidebar
             agency={agency}
             agent={agent}

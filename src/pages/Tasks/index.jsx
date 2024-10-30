@@ -348,7 +348,7 @@ const Tasks = (props) => {
 	};
 	return (
 		<div className="page-container">
-			<div className="page-header">S-Hub Control Panel : PMs</div>
+			<div className="page-header">Villa Tracker Extranet : PMs</div>
 			<Sidebar
 				agency={agency}
 				agent={agent}

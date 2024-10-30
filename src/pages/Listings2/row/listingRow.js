@@ -69,7 +69,7 @@ const Listingrow = (props) => {
   const [subRegion, setNewSubRegion] = useState(xdata?.subRegion)
   const [picIndex, setPicIndex] = useState(0);
   const history = useHistory()
-  const [title, setTitle] = useState(xdata.title)
+  const [title, setTitle] = useState(xdata.title||property.title)
   const summary =
     property?.publicDescription?.summary ||
     property?.publicDescription?.space
@@ -238,20 +238,6 @@ const Listingrow = (props) => {
     setNewSubRegion(newSubRegion)
     updateData()
   }
-
-  const renderAmount = (title, pic, amount) => {
-    return (
-      <div className="property-page-body-top-left-info-amount">
-        <div className="row d-flex justify-content-center m-2">
-          <img src={pic} alt="" style={{ width: "40px" }} />
-        </div>
-        <div className="row d-flex justify-content-center m-2">{title}</div>
-        <div className="row d-flex justify-content-center m-2">
-          {amount ? amount : ``}
-        </div>
-      </div>
-    );
-  };
 
   const renderSpecialCollections = () => {
     return (
@@ -484,16 +470,11 @@ const Listingrow = (props) => {
     </h4>
     </td>
     <td className="px-4 p-3 ">
-      <h4>{renderChannels()}
-        <br></br>
+      <h4>
         {xdata.status}{xdata.newListing ? '(New)' : ''}
       </h4>
     </td>
     <td className="px-4 p-3">
-      <h4>
-        {fullCalendar ? fullCalendar.length : 'undefined'}
-      </h4>
-    </td><td className="px-4 p-3">
       <h4>
         {renderSpecialCollections()}<br></br><br></br>
         weekdays: {property?.prices?.basePrice} {property?.prices?.currency}<br></br>
@@ -510,32 +491,23 @@ const Listingrow = (props) => {
         )}
       </h4>
       <div className="property-box-footer-left">
-          <div className="property-box-footer-left-icon">
-            <img src={peopleIcon} alt="" />
-            {property?.accommodates}
-          </div>
-          <div className="property-box-footer-left-icon">
-            <img src={bedsIcon} alt="" />
-            {xdata?.beds} 
-          </div>
-          <div className="property-box-footer-left-icon">
-            <img src={bathIcon} alt="" />
-            {property?.bathrooms}
-          </div>
-          <div className="property-box-footer-left-icon">
-            {/* <img src={bedsIcon} alt="" /> */}
-            {property.bedrooms} bedrooms 
-          </div>
-
+        <div className="property-box-footer-left-icon">
+          <img src={peopleIcon} alt="" />
+          {property?.accommodates}
+        </div>
+        <div className="property-box-footer-left-icon">
+          <img src={bedsIcon} alt="" />
+          {xdata?.beds}
+        </div>
+        <div className="property-box-footer-left-icon">
+          <img src={bathIcon} alt="" />
+          {property?.bathrooms}
+        </div>
+        <div className="property-box-footer-left-icon">
+          {/* <img src={bedsIcon} alt="" /> */}
+          {property.bedrooms} bedrooms
+        </div>
       </div>
-    </td>
-    <td className="px-4 p-3 ">
-      {!partnerLogin && <Button
-        style={{ height: '60px', width: '100px', fontSize: '1rem', borderRadius: '6px' }}
-        variant="green"
-        text="Geo-Reset"
-        onClick={handleResetButton()}
-      />}
     </td>
     <td className="px-4 p-3 text-decoration">
       <h4>
@@ -548,11 +520,6 @@ const Listingrow = (props) => {
         property={property}
         xdata={xdata}
       />}
-    </td>
-    <td className="px-4 p-3">
-      <h4>
-        {agent?.firstName + ' ' + agent?.lastName}
-      </h4>
     </td>
   </>
 
