@@ -261,14 +261,14 @@ const handleSearchButton = () => {
         console.log('searching listings per q :', searchInputes.q, 'accountId:', partner.accountId)
         delete searchInputes.id
         delete searchInputes.filters
-        delete searchInputes.accountId
+        //delete searchInputes.accountId
     } else
         if (searchInputes.id) { // on id remove the accountId search
             if (searchInputes.id) {
 
                 searchInputes.filters = '[{"field":"ids", "operator":"$in", "value": ["' + searchInputes.id + '"]}]'
                 delete searchInputes.id
-                delete searchInputes.accountId
+                //delete searchInputes.accountId
                 delete searchInputes.q
                 console.log('searching listings per id:', searchInputes)
             } else {
@@ -276,9 +276,10 @@ const handleSearchButton = () => {
                 delete searchInputes.id
             }
         }
-
+        setIsLoading(true)
     console.log("pressed search button:", searchInputes)
     AuthService.trianglLuxuryApi(searchInputes).then((response) => {
+        setIsLoading(false)
         if (response) {
             setListings(response.listings)
             console.log('search results:', response)
