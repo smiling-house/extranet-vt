@@ -471,7 +471,7 @@ const Listingrow = (props) => {
     </td>
     <td className="px-4 p-3 ">
       <h4>
-        {xdata.status}{xdata.newListing ? '(New)' : ''}
+        {xdata.status} 
       </h4>
     </td>
     <td className="px-4 p-3">
