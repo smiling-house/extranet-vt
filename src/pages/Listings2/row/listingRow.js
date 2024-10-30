@@ -69,7 +69,7 @@ const Listingrow = (props) => {
   const [subRegion, setNewSubRegion] = useState(xdata?.subRegion)
   const [picIndex, setPicIndex] = useState(0);
   const history = useHistory()
-  const [title, setTitle] = useState(xdata.title||property.title)
+  const [title, setTitle] = useState(xdata.title || property.title)
   const summary =
     property?.publicDescription?.summary ||
     property?.publicDescription?.space
@@ -455,23 +455,15 @@ const Listingrow = (props) => {
             />
           </div>
         </div>
+        <div className="text-title"><h2>{title}</h2></div>
       </div>
-      <div className="text-title">{title}
-        {!partnerLogin && <ImageWithHover
-          path={regenerateOff}
-          pathOver={regenerateOn}
-          className="property-page-prev-next-pic"
-          style={{ right: "10px" }}
-          tooltip={'AI generate for title:' + property?.title + ' and rewrite the desc.' + desc}
-          onClick={setAITitle}
-        />}
-      </div>
+
 
     </h4>
     </td>
     <td className="px-4 p-3 ">
       <h4>
-        {xdata.status} 
+        {xdata.status}
       </h4>
     </td>
     <td className="px-4 p-3">
