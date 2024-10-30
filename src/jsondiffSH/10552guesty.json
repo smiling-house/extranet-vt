@@ -1,0 +1,427 @@
+{
+    "_id": "64dd1d6965a80f0041a89f11",
+    "SaaS": {
+        "autoRenew": true
+    },
+    "cleaningStatus": {
+        "value": null
+    },
+    "picture": {
+        "thumbnail": "https://assets.guesty.com/image/upload/c_fit,h_200/v1692212263/production/585a39dbe43900100017e9e8/jdpb8ux8tvds6soeamep.jpg"
+    },
+    "terms": {
+        "minNights": 2,
+        "maxNights": 365
+    },
+    "prices": {
+        "monthlyPriceFactor": 1,
+        "weeklyPriceFactor": 1,
+        "currency": "ILS",
+        "basePrice": 70,
+        "securityDepositFee": 1030,
+        "petFee": 0,
+        "cleaningFee": 349
+    },
+    "pms": {
+        "automation": {
+            "answeringMachine": {
+                "confirmedBeforeCheckIn": {
+                    "delayInMinutes": 45
+                },
+                "confirmedDayOfCheckIn": {
+                    "delayInMinutes": 45
+                },
+                "confirmedDayOfCheckOut": {
+                    "delayInMinutes": 45
+                },
+                "confirmedDuringStay": {
+                    "delayInMinutes": 45
+                },
+                "confirmedAfterCheckOut": {
+                    "delayInMinutes": 45
+                },
+                "unconfirmedFirstMessage": {
+                    "delayInMinutes": 55
+                },
+                "unconfirmedSubsequentMessage": {
+                    "delayInMinutes": 45
+                }
+            },
+            "hooks": {
+                "ignoredHooks": []
+            },
+            "calendarSmartRules": {
+                "blockListings": []
+            },
+            "autoReviews": {
+                "templates": []
+            },
+            "autoPricing": {
+                "rules": []
+            }
+        },
+        "tasks": {
+            "defaultTasks": []
+        },
+        "autoPayments": {
+            "policy": []
+        },
+        "active": true,
+        "cleaningStatus": {
+            "active": true
+        }
+    },
+    "sales": {
+        "salesService": {
+            "atPhones": []
+        }
+    },
+    "receptionistsService": {
+        "receptionDesk": {
+            "atPhones": [],
+            "ittt": []
+        },
+        "screening": {
+            "checklist": []
+        }
+    },
+    "calendarRules": {
+        "defaultAvailability": "AVAILABLE",
+        "advanceNotice": {
+            "bookingCom": {
+                "isCutOffHoursEnabled": false
+            },
+            "expedia": {
+                "isCutOffHoursEnabled": false
+            },
+            "airbnb2": {
+                "isCutOffHoursEnabled": true
+            },
+            "directBookings": {
+                "isCutOffHoursEnabled": false
+            },
+            "updatedAt": "2023-08-16T19:03:05.599Z"
+        },
+        "bookingWindow": {
+            "updatedAt": "2023-08-16T19:03:05.599Z"
+        },
+        "preparationTime": {
+            "updatedAt": "2023-08-16T19:03:05.599Z"
+        },
+        "defaultAvailabilityUpdatedAt": "2023-08-16T19:03:05.601Z",
+        "rentalPeriods": []
+    },
+    "type": "SINGLE",
+    "tags": [],
+    "owners": [],
+    "amenities": [
+        "Wireless Internet",
+        "Towels provided",
+        "Toaster",
+        "Shampoo",
+        "Private entrance",
+        "Patio or balcony",
+        "Oven",
+        "Microwave",
+        "Laptop friendly workspace",
+        "Long term stays allowed",
+        "Kitchen",
+        "Bathtub",
+        "Bed linens",
+        "Coffee maker",
+        "Cookware",
+        "Desk",
+        "Essentials",
+        "Extra pillows and blankets",
+        "Family/kid friendly",
+        "Garden or backyard",
+        "Hangers",
+        "Hair dryer",
+        "Internet",
+        "Kettle",
+        "Air conditioning",
+        "Cable TV",
+        "Dishwasher",
+        "Dryer",
+        "Elevator",
+        "Free parking on premises",
+        "Heating",
+        "Iron",
+        "TV",
+        "Refrigerator",
+        "Stove",
+        "Washer"
+    ],
+    "amenitiesNotIncluded": [],
+    "useAccountRevenueShare": true,
+    "netIncomeFormula": "host_payout",
+    "commissionFormula": "net_income",
+    "ownerRevenueFormula": "net_income - pm_commission",
+    "useAccountAdditionalFees": false,
+    "taxes": [],
+    "useAccountTaxes": true,
+    "markups": {},
+    "useAccountMarkups": true,
+    "active": true,
+    "preBooking": [],
+    "accommodates": 3,
+    "bathrooms": 2,
+    "defaultCheckInTime": "15:00",
+    "defaultCheckOutTime": "11:00",
+    "propertyType": "Apartment",
+    "roomType": "Entire home/apt",
+    "address": {
+        "full": "Omar el-Khatab St 4, Haifa, Israel",
+        "street": "Omar el-Khatab Street 4",
+        "city": "Haifa",
+        "country": "Israel",
+        "lat": 32.811373,
+        "lng": 35.0028525,
+        "state": "Haifa District"
+    },
+    "pictures": [
+        {
+            "_id": "64dd1d6965a80f0041a89f12",
+            "original": "https://assets.guesty.com/image/upload/v1692212263/production/585a39dbe43900100017e9e8/jdpb8ux8tvds6soeamep.jpg",
+            "thumbnail": "https://assets.guesty.com/image/upload/c_fit,h_200/v1692212263/production/585a39dbe43900100017e9e8/jdpb8ux8tvds6soeamep.jpg",
+            "height": 1282,
+            "width": 1920,
+            "size": 166401
+        },
+        {
+            "_id": "64dd1d6965a80f0041a89f13",
+            "original": "https://assets.guesty.com/image/upload/v1692212268/production/585a39dbe43900100017e9e8/pjfro1se56twuaseojbq.jpg",
+            "thumbnail": "https://assets.guesty.com/image/upload/c_fit,h_200/v1692212268/production/585a39dbe43900100017e9e8/pjfro1se56twuaseojbq.jpg",
+            "height": 1282,
+            "width": 1920,
+            "size": 176525
+        },
+        {
+            "_id": "64dd1d6965a80f0041a89f14",
+            "original": "https://assets.guesty.com/image/upload/v1692212269/production/585a39dbe43900100017e9e8/dh1zu1at4oyzy2cf6byz.jpg",
+            "thumbnail": "https://assets.guesty.com/image/upload/c_fit,h_200/v1692212269/production/585a39dbe43900100017e9e8/dh1zu1at4oyzy2cf6byz.jpg",
+            "height": 1282,
+            "width": 1920,
+            "size": 230861
+        },
+        {
+            "_id": "64dd1d6965a80f0041a89f15",
+            "original": "https://assets.guesty.com/image/upload/v1692212267/production/585a39dbe43900100017e9e8/jgoxan9zhl2brsfh2cxr.jpg",
+            "thumbnail": "https://assets.guesty.com/image/upload/c_fit,h_200/v1692212267/production/585a39dbe43900100017e9e8/jgoxan9zhl2brsfh2cxr.jpg",
+            "height": 1282,
+            "width": 1920,
+            "size": 178150
+        },
+        {
+            "_id": "64dd1d6965a80f0041a89f16",
+            "original": "https://assets.guesty.com/image/upload/v1692212269/production/585a39dbe43900100017e9e8/ljtt7gxsnei0dnz2b2ik.jpg",
+            "thumbnail": "https://assets.guesty.com/image/upload/c_fit,h_200/v1692212269/production/585a39dbe43900100017e9e8/ljtt7gxsnei0dnz2b2ik.jpg",
+            "height": 1282,
+            "width": 1920,
+            "size": 157151
+        },
+        {
+            "_id": "64dd1d6965a80f0041a89f17",
+            "original": "https://assets.guesty.com/image/upload/v1692212267/production/585a39dbe43900100017e9e8/c0y24s0fnlxj7gykil2o.jpg",
+            "thumbnail": "https://assets.guesty.com/image/upload/c_fit,h_200/v1692212267/production/585a39dbe43900100017e9e8/c0y24s0fnlxj7gykil2o.jpg",
+            "height": 1282,
+            "width": 1920,
+            "size": 169741
+        },
+        {
+            "_id": "64dd1d6965a80f0041a89f18",
+            "original": "https://assets.guesty.com/image/upload/v1692212267/production/585a39dbe43900100017e9e8/d6b4p9n8vzwyre6wvenr.jpg",
+            "thumbnail": "https://assets.guesty.com/image/upload/c_fit,h_200/v1692212267/production/585a39dbe43900100017e9e8/d6b4p9n8vzwyre6wvenr.jpg",
+            "height": 1282,
+            "width": 1920,
+            "size": 210418
+        },
+        {
+            "_id": "64dd1d6965a80f0041a89f19",
+            "original": "https://assets.guesty.com/image/upload/v1692212264/production/585a39dbe43900100017e9e8/sp9yxmicb9hmatt2qseq.jpg",
+            "thumbnail": "https://assets.guesty.com/image/upload/c_fit,h_200/v1692212264/production/585a39dbe43900100017e9e8/sp9yxmicb9hmatt2qseq.jpg",
+            "height": 1282,
+            "width": 1920,
+            "size": 357009
+        },
+        {
+            "_id": "64dd1d6965a80f0041a89f1a",
+            "original": "https://assets.guesty.com/image/upload/v1692212264/production/585a39dbe43900100017e9e8/qitoebwyftbbk1nzgzxf.jpg",
+            "thumbnail": "https://assets.guesty.com/image/upload/c_fit,h_200/v1692212264/production/585a39dbe43900100017e9e8/qitoebwyftbbk1nzgzxf.jpg",
+            "height": 1282,
+            "width": 1920,
+            "size": 322232
+        },
+        {
+            "_id": "64dd1d6965a80f0041a89f1b",
+            "original": "https://assets.guesty.com/image/upload/v1692212264/production/585a39dbe43900100017e9e8/ufwcotzh9nq95vmzbemk.jpg",
+            "thumbnail": "https://assets.guesty.com/image/upload/c_fit,h_200/v1692212264/production/585a39dbe43900100017e9e8/ufwcotzh9nq95vmzbemk.jpg",
+            "height": 1282,
+            "width": 1920,
+            "size": 434885
+        },
+        {
+            "_id": "64dd1d6965a80f0041a89f1c",
+            "original": "https://assets.guesty.com/image/upload/v1692212264/production/585a39dbe43900100017e9e8/lpzewlop47rcsd1j4abc.jpg",
+            "thumbnail": "https://assets.guesty.com/image/upload/c_fit,h_200/v1692212264/production/585a39dbe43900100017e9e8/lpzewlop47rcsd1j4abc.jpg",
+            "height": 1282,
+            "width": 1920,
+            "size": 238550
+        },
+        {
+            "_id": "64dd1d6965a80f0041a89f1d",
+            "original": "https://assets.guesty.com/image/upload/v1692212265/production/585a39dbe43900100017e9e8/lqjuc6qure9kilkmez9e.jpg",
+            "thumbnail": "https://assets.guesty.com/image/upload/c_fit,h_200/v1692212265/production/585a39dbe43900100017e9e8/lqjuc6qure9kilkmez9e.jpg",
+            "height": 1282,
+            "width": 1920,
+            "size": 281185
+        },
+        {
+            "_id": "64dd1d6965a80f0041a89f1e",
+            "original": "https://assets.guesty.com/image/upload/v1692212268/production/585a39dbe43900100017e9e8/zlkrtlsysiuaf0xx0lv3.jpg",
+            "thumbnail": "https://assets.guesty.com/image/upload/c_fit,h_200/v1692212268/production/585a39dbe43900100017e9e8/zlkrtlsysiuaf0xx0lv3.jpg",
+            "height": 1282,
+            "width": 1920,
+            "size": 196316
+        },
+        {
+            "_id": "64dd1d6965a80f0041a89f1f",
+            "original": "https://assets.guesty.com/image/upload/v1692212262/production/585a39dbe43900100017e9e8/ajqxe03uqygac3fu7aog.jpg",
+            "thumbnail": "https://assets.guesty.com/image/upload/c_fit,h_200/v1692212262/production/585a39dbe43900100017e9e8/ajqxe03uqygac3fu7aog.jpg",
+            "height": 1282,
+            "width": 1920,
+            "size": 139058
+        },
+        {
+            "_id": "64dd1d6965a80f0041a89f20",
+            "original": "https://assets.guesty.com/image/upload/v1692212266/production/585a39dbe43900100017e9e8/bodzg0omnwe9hq83hhjh.jpg",
+            "thumbnail": "https://assets.guesty.com/image/upload/c_fit,h_200/v1692212266/production/585a39dbe43900100017e9e8/bodzg0omnwe9hq83hhjh.jpg",
+            "height": 1282,
+            "width": 1920,
+            "size": 126865
+        },
+        {
+            "_id": "64dd1d6965a80f0041a89f21",
+            "original": "https://assets.guesty.com/image/upload/v1692212264/production/585a39dbe43900100017e9e8/rx9gqkgvbrhdhdzpx0ju.jpg",
+            "thumbnail": "https://assets.guesty.com/image/upload/c_fit,h_200/v1692212264/production/585a39dbe43900100017e9e8/rx9gqkgvbrhdhdzpx0ju.jpg",
+            "height": 1282,
+            "width": 1920,
+            "size": 107407
+        },
+        {
+            "_id": "64dd1d6965a80f0041a89f22",
+            "original": "https://assets.guesty.com/image/upload/v1692212266/production/585a39dbe43900100017e9e8/s8lxflyynbnzx5t4rzdf.jpg",
+            "thumbnail": "https://assets.guesty.com/image/upload/c_fit,h_200/v1692212266/production/585a39dbe43900100017e9e8/s8lxflyynbnzx5t4rzdf.jpg",
+            "height": 1282,
+            "width": 1920,
+            "size": 140309
+        },
+        {
+            "_id": "64dd1d6965a80f0041a89f23",
+            "original": "https://assets.guesty.com/image/upload/v1692212265/production/585a39dbe43900100017e9e8/dgzhrybbdjhq3l6bvcyx.jpg",
+            "thumbnail": "https://assets.guesty.com/image/upload/c_fit,h_200/v1692212265/production/585a39dbe43900100017e9e8/dgzhrybbdjhq3l6bvcyx.jpg",
+            "height": 1282,
+            "width": 1920,
+            "size": 124322
+        },
+        {
+            "_id": "64dd1d6965a80f0041a89f24",
+            "original": "https://assets.guesty.com/image/upload/v1692212266/production/585a39dbe43900100017e9e8/st7j9tdxpopynne1stdx.jpg",
+            "thumbnail": "https://assets.guesty.com/image/upload/c_fit,h_200/v1692212266/production/585a39dbe43900100017e9e8/st7j9tdxpopynne1stdx.jpg",
+            "height": 1282,
+            "width": 1920,
+            "size": 165817
+        }
+    ],
+    "timezone": "Asia/Jerusalem",
+    "nickname": "TLV052 SNR OMAR EL",
+    "title": "Cozy Nest Apartment with Balcony",
+    "accountId": "585a39dbe43900100017e9e8",
+    "isListed": true,
+    "createdAt": "2023-08-16T19:03:05.601Z",
+    "lastUpdatedAt": "2023-11-06T10:40:10.912Z",
+    "integrations": [
+        {
+            "airbnb2": {
+                "daysOfWeekMinimumNights": [],
+                "promotions": []
+            },
+            "bookingCom": {
+                "acceptedCreditCards": [],
+                "errors": [],
+                "initialComplexListing": false,
+                "publishCompanyLogo": false,
+                "isPublishedCompanyLogo": false,
+                "publishCompanyInfo": false,
+                "isPublishedCompanyInfo": false,
+                "taxInfo": []
+            },
+            "_id": "65005b08549f03e79866d07e",
+            "platform": "smilingHouse",
+            "smilingHouse": {
+                "status": "IN_PROGRESS",
+                "cancellationPolicy": "strict_60",
+                "cancellationPenalty": 100,
+                "createdAt": "2023-11-06T10:40:10.839Z"
+            }
+        }
+    ],
+    "pendingTasks": [],
+    "listingRooms": [
+        {
+            "_id": "64dd1e8941a36100428d0c4f",
+            "roomNumber": 0,
+            "beds": [
+                {
+                    "_id": "64dd1e8941a36100428d0c50",
+                    "type": "SOFA_BED",
+                    "quantity": 1
+                }
+            ]
+        },
+        {
+            "_id": "64dd1e8941a36100428d0c51",
+            "roomNumber": 1,
+            "beds": [
+                {
+                    "_id": "64dd1e8941a36100428d0c52",
+                    "type": "QUEEN_BED",
+                    "quantity": 1
+                }
+            ]
+        }
+    ],
+    "customFields": [],
+    "offeredServices": [],
+    "importedAt": "2023-08-16T19:03:05.601Z",
+    "occupancyStats": [],
+    "__v": 10,
+    "publicDescription": {
+        "summary": "Cozy Nest Apartment with balcony located in the Vibrant downtown of Haifa.",
+        "space": "Renovated and equipped with all the necessary amenities\nfor a short and long period of stay in Haifa.\n\nThe apartment is one bedroom apartment with a balcony,\nfully equipped kitchen furnished living room . two well-designed bathrooms. one in the suite and one for guests.\n\nThe balcony with a sitting area and a pastoral view. is a great addition for an enjoyable stay."
+    },
+    "bedrooms": 1,
+    "beds": 2,
+    "financials": {
+        "cleaningFee": {
+            "value": {
+                "_id": "64dd1fa2b004130049a5c96a",
+                "multiplier": "PER_STAY",
+                "formula": 349,
+                "valueType": "FIXED"
+            },
+            "lastUpdated": "2023-08-16T19:12:34.453Z"
+        },
+        "petFee": {
+            "value": {
+                "_id": "64dd1fa2b004130049a5c969",
+                "multiplier": "PER_PET_PER_STAY",
+                "formula": 0,
+                "valueType": "FIXED"
+            },
+            "lastUpdated": "2023-08-16T19:12:34.452Z"
+        }
+    },
+    "accountTaxes": [],
+    "source": "guesty_openapi"
+}

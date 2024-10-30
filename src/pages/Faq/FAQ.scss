@@ -1,0 +1,162 @@
+.main_container_faq {
+  //   border: 2px solid black;
+  height: 170vh;
+  margin-left: 20px;
+  margin-top: 20px;
+  margin-right: 20px;
+  flex-wrap: wrap;
+ background-color: #F5F9FA;
+}
+// headings-
+.header_title {
+  overflow: visible;
+  white-space: nowrap;
+  text-align: center;
+  font-family: Quicksand;
+  font-style: normal;
+  font-weight: bold;
+  font-size: 30px;
+  color: rgb(19, 60, 115);
+  margin-top: 50px;
+}
+.header_title2 {
+  white-space: nowrap;
+  text-align: left;
+  font-family: Quicksand;
+  font-style: normal;
+  font-weight: normal;
+  font-size: 22px;
+  color: rgba(19, 60, 115, 1);
+}
+
+.faqHeader_heading {
+  //   border: 2px solid red;
+  height: 100px;
+  justify-content: center;
+  align-items: center;
+  text-align: left;
+}
+.flex_item_faq1 {
+  font-family: Quicksand;
+  font-style: normal;
+  font-weight: normal;
+  font-size: 40px;
+  color: rgba(19, 60, 115, 1);
+}
+
+// .flex_item_faq2 {
+//   font-style: normal;
+//   font-weight: normal;
+//   font-size: 22px;
+//   color: rgba(19, 60, 115, 1);
+// }
+
+// booking and container-
+.bp_container {
+ // display: flex;
+  text-align: center;
+  //   border: 2px solid cyan;
+  height: 180px;
+  margin-top: 50px;
+  align-items: center;
+}
+.bp_icon {
+  border: 2px dotted black;
+  height: 45px;
+  width: 59px;
+}
+.bp_text {
+  margin-left: 10px;
+  left: 55.33px;
+  top: 1.8px;
+  overflow: visible;
+  width: 296px;
+  white-space: nowrap;
+  text-align: left;
+  font-family: Quicksand;
+  font-style: normal;
+  font-weight: bold;
+  font-size: 30px;
+  color: rgba(19, 60, 115, 1);
+}
+// accordian-
+.Accordian_Heading {
+  white-space: nowrap;
+  text-align: left;
+  font-family: Quicksand;
+  font-style: normal;
+  font-weight: normal;
+  font-size: 22px;
+  color: rgba(3, 106, 225, 1);
+}
+.Accordian_SubHeading {
+  white-space: nowrap;
+  text-align: left;
+  font-family: Quicksand;
+  font-style: normal;
+  font-weight: normal;
+  font-size: 22px;
+  color: rgba(27, 156, 93, 1);
+}
+.Accordian_body {
+  text-align: left;
+  font-family: Quicksand;
+  font-style: normal;
+  font-weight: normal;
+  font-size: 22px;
+  color: rgba(112, 112, 112, 1);
+}
+//
+#Read_More_ {
+  display: flex;
+  justify-content: flex-end;
+  text-align: left;
+  font-family: Quicksand;
+  font-style: normal;
+  font-weight: normal;
+  font-size: 20px;
+  color: rgba(3, 106, 225, 1);
+}
+
+.Getting_Started {
+  font-family: Quicksand;
+  font-style: normal;
+  font-weight: normal;
+  font-size: 22px;
+  color: rgba(19, 60, 115, 1);
+}
+
+.bg-card {
+  background-color:rgb(90, 48, 48);
+  cursor: pointer;
+}
+
+.bg-card:hover {
+  background-color:rgb(52, 54, 53);
+  cursor: pointer;
+}
+
+.bg-card:hover * {
+  color: white;
+  cursor: pointer;
+}
+
+.bg-card:hover p {
+  color: white;
+}
+
+.bg-card p {
+  white-space: nowrap;
+  text-align: center;
+  font-family: Quicksand;
+  font-style: normal;
+  font-weight: normal;
+  font-size: 16px;
+  color: rgba(19,60,115,1);
+}
+.bg-card:hover *{
+fill: white;
+}
+.vision-cat {
+
+}

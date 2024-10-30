@@ -1,0 +1,88 @@
+/* .welcome-bg {
+	background-image: url("../../assets/desktop/welcome/welcome-bg.png");
+	background-size: cover;
+	height: 150vh;
+} */
+
+.auth-container {
+	display: grid;
+	grid-template-columns: 40% 60%;
+	height: 150vh;
+}
+
+.auth-pic-left {
+	background-image: url("../../assets/bk_pool.png");
+	background-size: cover;
+	height: 150vh;
+}
+
+.auth-main {
+	height: 140vh;
+	overflow: hidden;
+	display: grid;
+	grid-template-rows: 1fr 50px;
+}
+
+.auth-footer {
+	border-top: 1px solid #DFDFDF;
+	width: calc(140% - 100px);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	justify-self: center;
+}
+
+.auth-box-parent {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: #FDFDFD;
+}
+
+.auth-box-child {
+	box-sizing: border-box;
+	font-family: "Quicksand", sans-serif;
+	left: 0;
+	position: relative;
+	top: 0;
+	text-align: left;
+}
+.auth-box-child-mobile {
+	box-sizing: border-box;
+	font-family: "Quicksand", sans-serif;
+	height: 100%;
+	padding: 35px;
+	left: 0;
+	position: relative;
+	top: 0;
+	text-align: left;
+	width: 100%;
+}
+
+.forgot-password {
+	margin-top: 18px;
+	text-align: center;
+	width: 100%;
+}
+
+.custom-link {
+	color: #0d6efd !important;
+	text-decoration: underline !important;
+	cursor: pointer !important;
+}
+
+.small-text {
+	font-size: 20px !important;
+}
+
+.image-width {
+	width: 25% !important;
+}
+
+@media screen and (max-width: 700px) {
+	.image-width {
+		width: 50% !important;
+	}
+}
+
+

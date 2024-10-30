@@ -1,0 +1,28 @@
+[
+  {
+	"name": "100-1500$",
+	"code": "priceRange1",
+	"min": 100,
+	"max": 1500
+  },
+  {
+	"name": "1500-2500$",
+	"code": "priceRange2",
+	"min": 1500,
+	"max": 2500
+  },
+  {
+	"name": "2500-5000$",
+	"code": "priceRange3",
+	"min": 2500,
+	"max": 5000
+
+  },
+  {
+	"name": "5000-10000$",
+	"code": "priceRange4",
+	"min": 5000,
+	"max": 10000
+  }
+
+]

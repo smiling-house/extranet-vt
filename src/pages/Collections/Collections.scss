@@ -1,0 +1,89 @@
+.collections-container {
+  display: grid;
+  grid-template-rows: 255px 1fr;
+  * {
+    box-sizing: border-box;
+  }
+  /* For desktop: */
+.col-1 {width: 50%;}
+.col-2 {width: 50%;}
+.col-3 {width: 25%;}
+.col-4 {width: 33.33%;}
+.col-5 {width: 41.66%;}
+.col-6 {width: 50%;}
+.col-7 {width: 58.33%;}
+.col-8 {width: 66.66%;}
+.col-9 {width: 75%;}
+.col-10 {width: 83.33%;}
+.col-11 {width: 91.66%;}
+.col-12 {width: 100%;}
+
+@media only screen and (max-width: 768px) {
+  /* For mobile phones: */
+  [class*="col-"] {
+    width: 100%;
+  }
+}
+  .collections-body {
+    background-color: white;
+    padding: 10px 50px;
+    margin-top: -160px;
+
+    .collections-body-title {
+      color: #284866;
+      font-size: 35px;
+      font-weight: 500;
+    }
+
+    .collections-boxes {
+		display: flex;
+		grid-row-gap: 10px;
+    row-gap: 10px;
+
+
+      .collections-box {
+        height: 200px;
+        // width: 770px;
+        border-radius: 10px;
+        grid-template-rows: 1fr 60px;
+        cursor: pointer;
+        background-size: 100%;
+
+        .player-wrapper {
+          position: relative;
+          padding-top: 56.25%; /* Player ratio: 100 / (1280 / 720) */
+        }
+
+        .react-player {
+          position: absolute;
+          top: 0;
+          left: 0;
+        }
+
+        .collections-box-footer {
+          background-color: #284866a6;
+          border-bottom-left-radius: 10px;
+          border-bottom-right-radius: 10px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: white;
+          font-size: 25px;
+        }
+      }
+
+      .collections-box:hover {
+        opacity: 0.9;
+		cursor: pointer;
+      }
+      .card-img-top:hover {
+        opacity: 0.9;
+        
+		cursor: pointer;
+      }
+      .card-title:hover {
+        cursor: pointer;
+      }
+    }
+  }
+}

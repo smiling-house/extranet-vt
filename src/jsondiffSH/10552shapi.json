@@ -1,0 +1,245 @@
+ {
+        "_id": "10552",
+        "picture": "https://smilinghouse.ch/wp-content/uploads/guesty_photos/photo_00001_10552.jpg",
+        "terms": {
+            "minNights": 0,
+            "maxNights": 99
+        },
+        "prices": {
+            "monthlyPriceFactor": 0,
+            "weeklyPriceFactor": 0,
+            "currency": 0,
+            "basePrice": 0,
+            "cleaningFee": 0,
+            "securityDepositFee": 0,
+            "guestsIncludedInRegularFee": 0,
+            "weekendBasePrice": 0,
+            "weekendDays": ""
+        },
+        "tags": "",
+        "amenities": [
+            "Free parking",
+            "Building Elevator",
+            "Iron",
+            "Oven",
+            "Refrigerator",
+            "Dishwasher",
+            "Color television",
+            "Heating",
+            "Private bathroom",
+            "Wireless internet connection",
+            "Hairdryer",
+            "Coffee/Tea maker.",
+            "Cable television",
+            "Air conditioning",
+            "Kitchen",
+            "Bathtub",
+            "Microwave",
+            "Washer",
+            "Balcony/Lanai/Terrace",
+            "Stove",
+            "Washer or dryer",
+            "Garden"
+        ],
+        "active": 1,
+        "accommodates": 3,
+        "bedrooms": 1,
+        "beds": 2,
+        "bathrooms": 2,
+        "propertyType": "PCT3",
+        "address": {
+            "full": "Omar el-Khatab St 4, Haifa, Israel",
+            "lng": 32.811375,
+            "lat": 35.002853,
+            "street": "Omar el-Khatab St 4, Haifa, Israel",
+            "city": "Haifa",
+            "country": "Israel",
+            "zipcode": null,
+            "state": "",
+            "neighborhood": "Haifa"
+        },
+        "title": "Cozy Nest Apartment with Balcony",
+        "nickname": "TLV052",
+        "createdAt": "2023-09-01 15:28:22",
+        "lastUpdatedAt": "0000-00-00 00:00:00",
+        "taxes": [
+            null
+        ],
+        "isListed": true,
+        "publicDescription": {
+            "summary": "Renovated and equipped with all the necessary amenities for a short and long period of stay in Haifa. The apartment is one bedroom apartment with a balcony, fully equipped kitchen furnished living room . two well-designed bathrooms. one in the suite and one for guests. The balcony with a sitting area and a pastoral view. is a great addition for an enjoyable stay.Powered by Froala Editor",
+            "transit": "Cozy Nest Apartment with balcony located in the Vibrant downtown of Haifa.Powered by Froala Editor"
+        },
+        "availableRatePlans": [
+            {
+                "code": "5c-85c179e985c179e9",
+                "name": "Standard",
+                "description": "Standard rate plan based on cancellation policy",
+                "currency": 0,
+                "valueAddInclusions": {
+                    "mealPlanCode": "0",
+                    "mealPlanName": "None"
+                },
+                "policyInfo": {
+                    "policyName": "firm",
+                    "bookingRule": {
+                        "minAdvancedBookingOffset": null,
+                        "maxAdvancedBookingOffset": null
+                    },
+                    "cancelPolicy": {
+                        "description": "firm",
+                        "penaltyAfterReserPercent": 0,
+                        "penaltyAfterReserDays": null,
+                        "deadlineDays": null,
+                        "deadlineHours": 0,
+                        "penaltyAfterDeadlinePercent": null,
+                        "penaltyAfterDeadlineDays": 0
+                    },
+                    "guaranteePaymentPolicy": {
+                        "guaranteePayment": {
+                            "policyCode": null,
+                            "prePaymentRequired": true
+                        }
+                    },
+                    "bookDates": null,
+                    "activeWeekdays": null
+                }
+            }
+        ],
+        "pictures": [
+            {
+                "_id": "photo_00001",
+                "original": "https://smilinghouse.ch/wp-content/uploads/guesty_photos/photo_00001_10552.jpg",
+                "thumbnail": "https://smilinghouse.ch/wp-content/uploads/mainPhotos/main_10552.jpg",
+                "height": "1800",
+                "width": "1271",
+                "size": 118169
+            },
+            {
+                "_id": "photo_00002",
+                "original": "https://smilinghouse.ch/wp-content/uploads/guesty_photos/photo_00002_10552.jpg",
+                "height": "1800",
+                "width": "1271",
+                "size": 123466
+            },
+            {
+                "_id": "photo_00003",
+                "original": "https://smilinghouse.ch/wp-content/uploads/guesty_photos/photo_00003_10552.jpg",
+                "height": "1800",
+                "width": "1271",
+                "size": 156897
+            },
+            {
+                "_id": "photo_00004",
+                "original": "https://smilinghouse.ch/wp-content/uploads/guesty_photos/photo_00004_10552.jpg",
+                "height": "1800",
+                "width": "1271",
+                "size": 125905
+            },
+            {
+                "_id": "photo_00005",
+                "original": "https://smilinghouse.ch/wp-content/uploads/guesty_photos/photo_00005_10552.jpg",
+                "height": "1800",
+                "width": "1271",
+                "size": 111658
+            },
+            {
+                "_id": "photo_00006",
+                "original": "https://smilinghouse.ch/wp-content/uploads/guesty_photos/photo_00006_10552.jpg",
+                "height": "1800",
+                "width": "1271",
+                "size": 122016
+            },
+            {
+                "_id": "photo_00007",
+                "original": "https://smilinghouse.ch/wp-content/uploads/guesty_photos/photo_00007_10552.jpg",
+                "height": "1800",
+                "width": "1271",
+                "size": 147491
+            },
+            {
+                "_id": "photo_00008",
+                "original": "https://smilinghouse.ch/wp-content/uploads/guesty_photos/photo_00008_10552.jpg",
+                "height": "1800",
+                "width": "1271",
+                "size": 230156
+            },
+            {
+                "_id": "photo_00009",
+                "original": "https://smilinghouse.ch/wp-content/uploads/guesty_photos/photo_00009_10552.jpg",
+                "height": "1800",
+                "width": "1271",
+                "size": 214867
+            },
+            {
+                "_id": "photo_00010",
+                "original": "https://smilinghouse.ch/wp-content/uploads/guesty_photos/photo_00010_10552.jpg",
+                "height": "1800",
+                "width": "1271",
+                "size": 283389
+            },
+            {
+                "_id": "photo_00011",
+                "original": "https://smilinghouse.ch/wp-content/uploads/guesty_photos/photo_00011_10552.jpg",
+                "height": "1800",
+                "width": "1271",
+                "size": 156453
+            },
+            {
+                "_id": "photo_00012",
+                "original": "https://smilinghouse.ch/wp-content/uploads/guesty_photos/photo_00012_10552.jpg",
+                "height": "1800",
+                "width": "1271",
+                "size": 181938
+            },
+            {
+                "_id": "photo_00013",
+                "original": "https://smilinghouse.ch/wp-content/uploads/guesty_photos/photo_00013_10552.jpg",
+                "height": "1800",
+                "width": "1271",
+                "size": 135809
+            },
+            {
+                "_id": "photo_00014",
+                "original": "https://smilinghouse.ch/wp-content/uploads/guesty_photos/photo_00014_10552.jpg",
+                "height": "1800",
+                "width": "1271",
+                "size": 105195
+            },
+            {
+                "_id": "photo_00015",
+                "original": "https://smilinghouse.ch/wp-content/uploads/guesty_photos/photo_00015_10552.jpg",
+                "height": "1800",
+                "width": "1271",
+                "size": 98867
+            },
+            {
+                "_id": "photo_00016",
+                "original": "https://smilinghouse.ch/wp-content/uploads/guesty_photos/photo_00016_10552.jpg",
+                "height": "1800",
+                "width": "1271",
+                "size": 88855
+            },
+            {
+                "_id": "photo_00017",
+                "original": "https://smilinghouse.ch/wp-content/uploads/guesty_photos/photo_00017_10552.jpg",
+                "height": "1800",
+                "width": "1271",
+                "size": 107595
+            },
+            {
+                "_id": "photo_00018",
+                "original": "https://smilinghouse.ch/wp-content/uploads/guesty_photos/photo_00018_10552.jpg",
+                "height": "1800",
+                "width": "1271",
+                "size": 93010
+            },
+            {
+                "_id": "photo_00019",
+                "original": "https://smilinghouse.ch/wp-content/uploads/guesty_photos/photo_00019_10552.jpg",
+                "height": "1800",
+                "width": "1271",
+                "size": 121365
+            }
+        ]
+    }

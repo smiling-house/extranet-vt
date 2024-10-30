@@ -1,0 +1,29 @@
+.collection-container {
+	background-color: white;
+	margin-top: -164px;
+	.video-container {
+		width: 100%;
+		overflow: hidden;
+		display: block;
+		height: 300px;
+		margin-left: 0px;
+	
+	}
+	
+	#dog-events-sustain {
+		margin-top: -400px;
+		margin-right: -900px;
+	}
+	#family {
+		margin-top: -10%;
+		margin-right: -900px;
+	}
+	.collection-boxes {
+		grid-row-gap: 30px;
+		width: 100%;
+		// display: flex;
+		// justify-content: space-between;
+	}
+
+	
+}
