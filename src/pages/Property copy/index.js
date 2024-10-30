@@ -657,16 +657,6 @@ const Property = (props) => {
           <LoadingBox visible={true} />
         ) : (
           <div className="property-page-wrapper fluid-container">
-            {!noMenu && (
-              <PageHeader
-                agent={agent}
-                agency={agency}
-                bgColor="#16395C"
-                doSearch={doSearch}
-                onChange={onChange}
-              />
-            )}
-
             <div ref={ref} className="property-page-container">
               {!links && (
                 <div

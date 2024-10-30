@@ -309,44 +309,6 @@ const headerSearchRow = () => {
             <div className="col-sm-1">
                 <Button style={{ height: '60px', width: '120px', fontSize: '15px', borderRadius: '5px' }} variant="green" text="Search" onClick={handleSearchButton} />
             </div>
-            <span className="listings-search-separator" />
-
-            <div className="col-sm-2">
-                <div className="listings-search-add-client-button" onClick={() => setSelectedClientToEdit(NEW_CLIENT)}>
-                    <Icon name='pluscircle' font='AntDesign' color='white' size={30} />
-                    <span style={{ paddingLeft: '15px' }} data-bs-toggle="modal" href="#exampleModalToggle">Add New Client</span>
-                </div>
-            </div>
-            <div className="col-sm-2 listings-filter-channel">
-                Filter channels:
-                <div className="channels-main-filter-icons"
-                    style={{
-                        paddingTop: '15px',
-                        display: 'grid',
-                        gridTemplateColumns: '40px 40px 40px',
-                        justifyItems: 'center',
-                    }}>
-                    <CollectionIcon
-                        path={VTChannelIcon}
-                        pathOver={VTChannelIconOn}
-                        pathOver2={VTChannelIconOnBlue}
-                        selected={filterChannel?.findIndex((i) => i === 'VT') > -1}
-                        selected2={false}
-                        label={VTChannelLabel}
-                        onClick={() => toggleFilterChannel("VT")}
-
-                    />
-                    <CollectionIcon
-                        path={SHChannelIcon}
-                        pathOver={SHChannelIconOn}
-                        pathOver2={SHChannelIconOnBlue}
-                        selected={filterChannel?.findIndex((i) => i === 'SH') > -1}
-                        selected2={false}
-                        label={SHChannelLabel}
-                        onClick={() => toggleFilterChannel("SH")}
-                    />
-                </div>
-            </div>
         </div>
     )
 }
@@ -397,13 +359,13 @@ return (
             >
                 <LoadingBox visible={isLoading} />
                 <div>
-                    <PageHeader 
+                    {/* <PageHeader 
                     PageHeader={true} 
                     doSearch={doSearch} 
                     handleSearchListings={handleSearchListings} 
                     searchOpen={true} 
                     topBgColor="rgb(119 198 85)">
-                    </PageHeader>
+                    </PageHeader> */}
                     {headerSearchRow()}
                 </div>
 

@@ -197,16 +197,22 @@ const Partners = (props) => {
 				limit: constants.PAGING_PARTNERS_SIZE,
 				skip: partnersPagingFrom - 1,
 				pmName: searchInputes.pmName,
+				//channelSource: 'VT',
+				source:'VT'
 			} :
 				{
 					limit: constants.PAGING_PARTNERS_SIZE,
 					skip: partnersPagingFrom - 1,
-					accountId: searchInputes.accountId
+					accountId: searchInputes.accountId,
+					//channelSource: 'VT',
+				source:'VT'
 				} :
 
 			{
 				limit: constants.PAGING_PARTNERS_SIZE,
 				skip: partnersPagingFrom - 1,
+				//channelSource: 'VT',
+				source:'VT'
 			}
 		console.log('loading search:', params)
 		const partnersResponse = await userRequest.get(`local/partners`,
@@ -427,13 +433,6 @@ const Partners = (props) => {
 
 				<div className="agencies-container" >
 					<LoadingBox visible={isLoading} />
-					<PageHeader
-						partnerLogin={partnerLogin}
-						handleSearchFuntionality={handleSearchFuntionality}
-						searchInputes={searchInputes}
-						handlSearchButtonAdmin={handlSearchButtonAdmin}
-						searchOpen={null}
-						topBgColor="rgb(119, 198, 85)" />
 					{selectedRowToEdit &&
 						<>
 							<div className="agencies-floating-edit-menu-floater" onClick={clearEditMenu} />

@@ -306,13 +306,6 @@ const Admin = (props) => {
 			// activeMenu={activeMenu}
 			// handleToggleMenu={handleToggleMenu}
 			/>
-			<PageHeader
-				handleSearchFuntionality={handleSearchFuntionality}
-				searchInputes={searchInputes}
-				handlSearchButtonAdmin={handlSearchButtonAdmin}
-				addUser={onAddAgency}
-				searchOpen={null}
-				topBgColor="#133B71" />
 			{selectedRowToEdit &&
 				<>
 					<div className="agencies-floating-edit-menu-floater" onClick={clearEditMenu} />
