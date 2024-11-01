@@ -63,7 +63,7 @@ export const signInEx = (user, chkRememberMe, callback) => {
 				localStorage.setItem("partnerLogin", partner[0].accountId);
 				localStorage.setItem("partnerName", partner[0].pmName);
 				const result = await userService.signIn({
-					"email": "moriya@smilinghouse.ch",
+					"email": "tech.smilinghouse@gmail.com",
 					"password": "121Mor12!"
 				})
 				if (result == null) {
