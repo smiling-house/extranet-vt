@@ -65,6 +65,31 @@ export const signInEx = async user => {
 })
 };
 
+export const sendtwoFAcode = async user => {
+	log.debug("UserService -> twofa -> Enter");
+
+	return axios.post(`${constants.SHUB_URL}/external-partners/twofa`, user)
+		.then(async response => {
+			const res = response.data;
+			// log.debug("UserService -> signIn -> response: " + res);
+			toast.success(res.message, {
+				position: 'top-right',
+				toastClassName: 'custom-toast',
+			});
+			return res;
+		})
+		.catch(response => {
+			// log.debug("userService -> signIn -> error: ");
+			log.debug(response);
+			 
+			toast.error(response.response.data.message, {
+				position: 'top-right',
+				toastClassName: 'custom-toast',
+			});
+	return null;
+})
+};
+
 export const signUp = async user => {
 	log.debug("UserService -> signUp -> Enter");
 
