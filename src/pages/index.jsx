@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import * as userActions from "../store/redux/User/actions";
-import Auth from "./Auth/Auth";
+import Auth from "./Auth/Auth2fa";
 import ResetPasswordPage from "./ResetPasswordPage/ResetPasswordPage";
 import SignupThanks from "./SignupThanks";
 import { Link, Route, Switch, useHistory, useLocation, useParams } from "react-router-dom";
