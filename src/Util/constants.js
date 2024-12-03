@@ -32,10 +32,10 @@ export const PATH_EPARTNERS = '/external-partners';
 
 const constants = {
 	ENV: 'LOCAL',
-	//BASE_URL: 'https://backend.villatracker.com',
+	BASE_URL: 'https://backend.villatracker.com',
 	//SHUB_URL: 'http://localhost:3333',
 	SHUB_URL: 'https://api.triangle.luxury',
-	BASE_URL: 'http://localhost:8080',
+	//BASE_URL: 'http://localhost:8080',
 	BASE_URL2: 'https://vt-backend-8zwvrrlxf-smiling-house.vercel.app',
 	BASE_URL1: 'http://vtbackend-env.eba-b3vxhzrg.us-east-2.elasticbeanstalk.com',
 	GLOBAL_ACTION_INIT_STATE: 'GLOBAL_ACTION_INIT_STATE',
