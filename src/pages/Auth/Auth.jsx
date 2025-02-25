@@ -12,6 +12,7 @@ import Checkbox from "../../components/Checkbox";
 import LeftImage from '../../assets/SigninPic.jpeg'
 import EmailInput from "../../components/Forms/Fields/EmailInput/EmailInput";
 import PasswordInput from "../../components/Forms/Fields/PasswordInput/PasswordInput";
+import NameInput from "../../components/Forms/Fields/NameInput/NameInput";
 import { toast } from "react-toastify";
 import { getStorageValue } from "../../Util/general.js";
 
@@ -40,6 +41,9 @@ export const SignIn = () => {
 	const [chkAgreeToTerms, setChkAgreeToTerms] = useState(false);
 	const [email, setEmail] = useState('');
 	const [password, setPassword] = useState('');
+	const [twoFA, setTwoFA] = useState("");
+  	const [codeSent, setCodeSent] = useState(false);
+
 	const partnerLogin = getStorageValue('partnerLogin')
 	const [state, setState] = useState({
 		loading: false
@@ -55,10 +59,18 @@ export const SignIn = () => {
 	const signupExCallback = result => {
 		console.log("EX result", result)
 		if (result === 'ok') {
-			window.open("/home", "_self")
+			window.open("/", "_self")
 			console.log('partnerLogin', partnerLogin)
 		}
 	};
+
+	const twoFACallback = (result) => {
+		if (result) {
+			setCodeSent(true);
+		} else {
+			setCodeSent(false);
+		}
+	}
 
 	const loginCallback = result => {
 		// //console.log(result);
@@ -173,13 +185,42 @@ export const SignIn = () => {
 				},
 				loading: false,
 			});
+		} else if(twoFA.length === 0 && codeSent) {
+			setState({
+			  ...state,
+			  error: {
+				msg: "Please enter the 2fa code sent to your email",
+				placement: "2FA CODE"
+			  },
+			  loading: false,
+			});
+		} else if(twoFA.length !== 4 && codeSent) {
+			setState({
+			  ...state,
+			  error: {
+				msg: "Please enter a valid code",
+				placement: "2FA CODE"
+			  },
+			  loading: false,
+			});
 		} else {
-			const user = {
-				email: email,
-				password: password
-			};
-			// console.log(user, "user")
-			dispatch(userActions.signInEx(user, chkRememberMe, signupExCallback));
+			if(!codeSent) {
+				const user = {
+					email: email,
+					password: password
+				};
+				// console.log(user, "user")
+				dispatch(userActions.sendtwoFAcode(user, chkRememberMe, twoFACallback));
+			} else {
+				const user = {
+					email: email,
+					password: password,
+					twoFA: twoFA
+				};
+				// console.log(user, "user")
+				dispatch(userActions.signInEx(user, chkRememberMe, signupExCallback));
+			}
+			
 		}
 	};
 
@@ -239,6 +280,22 @@ export const SignIn = () => {
 									showLoginLink="none"
 								/>
 							</div>
+							{
+								codeSent && (
+									<div className="col-8 mt-2">
+										<NameInput
+											onSubmit={handleSubmit}
+											value={twoFA}
+											setValue={setTwoFA}
+											label="2FA Code*"
+											inputName="twoFA"
+											placeholder="2FA Code"
+											error={state?.error}
+											showLoginLink="none"
+										/>
+									</div>
+								)
+							}
 							<div className="col-8 mt-2">
 								<div className="row d-flex justify-content-between align-items-center">
 									<div className="col-6 mb-2">
@@ -272,7 +329,7 @@ export const SignIn = () => {
 										setState({ ...state, error: undefined });
 										handleSubmitEx(e);
 									}}
-								>Extranet login</button>
+								>{codeSent?('Extranet login'):('Send 2FA Code')}</button>
 							</div>
 						</div>
 						<div className={styles.return_to_login_wrapper}>

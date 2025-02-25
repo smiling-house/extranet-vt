@@ -68,15 +68,24 @@ export const signInEx = async user => {
 export const sendtwoFAcode = async user => {
 	log.debug("UserService -> twofa -> Enter");
 
-	return axios.post(`${constants.SHUB_URL}/external-partners/twofa`, user)
+	return axios.post(`${constants.SHUB_URL}/local/partners/twofa`, user)
 		.then(async response => {
 			const res = response.data;
 			// log.debug("UserService -> signIn -> response: " + res);
-			toast.success(res.message, {
-				position: 'top-right',
-				toastClassName: 'custom-toast',
-			});
+			if(res.success) {
+				toast.success(res.message, {
+					position: 'top-right',
+					toastClassName: 'custom-toast',
+				});
+				
+			} else {
+				toast.error(res.message, {
+					position: 'top-right',
+					toastClassName: 'custom-toast',
+				});
+			}
 			return res;
+			
 		})
 		.catch(response => {
 			// log.debug("userService -> signIn -> error: ");
