@@ -18,7 +18,6 @@ import { getStorageValue } from "../../Util/general.js";
 
 const Auth = (props) => {
 
-
 	return (
 		<>
 			<SignIn />
