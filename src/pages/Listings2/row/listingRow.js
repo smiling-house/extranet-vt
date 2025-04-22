@@ -83,6 +83,22 @@ const Listingrow = (props) => {
     dangerouslyAllowBrowser: true
   });
 
+
+//By Jaison 2025-04-22 - START  
+/*
+  const [listingIdsToUpdate, setListingIdsToUpdate] = useState([]);
+  const handle_listing_ids_to_update = (event) => {
+      //alert(event.target.value);
+      //alert(event.target.checked);
+      if(event.target.checked===true) {
+        setListingIdsToUpdate([...listingIdsToUpdate, event.target.value])
+      } else if(event.target.checked===false) {
+        setListingIdsToUpdate(listingIdsToUpdate.filter(item => item !== event.target.value));
+      }
+  }
+  */
+//By Jaison 2025-04-22 - STOP   
+
   async function AITitle(input, wordCount, exclude) {
     try {
       const completion = await openai.chat.completions.create({
@@ -402,7 +418,10 @@ const Listingrow = (props) => {
     }
   //main xdata return here:
   return <>
-    <td className="px-3 p-3 text-primary cst-cursor"><h4 >
+ 
+    <td className="px-3 p-3 text-primary cst-cursor">
+      <input type="checkbox" value={id} name="listing_ids_to_update[]"  />
+      <h4 >
       <div className="property-main-picture-container">
         <div className="nickname">
           {property.nickname} <span className="property-type">({property?.propertyType})</span><br></br>

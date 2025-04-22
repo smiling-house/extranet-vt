@@ -94,7 +94,51 @@ const Listings = (props) => {
     const properties = useSelector((state) => state.property.properties);
     const source = location.state && location.state.source;
 
+//By Jaison 2025-04-22 - START
+    const [updateStatusProcess, setUpdateStatusProcess] = useState(0);
+    const [propStatus, setPropStatus] = useState('');
+    const [filterPropertyStatus, setFilterPropertyStatus] = useState('');
+    const filterByPropertyStatus = (event) => {
+        console.log(event.target.value)
+        setFilterPropertyStatus(event.target.value);
+    }
+    
+    async function approveSelectedListings() {
 
+        const checkboxes = document.querySelectorAll('input[name="listing_ids_to_update[]"]:checked');
+        const listingIdsToUpdate = Array.from(checkboxes).map(cb => cb.value);
+        console.log('listingIdsToUpdate:::', listingIdsToUpdate)
+
+        const updateListingsData = {'accountId':partner?.accountId,'ids':listingIdsToUpdate, 'status':propStatus}
+
+        if(listingIdsToUpdate.length > 0 && propStatus !== '') {
+            const ShubResponse = await userRequest.post(constants.SHUB_URL+'/local/listings/update-multiple-listings-status', updateListingsData);
+
+            if(ShubResponse.data.success === true) {
+
+
+                swal({
+                    show: true,
+                    icon: 'success',
+                    title: ShubResponse.data.message,
+                    text: ShubResponse.data.message
+                });
+                
+                setUpdateStatusProcess( updateStatusProcess + 1 ); //No efefct inside useEffect. So added the below line to run the function to refresh page
+                getAllListings();
+                
+            } else {
+                swal({
+                    show: true,
+                    icon: 'error',
+                    title: ShubResponse.data.message,
+                    text: ShubResponse.data.message
+                })                
+            }
+        }
+
+      } 
+//By Jaison 2025-04-22 - END
 
     const toggleFilterChannel = (channel) => {
         var newFilters = filterChannel// saving the currentXdata
@@ -150,8 +194,19 @@ const Listings = (props) => {
             accountId,
             limit: constants.PAGING_LISTING_SIZE, 
             skip: clientPagingFrom - 1,
-            sortBy: 'data.nickname:1'
+            sortBy: 'data.nickname:1',
     }
+
+
+    //task: EXTRANET VT - Check the possibilities of adding admin login - https://app.asana.com/1/1200178813358971/project/1209114491925523/task/1210009551590540
+    //By Jaison 2025-04-22 START 
+    if(filterPropertyStatus !== '') {       
+        params.status = filterPropertyStatus;
+    } else if(filterPropertyStatus==='') {
+        delete params.status;
+    }
+    //By Jaison 2025-04-22 END
+
     const queryString = Object.keys(params).map(key => key + '=' + params[key]).join('&');
     console.log('getting from /listings:',params)
     if (accountId.length > 0) {
@@ -248,7 +303,7 @@ const updateXdata = async (ID, xdataPayload) => {
      getAllListings()
 //     setRefresh(false)
 
- }, [refresh,isRefresh])
+ }, [refresh,isRefresh, filterPropertyStatus,updateStatusProcess])
 
 const handleSearchListings = (name, value) => {
     setsearchInputes({ ...searchInputes, [name]: value })
@@ -373,6 +428,48 @@ return (
                 <div className="listings-main">
                     <div className="listings-title">{partner?.pmName ? partner?.pmName : ''} /{partner?.contactName ? partner?.contactName : ''} / AccountID {partner?.accountId ? partner?.accountId : ''}</div>
                     <div className="listings-paging">Displaying  {ListingsPagingFrom}-{ListingsPagingTo} of {totalListings ? totalListings : "?"} Listings</div>
+
+ 
+<div class="row">
+    <div class="col-3">
+        <label>Status Filter</label>
+        <select class="form-control" onChange={(e)=>filterByPropertyStatus(e)}>
+            <option value="">--All--</option>
+            <option value="Approved">Approved</option>
+            <option value="Pending">Pending</option>
+            <option value="Declined">Declined</option>
+        </select>
+    </div>
+
+    <div class="col-3">
+        <label>Zipcode Filter</label>
+        <select class="form-control" onChange={(e)=>filterByPropertyStatus(e)}>
+            <option value="">--All--</option>
+            <option value="zipcode">zipcode</option>
+        </select>        
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12"><hr /></div>
+</div>  
+
+<div class="row">
+<div class="col-3">
+        <select class="form-control" onChange={ (e) => setPropStatus(e.target.value) }>
+            <option value="">--Select Status--</option>
+            <option value="Approved">Approved</option>
+            <option value="Pending">Pending</option>
+            <option value="Declined">Declined</option>
+        </select>
+    </div>
+
+    <div class="col-3">
+    <button class="btn btn-primary" onClick={approveSelectedListings}>Update Status</button>        
+    </div>
+</div>
+               
+
                     {<Paging perPage={constants.PAGING_LISTING_SIZE} totalItems={totalListings} currentPage={pageNumber} onChangePage={onChangePage} />}
                     <div style={{ padding: '0 20px' }}>
                         <div class="table-responsive" style={{ overflow: "auto" }}>

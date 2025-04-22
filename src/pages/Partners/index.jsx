@@ -123,6 +123,15 @@ const Partners = (props) => {
 	// console.log("filterPartners >>>>", filterPartners);
 	const [searchPartners, setSearchPartners] = useState("");
 	const [pageNumber, setPageNumber] = useState(0);
+
+
+//Task: EXTRANET VT - Check the possibilities of adding admin login
+//Task URL : https://app.asana.com/1/1200178813358971/project/1209114491925523/task/1210009551590540
+//By Jaison on 2025-04-21 - START					
+const agent_role = getStorageValue('agent_role');
+const agent_status = getStorageValue('agent_status');
+//By Jaison on 2025-04-21 - END	
+
 	const inputFileds = {
 		agentName: "",
 		managerLastName: "",
@@ -186,11 +195,12 @@ const Partners = (props) => {
 		//console.log("response:",partnersResponse.data)
 		if (partnersResponse.data) {
 			localStorage.setItem("partnerCount", partnersResponse.data.count);
-			setPartners(partnersResponse.data.partners);
+			setPartners(partnersResponse.data.partners);			
 			setTotalPartners(parseInt(partnersResponse.data.count))
 		} else { console.log("error on reading partners api from shub/local/partners") }
 	};
 	const getSearchPartners = async () => {
+
 		setIsLoading(true)
 		const params = (searchInputes.pmName !== '' || searchInputes.accountId !== '') ?
 			(searchInputes.pmName !== '') ? {
@@ -198,7 +208,7 @@ const Partners = (props) => {
 				skip: partnersPagingFrom - 1,
 				pmName: searchInputes.pmName,
 				//channelSource: 'VT',
-				source:'VT'
+				source:'VT' 
 			} :
 				{
 					limit: constants.PAGING_PARTNERS_SIZE,
@@ -215,6 +225,19 @@ const Partners = (props) => {
 				source:'VT'
 			}
 		console.log('loading search:', params)
+
+
+//Task: EXTRANET VT - Check the possibilities of adding admin login
+//Task URL : https://app.asana.com/1/1200178813358971/project/1209114491925523/task/1210009551590540
+//By Jaison on 2025-04-21 - START		
+if(agent_role) {
+	if(agent_role === 'admin' && agent_status==='approved') {
+		delete params.accountId; //To fetch all partners
+		console.log('loading search:', params)
+	}
+}
+//By Jaison on 2025-04-21 - END		
+		
 		const partnersResponse = await userRequest.get(`local/partners`,
 			{
 				params
@@ -225,6 +248,8 @@ const Partners = (props) => {
 		localStorage.setItem("partnerCount", partnersResponse.data.count);
 		setTotalPartners(parseInt(partnersResponse.data.count))
 		setPartners(partnersResponse.data.partners);
+
+		console.log('partners console by jaison:',partnersResponse.data.partners);		
 	};
 
 
