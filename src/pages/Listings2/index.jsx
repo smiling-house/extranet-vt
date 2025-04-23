@@ -26,6 +26,8 @@ import PageHeader from "../../components/PageHeader"
 import { PATH_PROPERTY } from "../../Util/constants"
 import { useLocation, useHistory } from "react-router-dom";
 
+import { getStorageValue } from "../../Util/general.js";
+
 import "./Listings.scss"
 import Paging from "../../components/Paging"
 import constants from "../../Util/constants"
@@ -138,6 +140,10 @@ const Listings = (props) => {
         }
 
       } 
+
+//Task URL : https://app.asana.com/1/1200178813358971/project/1209114491925523/task/1210009551590540
+const agent_role = getStorageValue('agent_role');
+const agent_status = getStorageValue('agent_status');
 //By Jaison 2025-04-22 - END
 
     const toggleFilterChannel = (channel) => {
@@ -454,6 +460,7 @@ return (
     <div class="col-12"><hr /></div>
 </div>  
 
+{agent_role==='admin' && agent_status==='approved' &&
 <div class="row">
 <div class="col-3">
         <select class="form-control" onChange={ (e) => setPropStatus(e.target.value) }>
@@ -468,6 +475,7 @@ return (
     <button class="btn btn-primary" onClick={approveSelectedListings}>Update Status</button>        
     </div>
 </div>
+}
                
 
                     {<Paging perPage={constants.PAGING_LISTING_SIZE} totalItems={totalListings} currentPage={pageNumber} onChangePage={onChangePage} />}
