@@ -97,6 +97,8 @@ const Listings = (props) => {
     const source = location.state && location.state.source;
 
 //By Jaison 2025-04-22 - START
+    const partnerPropertiesUniqueZipcodes = JSON.parse(getStorageValue('partnerPropertiesUniqueZipcodes') );
+    
     const [updateStatusProcess, setUpdateStatusProcess] = useState(0);
     const [propStatus, setPropStatus] = useState('');
     const [filterPropertyStatus, setFilterPropertyStatus] = useState('');
@@ -104,6 +106,12 @@ const Listings = (props) => {
         console.log(event.target.value)
         setFilterPropertyStatus(event.target.value);
     }
+
+    const [filterPropertyZipcode, setFilterPropertyZipcode] = useState('');
+    const filterByZipcode = (event) => {
+        console.log(event.target.value)
+        setFilterPropertyZipcode(event.target.value);
+    }    
     
     async function approveSelectedListings() {
 
@@ -211,6 +219,12 @@ const agent_status = getStorageValue('agent_status');
     } else if(filterPropertyStatus==='') {
         delete params.status;
     }
+
+    if(filterPropertyZipcode !== '') {       
+        params.extranet_filter_zipcode = filterPropertyZipcode;
+    } else if(filterPropertyZipcode==='') {
+        delete params.extranet_filter_zipcode;
+    }    
     //By Jaison 2025-04-22 END
 
     const queryString = Object.keys(params).map(key => key + '=' + params[key]).join('&');
@@ -309,7 +323,7 @@ const updateXdata = async (ID, xdataPayload) => {
      getAllListings()
 //     setRefresh(false)
 
- }, [refresh,isRefresh, filterPropertyStatus,updateStatusProcess])
+ }, [refresh,isRefresh, filterPropertyStatus,updateStatusProcess, filterPropertyZipcode])
 
 const handleSearchListings = (name, value) => {
     setsearchInputes({ ...searchInputes, [name]: value })
@@ -435,34 +449,36 @@ return (
                     <div className="listings-title">{partner?.pmName ? partner?.pmName : ''} /{partner?.contactName ? partner?.contactName : ''} / AccountID {partner?.accountId ? partner?.accountId : ''}</div>
                     <div className="listings-paging">Displaying  {ListingsPagingFrom}-{ListingsPagingTo} of {totalListings ? totalListings : "?"} Listings</div>
 
- 
-<div class="row">
-    <div class="col-3">
-        <label>Status Filter</label>
-        <select class="form-control" onChange={(e)=>filterByPropertyStatus(e)}>
-            <option value="">--All--</option>
-            <option value="Approved">Approved</option>
-            <option value="Pending">Pending</option>
-            <option value="Declined">Declined</option>
-        </select>
-    </div>
+                    <div className="listings-search-container row">
+                    <div className="col-sm-2">
+                        <label style={{'color':'white'}}><strong>Filter by Status</strong></label>
+                        <select class="form-control" onChange={(e)=>filterByPropertyStatus(e)}>
+                            <option value="">--All--</option>
+                            <option value="Approved">Approved</option>
+                            <option value="Pending">Pending</option>
+                            <option value="Declined">Declined</option>
+                        </select>                        
+                    </div>
 
-    <div class="col-3">
-        <label>Zipcode Filter</label>
-        <select class="form-control" onChange={(e)=>filterByPropertyStatus(e)}>
-            <option value="">--All--</option>
-            <option value="zipcode">zipcode</option>
-        </select>        
-    </div>
-</div>
+                    <div className="col-sm-2">
+                    <label style={{'color':'white'}}><strong>Filter by Zipcode</strong></label>
+                    <select class="form-control" onChange={(e)=>filterByZipcode(e)}>
+                        <option value="">--All--</option>
+                        {partnerPropertiesUniqueZipcodes.map((item, index) => {
+                            return <>
+                                <option value={item}>{item}</option>
+                            </>
+                        })}            
+                    </select>
+                    </div>
+                    </div>
 
-<div class="row">
-    <div class="col-12"><hr /></div>
-</div>  
 
 {agent_role==='admin' && agent_status==='approved' &&
-<div class="row">
-<div class="col-3">
+<section>
+<div style={{'padding':'10px', 'display':'flex', 'align-items':'center', 'row-gap':'20px', 'position':'sticky'}}>
+    <div class="col-3">
+        <label><strong>Change Selected Property Status</strong></label>
         <select class="form-control" onChange={ (e) => setPropStatus(e.target.value) }>
             <option value="">--Select Status--</option>
             <option value="Approved">Approved</option>
@@ -470,11 +486,14 @@ return (
             <option value="Declined">Declined</option>
         </select>
     </div>
-
-    <div class="col-3">
-    <button class="btn btn-primary" onClick={approveSelectedListings}>Update Status</button>        
-    </div>
 </div>
+
+<div style={{'padding':'10px', 'display':'flex', 'align-items':'center', 'row-gap':'20px', 'position':'sticky'}}>
+<div class="col-3">
+    <button class="btn btn-primary" onClick={approveSelectedListings}>Update Status</button>        
+    </div>    
+</div> 
+</section>   
 }
                
 

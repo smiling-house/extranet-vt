@@ -265,7 +265,16 @@ if(agent_role) {
 		console.log('search:', searchInputes)
 	}, [searchInputes]);
 
-	const GoToPartnerListings = (partner, accountId) => {
+	const GoToPartnerListings = async(partner, accountId) => {
+
+
+const responseData = await userRequest.post(`local/partners/properties-unique-zipcodes`,
+	{ accountId: accountId },
+);
+const partnerPropertiesUniqueZipcodes = responseData.data;
+console.log('partnerPropertiesUniqueZipcodes:::', partnerPropertiesUniqueZipcodes)
+localStorage.setItem('partnerPropertiesUniqueZipcodes', JSON.stringify(partnerPropertiesUniqueZipcodes));
+
 		console.log("see listings for account:", accountId, partner.source);
 		localStorage.setItem("partner", JSON.stringify(partner))
 		if (!partner.offsetRead) {
