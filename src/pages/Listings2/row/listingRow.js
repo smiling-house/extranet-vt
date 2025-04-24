@@ -431,7 +431,11 @@ const Listingrow = (props) => {
       <div className="property-main-picture-container">
         <div className="nickname">
           {property.nickname} <span className="property-type">({property?.propertyType})</span><br></br>
-          <span className="property-id">{property._id != null ? property._id : "-"}</span>
+
+          <a target="_blank" href={`https://login.villatracker.com/property/${property._id}`}>
+  <span className="property-id">{property._id != null ? property._id : "-"}</span>
+</a>          
+
         </div>
         <div className="img-number">
           {picIndex ? picIndex + 1 : "Main"}/{picLength} Total
