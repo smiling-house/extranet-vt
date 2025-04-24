@@ -127,9 +127,12 @@ const Partners = (props) => {
 
 //Task: EXTRANET VT - Check the possibilities of adding admin login
 //Task URL : https://app.asana.com/1/1200178813358971/project/1209114491925523/task/1210009551590540
-//By Jaison on 2025-04-21 - START					
+//By Jaison on 2025-04-21 - START	
+/*				
 const agent_role = getStorageValue('agent_role');
 const agent_status = getStorageValue('agent_status');
+*/
+const agentLoggedIn = JSON.parse( localStorage.getItem('agent') );
 //By Jaison on 2025-04-21 - END	
 
 	const inputFileds = {
@@ -186,6 +189,15 @@ const agent_status = getStorageValue('agent_status');
 			Authorization: constants.SHUB_TOKEN,
 		},
 	});
+
+	async function allZipcodes() {
+		const responseDataAllZips = await userRequest.post('local/all-zipcodes');
+		const allZipcodes = responseDataAllZips.data;	
+		localStorage.setItem('allZipcodes', JSON.stringify(allZipcodes));
+		console.log('allZipcodes:', allZipcodes)		
+	}
+	allZipcodes();
+
 	const getAllPartners = async () => {
 		setIsLoading(true)
 		const partnersResponse = await userRequest.get(`local/partners`,
@@ -229,13 +241,15 @@ const agent_status = getStorageValue('agent_status');
 
 //Task: EXTRANET VT - Check the possibilities of adding admin login
 //Task URL : https://app.asana.com/1/1200178813358971/project/1209114491925523/task/1210009551590540
-//By Jaison on 2025-04-21 - START		
+//By Jaison on 2025-04-21 - START	
+/*	
 if(agent_role) {
 	if(agent_role === 'admin' && agent_status==='approved') {
 		delete params.accountId; //To fetch all partners
 		console.log('loading search:', params)
 	}
 }
+*/
 //By Jaison on 2025-04-21 - END		
 		
 		const partnersResponse = await userRequest.get(`local/partners`,
@@ -267,12 +281,10 @@ if(agent_role) {
 
 	const GoToPartnerListings = async(partner, accountId) => {
 
-
-const responseData = await userRequest.post(`local/partners/properties-unique-zipcodes`,
+const responseDataUniqueZips = await userRequest.post(`local/partners/properties-unique-zipcodes`,
 	{ accountId: accountId },
 );
-const partnerPropertiesUniqueZipcodes = responseData.data;
-console.log('partnerPropertiesUniqueZipcodes:::', partnerPropertiesUniqueZipcodes)
+const partnerPropertiesUniqueZipcodes = responseDataUniqueZips.data;
 localStorage.setItem('partnerPropertiesUniqueZipcodes', JSON.stringify(partnerPropertiesUniqueZipcodes));
 
 		console.log("see listings for account:", accountId, partner.source);
@@ -417,7 +429,6 @@ localStorage.setItem('partnerPropertiesUniqueZipcodes', JSON.stringify(partnerPr
 	const handleSearchFuntionality = (name, value) => {
 		console.log('set search:', name, value)
 		setsearchInputes({ ...searchInputes, [name]: value })
-
 	}
 	const handlSearchButtonAdmin = () => {
 		getSearchPartners();
@@ -452,6 +463,8 @@ localStorage.setItem('partnerPropertiesUniqueZipcodes', JSON.stringify(partnerPr
 			</div>
 		)
 	};
+
+
 	return (
 		<div className="page-container">
 			<div className="page-header">Villa Tracker Extranet : PMs</div>
@@ -520,9 +533,28 @@ localStorage.setItem('partnerPropertiesUniqueZipcodes', JSON.stringify(partnerPr
 					}
 
 					<div className="agencies-main">
+
+
+<div className="agencies-search-container">
+          <div className="navigation-bar" style={{ position: "absolute", marginBottom: "110px" }}> </div>
+          <div className="row">
+            <div className="col-sm-8">
+              <input type="text" className="form-control" placeholder="Search by PM Name"  onChange={(e) => handleSearchFuntionality("pmName",e.target.value)} />
+            </div>
+            <div className="col-sm-2">
+              <button className="form-control" style={{ height: "60px", width: "200px", fontSize: "20px", borderRadius: "6px", fontWeight: 100, }} onClick={() => handlSearchButtonAdmin()}>
+                <span>Search</span>
+              </button>
+            </div>
+            <span className=" agencies-search-separator"></span>
+          </div>
+        </div>
+
+
+
 						<div className="agencies-title">Guesty PM List
 							{!partnerLogin && (<>
-								<a class="dropdown-item" href="#" onClick={onAddPartnerSH}><img src={addAdminIcon} /> connect GUESTY PM partner SH = Smiling House </a>
+								{/*<a class="dropdown-item" href="#" onClick={onAddPartnerSH}><img src={addAdminIcon} /> connect GUESTY PM partner SH = Smiling House </a>*/}
 								<a class="dropdown-item" href="#" onClick={onAddPartnerVT}><img src={addAdminIcon} /> connect GUESTY PM partner VT = Villa Tracker </a>
 							</>)}
 
@@ -549,11 +581,26 @@ localStorage.setItem('partnerPropertiesUniqueZipcodes', JSON.stringify(partnerPr
 												<td className="pmName px-4 p-3  text-primary  cst-cursor" ><h4>{totalPartners - partnersPagingFrom - index + 1}</h4></td>
 												<td className="pmName px-4 p-3  text-primary  cst-cursor" ><h4>{item.pmName != null ? item.pmName : ""}</h4></td>
 												<td className="accountId px-4 p-3 text-primary text-decoration-underline cst-cursor"><h4 onClick={() => onEditPartner(item._id, item)}>{item.accountId !== null ? item.accountId : ""}</h4></td>
-												<td className="Listings px-4 p-3 text-primary text-decoration-underline cst-cursor"><h4 onClick={() => GoToPartnerListings(item, item.accountId)}>{item.offsetRead ? item.offsetRead : "No listings"}/({item.count ? item.count : ""})</h4></td>
-												<td className="VT provider px-4 p-3 text-primary  cst-cursor"><h4>{(Object.prototype.hasOwnProperty.call(item, 'approved')) && item.approved?.length}</h4></td>
-												<td className="SH provider px-4 p-3 text-primary  cst-cursor"><h4>{(Object.prototype.hasOwnProperty.call(item, 'pending')) && item.pending?.length}</h4></td>
-												<td className="SH provider px-4 p-3 text-primary  cst-cursor"><h4>{(Object.prototype.hasOwnProperty.call(item, 'declined')) && item.declined?.length}</h4></td>
-												<td className="Updated px-4 p-3"><h4>{item.updatedAt !== null && item.updatedAt !== "" ? item.updatedAt.slice(0, 10) : ""}</h4></td>
+
+{/*<td className="Listings px-4 p-3 text-primary text-decoration-underline cst-cursor"><h4 onClick={() => GoToPartnerListings(item, item.accountId)}>{item.offsetRead ? item.offsetRead : "No listings"}/({item.count ? item.count : ""})</h4></td>*/}
+
+<td className="Listings px-4 p-3 text-primary text-decoration-underline cst-cursor"><h4 onClick={() => GoToPartnerListings(item, item.accountId)}>{item.total_properties_count}</h4></td>
+
+{/*
+<td className="VT provider px-4 p-3 text-primary  cst-cursor"><h4>{(Object.prototype.hasOwnProperty.call(item, 'approved')) && item.approved?.length}</h4></td>
+*/}
+<td className="VT provider px-4 p-3 text-primary  cst-cursor"><h4>{item.approved_properties_count}</h4></td>
+{/*
+<td className="SH provider px-4 p-3 text-primary  cst-cursor"><h4>{(Object.prototype.hasOwnProperty.call(item, 'pending')) && item.pending?.length}</h4></td>
+*/}
+<td className="SH provider px-4 p-3 text-primary  cst-cursor"><h4>{item.pending_properties_count}</h4></td>
+
+{/*
+<td className="SH provider px-4 p-3 text-primary  cst-cursor"><h4>{(Object.prototype.hasOwnProperty.call(item, 'declined')) && item.declined?.length}</h4></td>
+*/}
+<td className="SH provider px-4 p-3 text-primary  cst-cursor"><h4>{item.declined_properties_count}</h4></td>
+
+<td className="Updated px-4 p-3"><h4>{item.updatedAt !== null && item.updatedAt !== "" ? item.updatedAt.slice(0, 10) : ""}</h4></td>
 											</tr >
 										</>
 									})}

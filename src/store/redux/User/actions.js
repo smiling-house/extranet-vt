@@ -161,9 +161,11 @@ export const signInEx = (user, chkRememberMe, callback) => {
 
 //Task: EXTRANET VT - Check the possibilities of adding admin login
 //Task URL : https://app.asana.com/1/1200178813358971/project/1209114491925523/task/1210009551590540
-//By Jaison on 2025-04-21 - START					
+//By Jaison on 2025-04-21 - START
+/*					
 localStorage.setItem('agent_role', result.agent.role);
 localStorage.setItem('agent_status', result.agent.status);
+*/
 //By Jaison on 2025-04-21 - END
 
 

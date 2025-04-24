@@ -98,7 +98,8 @@ const Listings = (props) => {
 
 //By Jaison 2025-04-22 - START
     const partnerPropertiesUniqueZipcodes = JSON.parse(getStorageValue('partnerPropertiesUniqueZipcodes') );
-    
+    const allZipcodes = JSON.parse(getStorageValue('allZipcodes') );
+
     const [updateStatusProcess, setUpdateStatusProcess] = useState(0);
     const [propStatus, setPropStatus] = useState('');
     const [filterPropertyStatus, setFilterPropertyStatus] = useState('');
@@ -150,8 +151,11 @@ const Listings = (props) => {
       } 
 
 //Task URL : https://app.asana.com/1/1200178813358971/project/1209114491925523/task/1210009551590540
+/*
 const agent_role = getStorageValue('agent_role');
 const agent_status = getStorageValue('agent_status');
+*/
+const agentLoggedIn = JSON.parse( localStorage.getItem('agent') );
 //By Jaison 2025-04-22 - END
 
     const toggleFilterChannel = (channel) => {
@@ -472,10 +476,9 @@ return (
                     </select>
                     </div>
                     </div>
-
-
-{agent_role==='admin' && agent_status==='approved' &&
-<section>
+            
+{agentLoggedIn.role==='admin' && agentLoggedIn.status==='approved' &&
+    <section>
 <div style={{'padding':'10px', 'display':'flex', 'align-items':'center', 'row-gap':'20px', 'position':'sticky'}}>
     <div class="col-3">
         <label><strong>Change Selected Property Status</strong></label>
@@ -493,9 +496,8 @@ return (
     <button class="btn btn-primary" onClick={approveSelectedListings}>Update Status</button>        
     </div>    
 </div> 
-</section>   
-}
-               
+</section>
+}            
 
                     {<Paging perPage={constants.PAGING_LISTING_SIZE} totalItems={totalListings} currentPage={pageNumber} onChangePage={onChangePage} />}
                     <div style={{ padding: '0 20px' }}>
@@ -512,6 +514,16 @@ return (
                                     </thead>
                                     <tbody>
                                         {listings.map((iteam, index) => {
+
+const countryZipKey = iteam.listing.address.country + '_' + iteam.listing.address.zipcode;
+
+if(allZipcodes[countryZipKey] !== 'undefined') {
+    var listingAddressZipExists = true
+} else {
+    var listingAddressZipExists = false
+}
+
+
                                             console.log("listing item:",index+1,iteam)
                                             const ApropertyId = iteam.listing?._id
                                             const fullCalendar = iteam.fullCalendar
@@ -526,7 +538,9 @@ return (
                                                         id={ApropertyId}
                                                         fullCalendar={fullCalendar}
                                                         updateXdata={updateXdata}
-                                                        uid="row{iteam.listing._id}"
+                                                        uid="row{iteam.listing._id}" 
+                                                        listingAddressZipExists={listingAddressZipExists} 
+                                           
                                                     />}
                                                 </tr>
                                             </>

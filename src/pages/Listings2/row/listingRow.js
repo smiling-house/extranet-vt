@@ -62,7 +62,8 @@ import OpenAI from "openai";
 import { getStorageValue } from "../../../Util/general";
 
 const Listingrow = (props) => {
-  const { property, fullCalendar, id, agent, agency, partner, xdata, updateXdata } = props
+  const { property, fullCalendar, id, agent, agency, partner, xdata, updateXdata, listingAddressFull, listingAddressZipExists } = props
+
   const [chk, setChk] = useState([])
   const [tags, setTags] = useState(xdata?.tags)
   const [region, setNewRegion] = useState(xdata?.region)
@@ -97,6 +98,9 @@ const Listingrow = (props) => {
       }
   }
   */
+  const agentLoggedIn = JSON.parse( localStorage.getItem('agent') );
+  //const allZipcodes = JSON.parse(getStorageValue('allZipcodes') );
+
 //By Jaison 2025-04-22 - STOP   
 
   async function AITitle(input, wordCount, exclude) {
@@ -420,7 +424,9 @@ const Listingrow = (props) => {
   return <>
  
     <td className="px-3 p-3 text-primary cst-cursor">
+    {agentLoggedIn.role==='admin' && agentLoggedIn.status==='approved' &&      
       <input type="checkbox" value={id} name="listing_ids_to_update[]"  />
+    }
       <h4 >
       <div className="property-main-picture-container">
         <div className="nickname">
@@ -521,16 +527,25 @@ const Listingrow = (props) => {
       </div>
     </td>
     <td className="px-4 p-3 text-decoration">
-      <h4>
-        {property?.address?.full}
-      </h4>
-      {!partnerLogin && <RegionsDropDown
+
+{listingAddressZipExists===true &&
+       <h4 style={{'background-color':'green'}}>
+       {property?.address?.full}
+     </h4>
+}
+{listingAddressZipExists===false &&
+       <h4 style={{'background-color':'red'}}>
+       {property?.address?.full}
+     </h4>
+}
+     
+      {/* !partnerLogin && <RegionsDropDown
         selectedRegion={selectedRegion}
         selectedSubRegion={selectedSubRegion}
         propertyId={id}
         property={property}
         xdata={xdata}
-      />}
+      /> */}
     </td>
   </>
 

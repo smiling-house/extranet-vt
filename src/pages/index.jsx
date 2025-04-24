@@ -2,6 +2,9 @@ import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import * as userActions from "../store/redux/User/actions";
 import Auth from "./Auth/Auth";
+
+import AuthAdmin from "./Auth/AuthAdmin";
+
 import ResetPasswordPage from "./ResetPasswordPage/ResetPasswordPage";
 import SignupThanks from "./SignupThanks";
 import { Link, Route, Switch, useHistory, useLocation, useParams } from "react-router-dom";
@@ -33,6 +36,7 @@ import {
   PATH_PARTNERS,
   PATH_EPARTNERS,
   PATH_ADMIN,
+  PATH_ADMIN_LOGIN,
   PATH_LISTINGS,
   PATH_TASKS,
   PATH_COLLECTIONS,
@@ -116,7 +120,7 @@ function MainPage(props) {
       });
       localStorage.setItem("agent", JSON.stringify(res.data?.agent));
       const agent = res?.data?.agent;
-      console.log("read agent:", agent)
+      //console.log("read agent:", agent); //Commented by Jaison for security purpose
       const agencyID = parseInt(agent?.agency_id);
       console.log("TA=", agencyID);
 
@@ -136,7 +140,9 @@ function MainPage(props) {
 
 
   useEffect(() => {
-    getProfile();
+    if(location.pathname !== PATH_ADMIN_LOGIN) { //For extranet /adminlogin page to load
+      getProfile();
+    }
   }, []);
 
   useEffect(() => {
@@ -184,6 +190,9 @@ function MainPage(props) {
         <Route exact path={[PATH_LOGIN]}>
           <Auth stage="login" signup={false} setToken={setToken} />
         </Route>
+        <Route exact path={[PATH_ADMIN_LOGIN]}>
+          <AuthAdmin stage="login" signup={false} setToken={setToken} />
+        </Route>        
         <Route exact path={"/verifycode/:id"}>
           <VerifyCodePage />
         </Route>
