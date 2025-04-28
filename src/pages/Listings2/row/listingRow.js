@@ -427,7 +427,13 @@ const Listingrow = (props) => {
     {agentLoggedIn.role==='admin' && agentLoggedIn.status==='approved' &&      
       <input type="checkbox" value={id} name="listing_ids_to_update[]"  />
     }
-      <h4 >
+
+{agentLoggedIn.role==='admin' && agentLoggedIn.status==='approved' && partner.accountId==='585a39dbe43900100017e9e8' &&      
+      <label>{xdata.pmName}</label>
+    }
+    
+
+      <h4>
       <div className="property-main-picture-container">
         <div className="nickname">
           {property.nickname} <span className="property-type">({property?.propertyType})</span><br></br>

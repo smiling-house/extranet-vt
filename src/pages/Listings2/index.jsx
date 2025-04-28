@@ -540,7 +540,7 @@ if(allZipcodes[countryZipKey] !== 'undefined') {
                                                         updateXdata={updateXdata}
                                                         uid="row{iteam.listing._id}" 
                                                         listingAddressZipExists={listingAddressZipExists} 
-                                           
+
                                                     />}
                                                 </tr>
                                             </>
