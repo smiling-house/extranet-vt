@@ -141,6 +141,7 @@ export const SignIn = () => {
 		}
 	};
 	const handleSubmitEx = async event => {
+		
 		event.preventDefault();
 		setState({
 			...state,
@@ -204,6 +205,7 @@ export const SignIn = () => {
 			});
 		} else {
 			if(!codeSent) {
+				
 				const user = {
 					email: email,
 					password: password
@@ -211,6 +213,7 @@ export const SignIn = () => {
 				// console.log(user, "user")
 				dispatch(userActions.sendtwoFAcode(user, chkRememberMe, twoFACallback));
 			} else {
+			
 				const user = {
 					email: email,
 					password: password,
