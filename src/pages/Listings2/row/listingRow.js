@@ -503,6 +503,10 @@ const Listingrow = (props) => {
     <td className="px-4 p-3 ">
       <h4>
         {xdata.status}
+
+        { (xdata.status==='Declined' &&  xdata.declineReason !== '') &&
+          <p><i>({xdata.declineReason})</i></p>
+        }
       </h4>
     </td>
     <td className="px-4 p-3">

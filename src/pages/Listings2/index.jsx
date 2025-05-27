@@ -102,6 +102,12 @@ const Listings = (props) => {
 
     const [updateStatusProcess, setUpdateStatusProcess] = useState(0);
     const [propStatus, setPropStatus] = useState('');
+    
+    const [decliningReason, setDecliningReason] = useState('');
+    const [decliningReasonOther, setDecliningReasonOther] = useState('');
+    const [actualDecliningReason, setActualDecliningReason] = useState('');
+
+
     const [filterPropertyStatus, setFilterPropertyStatus] = useState('');
     const filterByPropertyStatus = (event) => {
         console.log(event.target.value)
@@ -116,14 +122,65 @@ const extranet_vt_logged_in_role = localStorage.getItem('extranet-vt-logged-in-r
         console.log(event.target.value)
         setFilterPropertyZipcode(event.target.value);
     }    
+
+
+function updateDecliningReasonData() { //Didn't work all the time.
+    if(propStatus==='Declined') {
+    if(decliningReason==='Other') {
+        setActualDecliningReason( decliningReasonOther );
+    } else {
+        setActualDecliningReason(  decliningReason );
+    }
+} else {
+    setActualDecliningReason('')
+}
+}    
+
     
-    async function approveSelectedListings() {
+    async function updateSelectedListingsStatus() {
+       
+
+if(propStatus==='Declined' && decliningReason==='') {
+
+    swal({
+        show: true,
+        icon: 'error',
+        title: 'Choose the reason for declining!',
+        text: ''
+    });
+        
+    return false;
+}
+        
+
+if(propStatus==='Declined' && decliningReason==='Other' && decliningReasonOther.trim()==='') {
+
+    swal({
+        show: true,
+        icon: 'error',
+        title: 'Enter the other reason for declining!',
+        text: ''
+    });
+        
+    return false;
+}
+
+
+let reason_decline = '';
+if(propStatus==='Declined') {
+    if(decliningReason==='Other') {
+        reason_decline = decliningReasonOther
+    } else {
+        reason_decline =  decliningReason 
+    }
+} 
+
 
         const checkboxes = document.querySelectorAll('input[name="listing_ids_to_update[]"]:checked');
         const listingIdsToUpdate = Array.from(checkboxes).map(cb => cb.value);
         console.log('listingIdsToUpdate:::', listingIdsToUpdate)
 
-        const updateListingsData = {'accountId':partner?.accountId,'ids':listingIdsToUpdate, 'status':propStatus}
+        const updateListingsData = {'accountId':partner?.accountId,'ids':listingIdsToUpdate, 'status':propStatus, decliningReason:reason_decline}
 
         if(listingIdsToUpdate.length > 0 && propStatus !== '') {
             const ShubResponse = await userRequest.post(constants.SHUB_URL+'/local/listings/update-multiple-listings-status', updateListingsData);
@@ -488,21 +545,45 @@ return (
     <section>
 <div style={{'padding':'10px', 'display':'flex', 'align-items':'center', 'row-gap':'20px', 'position':'sticky'}}>
     <div class="col-3">
-        <label><strong>Change Selected Property Status</strong></label>
+        <label><strong>Change Selected Property Status:</strong></label>
         <select class="form-control" onChange={ (e) => setPropStatus(e.target.value) }>
-            <option value="">--Select Status--</option>
+            <option value="">-Select Status--</option>
             <option value="Approved">Approved</option>
             <option value="Pending">Pending</option>
             <option value="Declined">Declined</option>
         </select>
+
+            {propStatus==='Declined' &&
+            <section>
+            <label><strong>Select Declining Reason:</strong></label>
+            <select class="form-control" onChange={ (e) => setDecliningReason(e.target.value)  }>
+                <option value="">-Select Reason--</option>
+                <option value="Too cheap">Too cheap</option>
+                <option value="With watermark/Picture information">With watermark/Picture information</option>
+                <option value="Not feet quality">Not feet quality</option>
+                <option value="Existing as SH partner">Existing as SH partner</option>
+                <option value="Existing as SH partner">Existing as SH partner</option>
+                <option value="Other">Other</option>
+            </select>
+            </section>
+            }
+
+            {decliningReason==='Other' &&
+            <section>
+            <label><strong>Entert the other reason for declining:</strong></label>
+            <input required type="text" class="form-control" onChange={ (e) => setDecliningReasonOther(e.target.value) }  />
+            </section>
+            }
+
     </div>
 </div>
 
 <div style={{'padding':'10px', 'display':'flex', 'align-items':'center', 'row-gap':'20px', 'position':'sticky'}}>
-<div class="col-3">
-    <button class="btn btn-primary" onClick={approveSelectedListings}>Update Status</button>        
-    </div>    
-</div> 
+    <div class="col-3">
+        <button class="btn btn-primary" onClick={updateSelectedListingsStatus}>Update Status</button>        
+    </div>       
+</div>
+
 </section>
 }            
 
