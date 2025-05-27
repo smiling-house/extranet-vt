@@ -16,6 +16,8 @@ import NameInput from "../../components/Forms/Fields/NameInput/NameInput";
 import { toast } from "react-toastify";
 import { getStorageValue } from "../../Util/general.js";
 
+import {PATH_PARTNERS} from '../../Util/constants.js'
+
 const Auth = (props) => {
 
 	return (
@@ -60,6 +62,14 @@ export const SignIn = () => {
 		if (result === 'ok') {
 			window.open("/", "_self")
 			console.log('partnerLogin', partnerLogin)
+		}
+	};
+
+	const signupExCallback_CheckPartner = result => {
+		console.log("EX result", result)
+		if (result === 'ok') {
+			window.open(PATH_PARTNERS, "_self")
+			console.log('partnerLogin===', partnerLogin)
 		}
 	};
 
@@ -226,6 +236,69 @@ export const SignIn = () => {
 		}
 	};
 
+
+	
+	const handleSubmitEx_CheckPartner = async event => {
+		
+		event.preventDefault();
+		setState({
+			...state,
+			loading: false,
+			error: {}
+		});
+
+		if (email.length === 0) {
+			setState({
+				...state,
+				error: {
+					msg: "Please enter an email",
+					placement: "email",
+				},
+				loading: false,
+			});
+		} else if (!validateEmail(email)) {
+			setState({
+				...state,
+				error: {
+					msg: "Looks like you forgot something",
+					placement: "email",
+				},
+				loading: false,
+			});
+		} else if (password.length === 0) {
+			setState({
+				...state,
+				error: {
+					msg: "Please enter a password/accountId for EXTRANET",
+					placement: "password",
+				},
+				loading: false,
+			});
+		} else if (password.length < 6) {
+			setState({
+				...state,
+				error: {
+					msg: "Password/accountID must be at least 6 characters long",
+					placement: "password",
+				},
+				loading: false,
+			});
+		} 
+		
+ 			else {
+			
+				const user = {
+					email: email,
+					password: password,
+				};
+				// console.log(user, "user")
+				//dispatch(userActions.signInEx(user, chkRememberMe, signupExCallback));
+				dispatch(userActions.signInEx_CheckPartner(user, chkRememberMe, signupExCallback_CheckPartner));
+			}		
+
+	};
+
+
 	useEffect(() => {
 		const handleResize = () => setScreenSize(window.innerWidth);
 		window.addEventListener("resize", handleResize);
@@ -329,9 +402,13 @@ export const SignIn = () => {
 									text="Extranet login"
 									onClick={(e) => {
 										setState({ ...state, error: undefined });
-										handleSubmitEx(e);
+										//handleSubmitEx(e);
+										handleSubmitEx_CheckPartner(e);
 									}}
-								>{codeSent?('Extranet login'):('Send 2FA Code')}</button>
+								>
+									{/*codeSent?('Extranet login'):('Send 2FA Code')*/}
+									{'Extranet login'}
+								</button>
 							</div>
 						</div>
 						<div className={styles.return_to_login_wrapper}>

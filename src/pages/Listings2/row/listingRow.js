@@ -64,6 +64,7 @@ import { getStorageValue } from "../../../Util/general";
 const Listingrow = (props) => {
   const { property, fullCalendar, id, agent, agency, partner, xdata, updateXdata, listingAddressFull, listingAddressZipExists } = props
 
+
   const [chk, setChk] = useState([])
   const [tags, setTags] = useState(xdata?.tags)
   const [region, setNewRegion] = useState(xdata?.region)
@@ -100,6 +101,7 @@ const Listingrow = (props) => {
   */
   const agentLoggedIn = JSON.parse( localStorage.getItem('agent') );
   //const allZipcodes = JSON.parse(getStorageValue('allZipcodes') );
+  const extranet_vt_logged_in_role = localStorage.getItem('extranet-vt-logged-in-role');
 
 //By Jaison 2025-04-22 - STOP   
 
@@ -424,11 +426,13 @@ const Listingrow = (props) => {
   return <>
  
     <td className="px-3 p-3 text-primary cst-cursor">
-    {agentLoggedIn.role==='admin' && agentLoggedIn.status==='approved' &&      
+    {extranet_vt_logged_in_role==='admin' &&      
       <input type="checkbox" value={id} name="listing_ids_to_update[]"  />
     }
 
-{agentLoggedIn.role==='admin' && agentLoggedIn.status==='approved' && partner.accountId==='585a39dbe43900100017e9e8' &&      
+
+
+{extranet_vt_logged_in_role==='partner' && partner.accountId==='585a39dbe43900100017e9e8' &&      
       <label>{xdata.pmName}</label>
     }
     

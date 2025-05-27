@@ -62,6 +62,7 @@ import LoadingBox from "../../components/LoadingBox";
 import { getStorageValue } from "../../Util/general.js";
 import BankDetails from "./BankDetails/index.js";
 
+
 const NEW_PARTNER = {
 	id: "-1",
 	partnerName: "",
@@ -133,6 +134,16 @@ const agent_role = getStorageValue('agent_role');
 const agent_status = getStorageValue('agent_status');
 */
 const agentLoggedIn = JSON.parse( localStorage.getItem('agent') );
+const extranet_vt_logged_in_role = localStorage.getItem('extranet-vt-logged-in-role');
+
+/*
+const [filterPropertyStatus, setFilterPropertyStatus] = useState('');
+const filterByPropertyStatus = (event) => {
+	console.log(event.target.value)
+	setFilterPropertyStatus(event.target.value);
+}
+*/
+const [serialNumber, setSerialNumber] = useState(0);
 //By Jaison on 2025-04-21 - END	
 
 	const inputFileds = {
@@ -201,7 +212,7 @@ const agentLoggedIn = JSON.parse( localStorage.getItem('agent') );
 	const getAllPartners = async () => {
 		setIsLoading(true)
 		const partnersResponse = await userRequest.get(`local/partners`,
-			{ params: { limit: constants.PAGING_PARTNERS_SIZE, skip: partnersPagingFrom - 1 } },
+			{ params: { limit: constants.PAGING_PARTNERS_SIZE, skip: partnersPagingFrom - 1, source:'VT' } },
 		);
 		setIsLoading(false)
 		//console.log("response:",partnersResponse.data)
@@ -252,6 +263,7 @@ if(agent_role) {
 */
 //By Jaison on 2025-04-21 - END		
 		
+		//const partnersResponse = await userRequest.get(`local/partners`,
 		const partnersResponse = await userRequest.get(`local/partners`,
 			{
 				params
@@ -316,6 +328,8 @@ localStorage.setItem('partnerPropertiesUniqueZipcodes', JSON.stringify(partnerPr
 		console.log("page=", pageNumber + 1);
 		setPageNumber(pageNumber);
 		doSearch(pageNumber);
+		
+		setSerialNumber(pageNumber * constants.PAGING_PARTNERS_SIZE);
 	};
 
 	const menuStyle = () => {
@@ -535,6 +549,7 @@ localStorage.setItem('partnerPropertiesUniqueZipcodes', JSON.stringify(partnerPr
 					<div className="agencies-main">
 
 
+{extranet_vt_logged_in_role==='admin' &&
 <div className="agencies-search-container">
           <div className="navigation-bar" style={{ position: "absolute", marginBottom: "110px" }}> </div>
           <div className="row">
@@ -549,7 +564,7 @@ localStorage.setItem('partnerPropertiesUniqueZipcodes', JSON.stringify(partnerPr
             <span className=" agencies-search-separator"></span>
           </div>
         </div>
-
+}
 
 
 						<div className="agencies-title">Guesty PM List
@@ -561,6 +576,28 @@ localStorage.setItem('partnerPropertiesUniqueZipcodes', JSON.stringify(partnerPr
 							<div className="agencies-main-subtitle">Displaying PMs {partnersPagingFrom}-{partnersPagingTo} of {totalPartners ? totalPartners : "?"}
 							</div>
 						</div>
+
+
+{/*extranet_vt_logged_in_role==='admin' &&
+<div className="row">
+<div className="col-12">
+                    <div className="listings-search-container row">
+                    <div className="col-sm-2">
+                        <label style={{'color':'white'}}><strong>Filter by Status</strong></label>
+                        <select class="form-control" onChange={(e)=>filterByPropertyStatus(e)}>
+                            <option value="">--All--</option>
+                            <option value="Approved">Approved</option>
+                            <option value="Pending">Pending</option>
+                            <option value="Declined">Declined</option>
+                        </select>                        
+                    </div>
+
+                    </div>
+</div>
+</div>
+*/}
+
+
 						{<Paging perPage={constants.PAGING_PARTNERS_SIZE} totalItems={localStorage.getItem("partnerCount")} currentPage={pageNumber} onChangePage={onChangePage} />}
 						<div className="table-responsive px-3">
 							<table class="table">
@@ -578,7 +615,9 @@ localStorage.setItem('partnerPropertiesUniqueZipcodes', JSON.stringify(partnerPr
 										//console.log("item ", index, item)
 										return <>
 											<tr >
-												<td className="pmName px-4 p-3  text-primary  cst-cursor" ><h4>{totalPartners - partnersPagingFrom - index + 1}</h4></td>
+												<td className="pmName px-4 p-3  text-primary  cst-cursor" ><h4>{/*totalPartners - partnersPagingFrom - index + 1*/}
+												{serialNumber+index+1}
+												</h4></td>
 												<td className="pmName px-4 p-3  text-primary  cst-cursor" ><h4>{item.pmName != null ? item.pmName : ""}</h4></td>
 												<td className="accountId px-4 p-3 text-primary text-decoration-underline cst-cursor"><h4 onClick={() => onEditPartner(item._id, item)}>{item.accountId !== null ? item.accountId : ""}</h4></td>
 

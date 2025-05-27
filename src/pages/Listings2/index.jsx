@@ -108,6 +108,9 @@ const Listings = (props) => {
         setFilterPropertyStatus(event.target.value);
     }
 
+
+const extranet_vt_logged_in_role = localStorage.getItem('extranet-vt-logged-in-role');
+
     const [filterPropertyZipcode, setFilterPropertyZipcode] = useState('');
     const filterByZipcode = (event) => {
         console.log(event.target.value)
@@ -446,13 +449,16 @@ return (
                     searchOpen={true} 
                     topBgColor="rgb(119 198 85)">
                     </PageHeader> */}
-                    {headerSearchRow()}
+{extranet_vt_logged_in_role==='admin' &&                    
+                    headerSearchRow()
+}                    
                 </div>
 
                 <div className="listings-main">
                     <div className="listings-title">{partner?.pmName ? partner?.pmName : ''} /{partner?.contactName ? partner?.contactName : ''} / AccountID {partner?.accountId ? partner?.accountId : ''}</div>
                     <div className="listings-paging">Displaying  {ListingsPagingFrom}-{ListingsPagingTo} of {totalListings ? totalListings : "?"} Listings</div>
 
+{extranet_vt_logged_in_role==='admin' &&
                     <div className="listings-search-container row">
                     <div className="col-sm-2">
                         <label style={{'color':'white'}}><strong>Filter by Status</strong></label>
@@ -476,8 +482,9 @@ return (
                     </select>
                     </div>
                     </div>
+}                    
             
-{agentLoggedIn.role==='admin' && agentLoggedIn.status==='approved' &&
+{extranet_vt_logged_in_role==='admin' &&
     <section>
 <div style={{'padding':'10px', 'display':'flex', 'align-items':'center', 'row-gap':'20px', 'position':'sticky'}}>
     <div class="col-3">

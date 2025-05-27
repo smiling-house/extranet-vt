@@ -32,6 +32,11 @@ export const AdminSignIn = () => {
 
 	const dispatch = useDispatch();
 
+
+localStorage.removeItem("partnerLogin");
+localStorage.removeItem("partnerName");
+
+
 	const history = useHistory();
 	const [smallScreen, setSmallScreen] = useState(false);
 	const [screenSize, setScreenSize] = useState(null);
