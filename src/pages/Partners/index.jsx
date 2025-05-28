@@ -99,6 +99,9 @@ const NEW_PARTNER_VT = {
 
 const Partners = (props) => {
 	const { token, agency, agent, screenSize, activeMenu, handleToggleMenu, setActiveMenu } = props
+
+	const agentData = JSON.parse(agent);
+
 	const divRefs = React.useRef([]);
 	const partnerLogin = getStorageValue('partnerLogin')
 	const partnerName = getStorageValue('partnerName')
@@ -481,7 +484,7 @@ localStorage.setItem('partnerPropertiesUniqueZipcodes', JSON.stringify(partnerPr
 
 	return (
 		<div className="page-container">
-			<div className="page-header">Villa Tracker Extranet : PMs</div>
+			<div className="page-header">Villa Tracker Extranet : PMs ({agentData.firstName})</div>
 			<Sidebar
 				agency={agency}
 				agent={agent}

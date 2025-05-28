@@ -504,9 +504,14 @@ const Listingrow = (props) => {
       <h4>
         {xdata.status}
 
-        { (xdata.status==='Declined' &&  xdata.declineReason !== '') &&
+        { (extranet_vt_logged_in_role==='admin' && xdata.status==='Declined' &&  xdata.declineReason !== '') &&
           <p><i>({xdata.declineReason})</i></p>
         }
+
+        {(extranet_vt_logged_in_role==='admin' && xdata?.statusUpdatedBy != null) &&
+          <p>Status Updated By: {xdata.statusUpdatedBy}</p>
+        }
+
       </h4>
     </td>
     <td className="px-4 p-3">

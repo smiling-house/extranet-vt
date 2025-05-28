@@ -54,6 +54,10 @@ const NEW_CLIENT = {
 
 const Listings = (props) => {
     const { token, screenSize, activeMenu, handleToggleMenu, setActiveMenu } = props
+
+    	const agentData = JSON.parse( localStorage.getItem('agent') );
+
+
     const [refresh, setRefresh] = useState(true)
     const [isLoading, setIsLoading] = useState(false)
     const [selectedCollections, setSelectedCollections] = useState([])
@@ -180,7 +184,7 @@ if(propStatus==='Declined') {
         const listingIdsToUpdate = Array.from(checkboxes).map(cb => cb.value);
         console.log('listingIdsToUpdate:::', listingIdsToUpdate)
 
-        const updateListingsData = {'accountId':partner?.accountId,'ids':listingIdsToUpdate, 'status':propStatus, decliningReason:reason_decline}
+        const updateListingsData = {'accountId':partner?.accountId,'ids':listingIdsToUpdate, 'status':propStatus, decliningReason:reason_decline, statusUpdatedBy:agentData.firstName}
 
         if(listingIdsToUpdate.length > 0 && propStatus !== '') {
             const ShubResponse = await userRequest.post(constants.SHUB_URL+'/local/listings/update-multiple-listings-status', updateListingsData);
@@ -482,7 +486,7 @@ return (
     
     <div className="page-container">
         
-        <div className="page-header">Villa Tracker Extranet</div>
+        <div className="page-header">Villa Tracker Extranet ({agentData.firstName})</div>
         <Sidebar
             agency={agency}
             agent={agent}
@@ -570,7 +574,7 @@ return (
 
             {decliningReason==='Other' &&
             <section>
-            <label><strong>Entert the other reason for declining:</strong></label>
+            <label><strong>Enter the other reason for declining:</strong></label>
             <input required type="text" class="form-control" onChange={ (e) => setDecliningReasonOther(e.target.value) }  />
             </section>
             }
