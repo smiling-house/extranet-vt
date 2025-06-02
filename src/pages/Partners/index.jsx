@@ -98,6 +98,8 @@ const NEW_PARTNER_VT = {
 };
 
 const Partners = (props) => {
+        localStorage.removeItem('property_status_to_filter');
+
 	const { token, agency, agent, screenSize, activeMenu, handleToggleMenu, setActiveMenu } = props
 
 	const agentData = JSON.parse(agent);
@@ -294,7 +296,7 @@ if(agent_role) {
 		console.log('search:', searchInputes)
 	}, [searchInputes]);
 
-	const GoToPartnerListings = async(partner, accountId) => {
+	const GoToPartnerListings = async(partner, accountId, property_status_to_filter='') => {
 
 const responseDataUniqueZips = await userRequest.post(`local/partners/properties-unique-zipcodes`,
 	{ accountId: accountId },
@@ -304,6 +306,7 @@ localStorage.setItem('partnerPropertiesUniqueZipcodes', JSON.stringify(partnerPr
 
 		console.log("see listings for account:", accountId, partner.source);
 		localStorage.setItem("partner", JSON.stringify(partner))
+		localStorage.setItem("property_status_to_filter", property_status_to_filter)
 		if (!partner.offsetRead) {
 			swal({
 				show: true,
@@ -423,7 +426,7 @@ localStorage.setItem('partnerPropertiesUniqueZipcodes', JSON.stringify(partnerPr
 			width: '250px'
 		}, {
 			name: 'Listings',
-			width: '80px'
+			width: '100px'
 		}, {
 			name: 'APPROVED',
 			sortable: true,
@@ -608,7 +611,8 @@ localStorage.setItem('partnerPropertiesUniqueZipcodes', JSON.stringify(partnerPr
 									<tr>
 										{columns?.map((item, index) => {
 											return <>
-												<th scope="col" style={{ cursor: "pointer", width: item.width }}><h3>{item.name} <BsChevronDown /></h3></th>
+												{/*<th scope="col" style={{ cursor: "pointer", width: item.width }}><h3>{item.name} <BsChevronDown /></h3></th>*/}
+<th scope="col" style={{ cursor: "pointer", width: item.width }}>{item.name} <BsChevronDown /></th>
 											</>
 										})}
 									</tr>
@@ -631,16 +635,16 @@ localStorage.setItem('partnerPropertiesUniqueZipcodes', JSON.stringify(partnerPr
 {/*
 <td className="VT provider px-4 p-3 text-primary  cst-cursor"><h4>{(Object.prototype.hasOwnProperty.call(item, 'approved')) && item.approved?.length}</h4></td>
 */}
-<td className="VT provider px-4 p-3 text-primary  cst-cursor"><h4>{item.approved_properties_count}</h4></td>
+<td className="VT provider px-4 p-3 text-primary  cst-cursor"><h4 onClick={() => GoToPartnerListings(item, item.accountId, 'Approved')}>{item.approved_properties_count}</h4></td>
 {/*
 <td className="SH provider px-4 p-3 text-primary  cst-cursor"><h4>{(Object.prototype.hasOwnProperty.call(item, 'pending')) && item.pending?.length}</h4></td>
 */}
-<td className="SH provider px-4 p-3 text-primary  cst-cursor"><h4>{item.pending_properties_count}</h4></td>
+<td className="SH provider px-4 p-3 text-primary  cst-cursor"><h4 onClick={() => GoToPartnerListings(item, item.accountId, 'Pending')}>{item.pending_properties_count}</h4></td>
 
 {/*
 <td className="SH provider px-4 p-3 text-primary  cst-cursor"><h4>{(Object.prototype.hasOwnProperty.call(item, 'declined')) && item.declined?.length}</h4></td>
 */}
-<td className="SH provider px-4 p-3 text-primary  cst-cursor"><h4>{item.declined_properties_count}</h4></td>
+<td className="SH provider px-4 p-3 text-primary  cst-cursor"><h4 onClick={() => GoToPartnerListings(item, item.accountId, 'Declined')}>{item.declined_properties_count}</h4></td>
 
 <td className="Updated px-4 p-3"><h4>{item.updatedAt !== null && item.updatedAt !== "" ? item.updatedAt.slice(0, 10) : ""}</h4></td>
 											</tr >

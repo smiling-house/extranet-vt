@@ -449,7 +449,8 @@ const Listingrow = (props) => {
         </div>
         <div className="img-number">
           {picIndex ? picIndex + 1 : "Main"}/{picLength} Total
-          <div className="garbage-can">
+          
+          {/*<div className="garbage-can">
             {!partnerLogin && <ImageWithHover
               path={canOff}
               pathOver={canOn}
@@ -457,7 +458,8 @@ const Listingrow = (props) => {
               tooltip={'DELETE THIS PIC'}
               onClick={removePic}
             />}
-          </div>
+            </div>*/}
+
           <div className="garbage-can">
             {!partnerLogin && <ImageWithHover
               path={starOff}

@@ -71,6 +71,9 @@ const Listings = (props) => {
     const location = useLocation();
     const partner = JSON.parse(localStorage.getItem("partner"))
     const accountId = localStorage.getItem("accountId")
+
+    const property_status_to_filter = localStorage.getItem("property_status_to_filter")
+
     const user_image = agency?.userImage
     const [allPage, setAllPage] = useState(false)
     const [all, setAll] = useState(false)
@@ -282,11 +285,24 @@ const agentLoggedIn = JSON.parse( localStorage.getItem('agent') );
 
     //task: EXTRANET VT - Check the possibilities of adding admin login - https://app.asana.com/1/1200178813358971/project/1209114491925523/task/1210009551590540
     //By Jaison 2025-04-22 START 
-    if(filterPropertyStatus !== '') {       
-        params.status = filterPropertyStatus;
-    } else if(filterPropertyStatus==='') {
+
+
+    let currentPropertyFilterStatus = '';
+    if(property_status_to_filter !== '' || filterPropertyStatus !== '') {
+
+        if(property_status_to_filter !== '') {
+            currentPropertyFilterStatus = property_status_to_filter
+        }
+        
+        if(filterPropertyStatus !== '') {
+            currentPropertyFilterStatus = filterPropertyStatus
+        }
+
+        params.status = currentPropertyFilterStatus;
+    } else if(property_status_to_filter === '' && filterPropertyStatus === '') {
         delete params.status;
     }
+  
 
     if(filterPropertyZipcode !== '') {       
         params.extranet_filter_zipcode = filterPropertyZipcode;
@@ -298,6 +314,7 @@ const agentLoggedIn = JSON.parse( localStorage.getItem('agent') );
     const queryString = Object.keys(params).map(key => key + '=' + params[key]).join('&');
     console.log('getting from /listings:',params)
     if (accountId.length > 0) {
+
         const shubSearch=constants.SHUB_URL+'/local/listings?';
         setIsLoading(true)
         userRequest.get(`${shubSearch}${queryString}`).then(async response => {
@@ -599,7 +616,8 @@ return (
                                         <tr>
                                             {columns?.map((iteam, index) => {
                                                 return <>
-                                                    <th key={index} scope="col" className="p-4 " style={{ cursor: "pointer", width: iteam.width }}><h3>{iteam.name} <BsChevronDown /></h3></th>
+                                                    {/*<th key={index} scope="col" className="p-4 " style={{ cursor: "pointer", width: iteam.width }}><h3>{iteam.name} <BsChevronDown /></h3></th>*/}
+<th key={index} scope="col" className="p-4 " style={{ cursor: "pointer", width: iteam.width }}>{iteam.name} <BsChevronDown /></th>
                                                 </>
                                             })}
                                         </tr>
