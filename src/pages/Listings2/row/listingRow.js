@@ -426,10 +426,13 @@ const Listingrow = (props) => {
   return <>
  
     <td className="px-3 p-3 text-primary cst-cursor">
-    {extranet_vt_logged_in_role==='admin' &&      
-      <input type="checkbox" value={id} name="listing_ids_to_update[]"  />
+    {(extranet_vt_logged_in_role==='admin' && (xdata.region === 'unmapped' || xdata.region === '') ) && 
+      <input type="checkbox" value={`${id}_unmapped`} name="listing_ids_to_update[]"  />
     }
 
+    {(extranet_vt_logged_in_role==='admin' && xdata.region !== 'unmapped' && xdata.region !== '') && 
+      <input type="checkbox" value={id} name="listing_ids_to_update[]"  />
+    }
 
 
 {extranet_vt_logged_in_role==='partner' && partner.accountId==='585a39dbe43900100017e9e8' &&      
@@ -501,6 +504,37 @@ const Listingrow = (props) => {
 
 
     </h4>
+    </td>
+     <td  className="px-4 p-6 ">
+      {xdata.region==='unmapped' ? <span style={{color:'red','font-weight':'bold'}}>unmapped</span> : <span>Mapped</span> }
+     </td>
+    <td  className="px-4 p-6 ">
+      
+      <div className="col-sm-6">
+        <label><strong>Country:</strong></label>
+         &nbsp;{property.address.country || '-Nil'}
+        <br /><br />
+
+        <label><strong>State: </strong></label>
+         &nbsp;{property.address.state || '-Nil'}
+        <br /><br />
+
+        <label><strong>Region: </strong></label>
+         &nbsp;{xdata.region || '-Nil'}
+        <br /><br />
+
+        <label><strong>City: </strong></label>
+         &nbsp;{property.address.city || '-Nil'}
+        <br /><br />
+
+        <label><strong>Sub Region: </strong></label>
+         &nbsp;{xdata.subRegion || '-Nil'}
+        <br /><br />
+
+        <label><strong>Zipcode: </strong></label>
+         &nbsp;{property.address.zipcode || '-Nil'}
+      </div>
+
     </td>
     <td className="px-4 p-3 ">
       <h4>

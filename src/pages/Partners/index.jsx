@@ -42,6 +42,8 @@ import EditPartner from "./EditPartner";
 import {
 	PATH_PARTNERS,
 	PATH_LISTINGS,
+	PATH_SIGNOUT,
+	PATH_LOGIN
 } from "../../Util/constants";
 
 import { data } from "./makeData.js";
@@ -61,6 +63,10 @@ import Sidebar from "../../components/Sidebar";
 import LoadingBox from "../../components/LoadingBox";
 import { getStorageValue } from "../../Util/general.js";
 import BankDetails from "./BankDetails/index.js";
+
+import menuIcon from '../../assets/icons8-menu-50.png'
+import * as userActions from "../../store/redux/User/actions";
+import { useDispatch, useSelector } from "react-redux";
 
 
 const NEW_PARTNER = {
@@ -98,7 +104,24 @@ const NEW_PARTNER_VT = {
 };
 
 const Partners = (props) => {
-        localStorage.removeItem('property_status_to_filter');
+
+const dispatch = useDispatch();	
+localStorage.removeItem('property_status_to_filter');
+
+const [showSideBarMenu, setShowSideBarMenu] = useState(false);
+  const signOut = () => {
+	localStorage.clear();
+	dispatch(userActions.signOut());
+	history.push(PATH_LOGIN);
+  };
+const showOrHideSideBarMenu=()=> {
+	if(showSideBarMenu===true) {
+		setShowSideBarMenu(false);
+	} else if(showSideBarMenu===false) {
+		setShowSideBarMenu(true);
+	}
+}  
+
 
 	const { token, agency, agent, screenSize, activeMenu, handleToggleMenu, setActiveMenu } = props
 
@@ -486,8 +509,9 @@ localStorage.setItem('partnerPropertiesUniqueZipcodes', JSON.stringify(partnerPr
 
 
 	return (
-		<div className="page-container">
-			<div className="page-header">Villa Tracker Extranet : PMs ({agentData.firstName})</div>
+		<div className="page-container">			
+			<div className="page-header"><img src={menuIcon} style={{'width':'25px'}} className="cst-cursor" onClick={showOrHideSideBarMenu} />&nbsp;Villa Tracker Extranet : PMs - {agentData.firstName} (<span className="cst-cursor" onClick={signOut}>Sign Out</span>)</div>
+{showSideBarMenu===true &&			
 			<Sidebar
 				agency={agency}
 				agent={agent}
@@ -496,7 +520,8 @@ localStorage.setItem('partnerPropertiesUniqueZipcodes', JSON.stringify(partnerPr
 				activeMenu={activeMenu}
 				handleToggleMenu={handleToggleMenu}
 			/>
-			<div className={activeMenu ? `${"page-body"}` : "page-body"} >
+}
+			<div className={showSideBarMenu ? `${"page-body"}` : "page-body-nomargin"} >
 
 				<div className="agencies-container" >
 					<LoadingBox visible={isLoading} />

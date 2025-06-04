@@ -23,7 +23,7 @@ import { data } from "./makeData.js"
 import axios from "axios"
 import { baseURL } from "../../core/index.js"
 import PageHeader from "../../components/PageHeader"
-import { PATH_PROPERTY } from "../../Util/constants"
+import { PATH_PROPERTY,PATH_SIGNOUT,PATH_LOGIN } from "../../Util/constants"
 import { useLocation, useHistory } from "react-router-dom";
 
 import { getStorageValue } from "../../Util/general.js";
@@ -42,6 +42,12 @@ import CollectionIcon from "../../components/CollectionIcon"
 import * as propertyActions from "../../store/redux/Property/actions";
 import Sidebar from "../../components/Sidebar";
 import Listingrow from "./row/listingRow"
+
+
+import menuIcon from '../../assets/icons8-menu-50.png'
+import * as userActions from "../../store/redux/User/actions";
+
+
 const NEW_CLIENT = {
     id: "-1",
     firstName: "",
@@ -53,6 +59,23 @@ const NEW_CLIENT = {
 
 
 const Listings = (props) => {
+
+
+const [showSideBarMenu, setShowSideBarMenu] = useState(false);
+  const signOut = () => {
+	localStorage.clear();
+	dispatch(userActions.signOut());
+	history.push(PATH_LOGIN);
+  };
+const showOrHideSideBarMenu=()=> {
+	if(showSideBarMenu===true) {
+		setShowSideBarMenu(false);
+	} else if(showSideBarMenu===false) {
+		setShowSideBarMenu(true);
+	}
+}  
+
+
     const { token, screenSize, activeMenu, handleToggleMenu, setActiveMenu } = props
 
     	const agentData = JSON.parse( localStorage.getItem('agent') );
@@ -183,9 +206,30 @@ if(propStatus==='Declined') {
 } 
 
 
+
+
+
         const checkboxes = document.querySelectorAll('input[name="listing_ids_to_update[]"]:checked');
         const listingIdsToUpdate = Array.from(checkboxes).map(cb => cb.value);
-        console.log('listingIdsToUpdate:::', listingIdsToUpdate)
+
+if(propStatus==='Approved') {
+
+    let unmapped_properties = 0;
+    listingIdsToUpdate.forEach((id) => {
+    if(id.includes('unmapped')) {
+        unmapped_properties++;
+    }
+    });
+
+    if(unmapped_properties > 0) {
+        alert('One or more selected properties have unmapped region!. Please map them first before approving,')
+        return false;
+    }
+
+}        
+
+console.log('listingIdsToUpdate New:::', listingIdsToUpdate)
+
 
         const updateListingsData = {'accountId':partner?.accountId,'ids':listingIdsToUpdate, 'status':propStatus, decliningReason:reason_decline, statusUpdatedBy:agentData.firstName}
 
@@ -477,7 +521,16 @@ const headerSearchRow = () => {
 const columns = [
     {
         name: 'property',
-    },   
+    }, 
+    {
+        name: 'Mapped Status',
+        width: '140px'
+    },      
+    {
+      
+        name: 'Details',
+        width: '250px'
+    },      
     {
       
         name: 'Status',
@@ -503,8 +556,10 @@ return (
     
     <div className="page-container">
         
-        <div className="page-header">Villa Tracker Extranet ({agentData.firstName})</div>
-        <Sidebar
+        {/*<div className="page-header">Villa Tracker Extranet ({agentData.firstName})</div>*/}
+		<div className="page-header"><img src={menuIcon} style={{'width':'25px'}} className="cst-cursor" onClick={showOrHideSideBarMenu} />&nbsp;Villa Tracker Extranet : PMs - {agentData.firstName} (<span className="cst-cursor" onClick={signOut}>Sign Out</span>)</div>
+
+        {showSideBarMenu===true && <Sidebar
             agency={agency}
             agent={agent}
             token={token}
@@ -513,7 +568,8 @@ return (
             handleToggleMenu={handleToggleMenu}
             setActiveMenu={setActiveMenu}
         />
-        <div className={activeMenu ? `${"page-body"}` : "page-body"} >
+}
+        <div className={showSideBarMenu ? `${"page-body"}` : "page-body-nomargin"} >
 
             <div className="listings-container"
                 style={{ backgroundImage: `url(${pageBg})` }}

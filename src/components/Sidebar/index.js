@@ -92,11 +92,7 @@ const Sidebar = ({ activeMenu, setActiveMenu, handleToggleMenu }) => {
   };
 
   return (
-    <div
-      className={
-        activeMenu ? `${"sidebar-container"}` : `${"sidebar-container"}`
-      }
-    >
+    <div className={ activeMenu ? `${"sidebar-container"}` : `${"sidebar-container"}` }  >
       {/* {!activeMenu && (
         <div onClick={handleToggleMenu} className="h-100">
           <a href="javascript:void" className="p-2 rounded text-white ">
@@ -106,7 +102,7 @@ const Sidebar = ({ activeMenu, setActiveMenu, handleToggleMenu }) => {
       )} */}
       {/* {activeMenu && ( */}
       (
-        <div
+        <div 
           className="sidebar-logo-container"
           onClick={() => history.push(PATH_HOME)}
         >

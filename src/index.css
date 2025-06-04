@@ -123,7 +123,9 @@ code {
 .page-body {
   margin-left: 400px;
 }
-
+.page-body-nomargin {
+  margin-left: 0px;
+}
 .page-body-sm {
   margin-left: 0px;
 }
