@@ -49,7 +49,7 @@ function PasswordInput({
 					placeholder={placeholder}
 					id={inputName}
 				/>
-				{
+				{/*
 					showPwd ?
 						<span onClick={() => setShowPwd(!showPwd)} className={styles.show_pwd_btn + styles.hide} style={{ position: 'absolute', top: '16px', right: '20px' }}>
 							<img src={eyeOff} />
@@ -58,7 +58,7 @@ function PasswordInput({
 						<span onClick={() => setShowPwd(!showPwd)} className={styles.show_pwd_btn} style={{ position: 'absolute', top: '20px', right: '20px' }}>
 							<img src={eyeOn} />
 						</span>
-				}
+				*/}
 			</div>
 
 			{error && error.placement === "password" && <span className={"EmailInput_email_error__tfmZ1"}><DangerExclamation size={16} fill="red" />&nbsp;{error.msg}</span>}

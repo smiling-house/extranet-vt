@@ -33,7 +33,7 @@ export default Auth;
 export const SignIn = () => {
 
 	const partnerLoginEmail = localStorage.getItem('partnerLoginEmail');
-	const partnerLoginAccountId = localStorage.getItem('partnerLoginAccountId');
+	const partnerLoginAccountId = localStorage.getItem('partnerLoginAccountId');	
 
 	const dispatch = useDispatch();
 
@@ -46,6 +46,13 @@ export const SignIn = () => {
 	const [password, setPassword] = useState('');
 	const [twoFA, setTwoFA] = useState("");
   	const [codeSent, setCodeSent] = useState(false);
+
+
+	const setQrCredentials = () => {
+		setEmail(partnerLoginEmail);
+		setPassword(partnerLoginAccountId);		
+	}
+
 
 	const partnerLogin = getStorageValue('partnerLogin')
 	const [state, setState] = useState({
@@ -302,10 +309,15 @@ export const SignIn = () => {
 
 
 	useEffect(() => {
+
+		setQrCredentials();
+
 		const handleResize = () => setScreenSize(window.innerWidth);
 		window.addEventListener("resize", handleResize);
 		handleResize();
 		return () => window.removeEventListener("resize", handleResize);
+
+
 	}, []);
 
 	useEffect(() => {
@@ -315,6 +327,9 @@ export const SignIn = () => {
 			setSmallScreen(false);
 		}
 	}, [screenSize]);
+
+
+
 	return <>
 		<section>
 			<div className="row">
@@ -336,7 +351,7 @@ export const SignIn = () => {
 							<div className="col-8">
 								<EmailInput
 									onSubmit={handleSubmit}
-									value={partnerLoginEmail}
+									value={email}
 									setValue={setEmail}
 									label="E-Mail*"
 									inputName="email"
@@ -348,11 +363,11 @@ export const SignIn = () => {
 							<div className="col-8 mt-2">
 								<PasswordInput
 									onSubmit={handleSubmit}
-									value={partnerLoginAccountId}
+									value={password}
 									setValue={setPassword}
-									label="your Guesty account ID*"
+									label="Password*"
 									inputName="password"
-									placeholder="guesty Account ID"
+									placeholder="Password"
 									error={state?.error}
 									showLoginLink="none"
 								/>
