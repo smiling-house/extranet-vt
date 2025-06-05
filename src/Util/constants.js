@@ -2,6 +2,7 @@ export const PATH_Welcome = '/welcome';
 export const PATH_SIGNUP = '/signup';
 export const PATH_SIGNOUT = 'signOut';
 export const PATH_HOME = '/home';
+export const PATH_QR = '/qr';
 export const PATH_LOGIN = '/login';
 export const PATH_FORGOT_PASSWORD = '/forgotPassword';
 export const PATH_VERIFY_CODE = '/verifycode/:id';

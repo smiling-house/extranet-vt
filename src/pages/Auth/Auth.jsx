@@ -32,6 +32,8 @@ export default Auth;
 
 export const SignIn = () => {
 
+	const partnerLoginEmail = localStorage.getItem('partnerLoginEmail');
+	const partnerLoginAccountId = localStorage.getItem('partnerLoginAccountId');
 
 	const dispatch = useDispatch();
 
@@ -334,7 +336,7 @@ export const SignIn = () => {
 							<div className="col-8">
 								<EmailInput
 									onSubmit={handleSubmit}
-									value={email}
+									value={partnerLoginEmail}
 									setValue={setEmail}
 									label="E-Mail*"
 									inputName="email"
@@ -346,7 +348,7 @@ export const SignIn = () => {
 							<div className="col-8 mt-2">
 								<PasswordInput
 									onSubmit={handleSubmit}
-									value={password}
+									value={partnerLoginAccountId}
 									setValue={setPassword}
 									label="your Guesty account ID*"
 									inputName="password"

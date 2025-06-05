@@ -142,17 +142,33 @@ const showOrHideSideBarMenu=()=> {
     const filterByPropertyStatus = (event) => {
         console.log(event.target.value)
         setFilterPropertyStatus(event.target.value);
+
+        unCheckAll();
+        setCheckedAll(false)        
     }
 
 
 const extranet_vt_logged_in_role = localStorage.getItem('extranet-vt-logged-in-role');
 
+    const [checkedAll, setCheckedAll] = useState(false);
+
     const [filterPropertyZipcode, setFilterPropertyZipcode] = useState('');
     const filterByZipcode = (event) => {
         console.log(event.target.value)
         setFilterPropertyZipcode(event.target.value);
+
+        unCheckAll();
+        setCheckedAll(false)        
     }    
 
+    const [filterRegionMappedUnmapped, setFilterRegionMappedUnmapped] = useState('');
+    const filterByMappedUnmappedRegion = (event) => {
+        console.log(event.target.value)
+        setFilterRegionMappedUnmapped(event.target.value);
+
+        unCheckAll();
+        setCheckedAll(false)        
+    }    
 
 function updateDecliningReasonData() { //Didn't work all the time.
     if(propStatus==='Declined') {
@@ -165,6 +181,35 @@ function updateDecliningReasonData() { //Didn't work all the time.
     setActualDecliningReason('')
 }
 }    
+
+const checkAll = () => {
+        document.querySelectorAll('input[name="listing_ids_to_update[]"]').forEach(checkbox => {
+            checkbox.checked = true;
+        });       
+}
+const unCheckAll = () => {
+        document.querySelectorAll('input[name="listing_ids_to_update[]"]').forEach(checkbox => {
+            checkbox.checked = false;
+        });  
+}
+
+const checkUncheckAll = () => {
+
+    if(checkedAll===false) {
+
+        checkAll();
+        setCheckedAll(true)
+
+    }
+
+    if(checkedAll===true) {
+
+        unCheckAll();
+        setCheckedAll(false)
+
+    }
+
+}
 
     
     async function updateSelectedListingsStatus() {
@@ -222,8 +267,16 @@ if(propStatus==='Approved') {
     });
 
     if(unmapped_properties > 0) {
-        alert('One or more selected properties have unmapped region!. Please map them first before approving,')
+
+        swal({
+            show: true,
+            icon: 'error',
+            title: 'One or more selected properties have unmapped region!. Please map them first before approving',
+            text: ''
+        })   
+        
         return false;
+        
     }
 
 }        
@@ -353,6 +406,12 @@ const agentLoggedIn = JSON.parse( localStorage.getItem('agent') );
     } else if(filterPropertyZipcode==='') {
         delete params.extranet_filter_zipcode;
     }    
+
+    if(filterRegionMappedUnmapped !== '') {       
+        params.extranet_filterRegionMappedUnmapped = filterRegionMappedUnmapped;
+    } else if(filterRegionMappedUnmapped==='') {
+        delete params.extranet_filterRegionMappedUnmapped;
+    }     
     //By Jaison 2025-04-22 END
 
     const queryString = Object.keys(params).map(key => key + '=' + params[key]).join('&');
@@ -452,7 +511,7 @@ const updateXdata = async (ID, xdataPayload) => {
      getAllListings()
 //     setRefresh(false)
 
- }, [refresh,isRefresh, filterPropertyStatus,updateStatusProcess, filterPropertyZipcode])
+ }, [refresh,isRefresh, filterPropertyStatus,updateStatusProcess, filterPropertyZipcode,filterRegionMappedUnmapped])
 
 const handleSearchListings = (name, value) => {
     setsearchInputes({ ...searchInputes, [name]: value })
@@ -615,6 +674,16 @@ return (
                         })}            
                     </select>
                     </div>
+
+                    <div className="col-sm-2">
+                    <label style={{'color':'white'}}><strong>Filter by Mapped/unmapped Region</strong></label>
+                    <select class="form-control" onChange={(e)=>filterByMappedUnmappedRegion(e)}>
+                        <option value="">--All--</option>
+                        <option value="Mapped">Mapped</option>
+                        <option value="Unmapped">Unmapped</option>
+                    </select>
+                    </div>
+
                     </div>
 }                    
             
@@ -669,6 +738,12 @@ return (
                         <div class="table-responsive" style={{ overflow: "auto" }}>
                                 <table class="table">
                                     <thead style={{ backgroundColor: "#f9f9f7" }} >
+
+{extranet_vt_logged_in_role==='admin' &&                                        
+<tr>
+   <td><span onClick={checkUncheckAll}  className="cst-cursor">Check/Uncheck All</span></td> 
+</tr>
+}
                                         <tr>
                                             {columns?.map((iteam, index) => {
                                                 return <>

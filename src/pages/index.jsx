@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import * as userActions from "../store/redux/User/actions";
 import Auth from "./Auth/Auth";
+import Qr from "./Auth/Qr";
 
 import AuthAdmin from "./Auth/AuthAdmin";
 
@@ -46,6 +47,7 @@ import {
   PATH_HOME,
   PATH_HOT_DESTINATIONS,
   PATH_LOGIN,
+  PATH_QR,
   PATH_MAP,
   PATH_PROFILE,
   PATH_PROPERTY,
@@ -190,6 +192,9 @@ function MainPage(props) {
         <Route exact path={[PATH_LOGIN]}>
           <Auth stage="login" signup={false} setToken={setToken} />
         </Route>
+        <Route exact path={[PATH_QR]}>
+          <Qr />
+        </Route>        
         <Route exact path={[PATH_ADMIN_LOGIN]}>
           <AuthAdmin stage="login" signup={false} setToken={setToken} />
         </Route>        
