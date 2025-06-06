@@ -282,13 +282,15 @@ if(propStatus==='Approved') {
 }        
 
 
+const listingIdsToUpdateCleaned = listingIdsToUpdate.map(id => id.replace('_unmapped', ''));
 
-        const updateListingsData = {'accountId':partner?.accountId,'ids':listingIdsToUpdate, 'status':propStatus, decliningReason:reason_decline, statusUpdatedBy:agentData.firstName}
+
+        const updateListingsData = {'accountId':partner?.accountId,'ids':listingIdsToUpdateCleaned, 'status':propStatus, decliningReason:reason_decline, statusUpdatedBy:agentData.firstName}
 
 console.log('updateListingsData:::', updateListingsData);
 //return false;
 
-        if(listingIdsToUpdate.length > 0 && propStatus !== '') {
+        if(listingIdsToUpdateCleaned.length > 0 && propStatus !== '') {
             const ShubResponse = await userRequest.post(constants.SHUB_URL+'/local/listings/update-multiple-listings-status', updateListingsData);
 
             if(ShubResponse.data.success === true) {
