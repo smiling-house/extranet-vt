@@ -545,7 +545,7 @@ const Listingrow = (props) => {
         }
 
         {(extranet_vt_logged_in_role==='admin' && xdata?.statusUpdatedBy != null) &&
-          <p>Status Updated By: {xdata.statusUpdatedBy}</p>
+          <div><label><i>Status Updated By:</i></label><i>{xdata.statusUpdatedBy}</i></div>
         }
 
       </h4>

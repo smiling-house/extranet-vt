@@ -281,10 +281,12 @@ if(propStatus==='Approved') {
 
 }        
 
-console.log('listingIdsToUpdate New:::', listingIdsToUpdate)
 
 
         const updateListingsData = {'accountId':partner?.accountId,'ids':listingIdsToUpdate, 'status':propStatus, decliningReason:reason_decline, statusUpdatedBy:agentData.firstName}
+
+console.log('updateListingsData:::', updateListingsData);
+//return false;
 
         if(listingIdsToUpdate.length > 0 && propStatus !== '') {
             const ShubResponse = await userRequest.post(constants.SHUB_URL+'/local/listings/update-multiple-listings-status', updateListingsData);

@@ -54,6 +54,9 @@ const Sidebar = ({ activeMenu, setActiveMenu, handleToggleMenu }) => {
     history.push(PATH_LOGIN);
   };
 
+  const extranet_vt_logged_in_role = localStorage.getItem('extranet-vt-logged-in-role');
+
+
   const renderItem = (text, path, icon) => {
     const doPress = () => {
       console.log(screenSize);
@@ -111,7 +114,14 @@ const Sidebar = ({ activeMenu, setActiveMenu, handleToggleMenu }) => {
           </div>
         </div>
       )
-      {renderItem("Guesty PMs", PATH_PARTNERS, adminIcon) }
+
+      {extranet_vt_logged_in_role==='admin' &&
+        renderItem("Guesty PMs", PATH_PARTNERS, adminIcon) 
+      }
+      {extranet_vt_logged_in_role==='partner' &&
+        renderItem("Partner Home", PATH_PARTNERS, adminIcon) 
+      }      
+      
       {admin&&renderItem("External Partners", PATH_EPARTNERS, adminIcon) }
       {admin&&renderItem("Listings", PATH_LISTINGS, customersIcon)}
       {admin&&renderItem("Tasks", PATH_TASKS, customersIcon)}
