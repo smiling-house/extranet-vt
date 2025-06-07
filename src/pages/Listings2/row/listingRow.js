@@ -1,6 +1,6 @@
 import Checkbox from "../../../components/Checkbox";
 import React, { useCallback, useEffect, useState } from "react"
-import { PATH_PROPERTY } from "../../../Util/constants"
+import { PATH_PROPERTY,OPEN_API_KEY } from "../../../Util/constants"
 import { useHistory } from "react-router-dom"
 import swal from "sweetalert"
 import canOff from "../../../assets/property/can-off.svg";
@@ -60,6 +60,7 @@ import RegionsDropDown from "../../../components/RegionsDropDown"
 import "./ListingRow.scss"
 import OpenAI from "openai";
 import { getStorageValue } from "../../../Util/general";
+import axios from "axios";
 
 const Listingrow = (props) => {
   const { property, fullCalendar, id, agent, agency, partner, xdata, updateXdata, listingAddressFull, listingAddressZipExists } = props
@@ -103,6 +104,48 @@ const Listingrow = (props) => {
   //const allZipcodes = JSON.parse(getStorageValue('allZipcodes') );
   const extranet_vt_logged_in_role = localStorage.getItem('extranet-vt-logged-in-role');
 
+
+  const [newRegionFromOpenAI, setNewRegionFromOpenAI] =useState('');
+  async function regionLookUpOpenAI(country, zipcode) {
+
+    const country_belongs_to = country;
+    const zipcode_to_search = zipcode;
+    
+try {
+      const response = await axios.post(
+        'https://api.openai.com/v1/chat/completions',
+        {
+          model: 'gpt-4',
+          messages: [
+            {
+              role: 'user',
+              content: `What is the region for ZIP code ${zipcode_to_search} in ${country_belongs_to}?`,
+            },
+          ],
+          temperature: 0,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${OPEN_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      const result = response.data.choices[0].message.content;
+      alert(result);
+      console.log(result);
+    } catch (error) {
+      console.error('Error fetching region:', error);
+    }    
+
+  }
+
+
+  
+  async function saveNewRegionFromOpenAI(country, zipcode, listingId) {
+    alert(listingId)
+  }
 //By Jaison 2025-04-22 - STOP   
 
   async function AITitle(input, wordCount, exclude) {
@@ -507,6 +550,14 @@ const Listingrow = (props) => {
     </td>
      <td  className="px-4 p-6 ">
       {xdata.region==='unmapped' ? <span style={{color:'red','font-weight':'bold'}}>unmapped</span> : <span>Mapped</span> }
+
+      {/*xdata.region==='unmapped' && 
+      <div>
+      <input type="text" value={newRegionFromOpenAI} onChange={ (e)=> setNewRegionFromOpenAI(e.target.value) } />
+      <button class="btn btn-primary" onClick={()=>regionLookUpOpenAI(property.address.country, property.address.zipcode)}>Region Lookup</button>
+      <button class="btn btn-success" onClick={()=>saveNewRegionFromOpenAI(property.address.country, property.address.zipcode, property.id)}>Update Region</button>      
+      </div>
+      */}
      </td>
     <td  className="px-4 p-6 ">
       

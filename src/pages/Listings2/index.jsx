@@ -75,6 +75,9 @@ const showOrHideSideBarMenu=()=> {
 	}
 }  
 
+const goToPartnersPage = () => {
+    history.push('/partners')
+}
 
     const { token, screenSize, activeMenu, handleToggleMenu, setActiveMenu } = props
 
@@ -169,6 +172,8 @@ const extranet_vt_logged_in_role = localStorage.getItem('extranet-vt-logged-in-r
         unCheckAll();
         setCheckedAll(false)        
     }    
+
+    
 
 function updateDecliningReasonData() { //Didn't work all the time.
     if(propStatus==='Declined') {
@@ -577,6 +582,7 @@ const headerSearchRow = () => {
             <div className="col-sm-1">
                 <Button style={{ height: '60px', width: '120px', fontSize: '15px', borderRadius: '5px' }} variant="green" text="Search" onClick={handleSearchButton} />
             </div>
+
         </div>
     )
 }
@@ -654,6 +660,10 @@ return (
                 <div className="listings-main">
                     <div className="listings-title">{partner?.pmName ? partner?.pmName : ''} /{partner?.contactName ? partner?.contactName : ''} / AccountID {partner?.accountId ? partner?.accountId : ''}</div>
                     <div className="listings-paging">Displaying  {ListingsPagingFrom}-{ListingsPagingTo} of {totalListings ? totalListings : "?"} Listings</div>
+
+<div className="col-sm-1">
+    <Button style={{ margin:'10px', height: '30px', width: '100px', fontSize: '15px', borderRadius: '5px' }} variant="green" text="GO BACK" onClick={goToPartnersPage} />
+</div>
 
 {extranet_vt_logged_in_role==='admin' &&
                     <div className="listings-search-container row">
