@@ -1,6 +1,6 @@
 import Checkbox from "../../../components/Checkbox";
 import React, { useCallback, useEffect, useState } from "react"
-import { PATH_PROPERTY,OPEN_API_KEY } from "../../../Util/constants"
+import { PATH_PROPERTY,OPEN_AI_KEY } from "../../../Util/constants"
 import { useHistory } from "react-router-dom"
 import swal from "sweetalert"
 import canOff from "../../../assets/property/can-off.svg";
@@ -126,7 +126,7 @@ try {
         },
         {
           headers: {
-            Authorization: `Bearer ${OPEN_API_KEY}`,
+            Authorization: `Bearer ${OPEN_AI_KEY}`,
             'Content-Type': 'application/json',
           },
         }
