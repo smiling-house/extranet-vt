@@ -598,7 +598,11 @@ localStorage.setItem('partnerPropertiesUniqueZipcodes', JSON.stringify(partnerPr
 }
 
 
-						<div className="agencies-title">Guesty PM List
+						<div className="agencies-title">
+							
+{extranet_vt_logged_in_role==='admin' && <span>Guesty PM List</span> }
+{extranet_vt_logged_in_role==='partner' && <span>Guesty PM Home</span> }
+
 							{!partnerLogin && (<>
 								{/*<a class="dropdown-item" href="#" onClick={onAddPartnerSH}><img src={addAdminIcon} /> connect GUESTY PM partner SH = Smiling House </a>*/}
 								<a class="dropdown-item" href="#" onClick={onAddPartnerVT}><img src={addAdminIcon} /> connect GUESTY PM partner VT = Villa Tracker </a>
@@ -607,6 +611,7 @@ localStorage.setItem('partnerPropertiesUniqueZipcodes', JSON.stringify(partnerPr
 							<div className="agencies-main-subtitle">Displaying PMs {partnersPagingFrom}-{partnersPagingTo} of {totalPartners ? totalPartners : "?"}
 							</div>
 						</div>
+
 
 
 {/*extranet_vt_logged_in_role==='admin' &&
