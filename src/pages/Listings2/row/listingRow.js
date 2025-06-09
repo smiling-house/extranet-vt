@@ -60,7 +60,9 @@ import RegionsDropDown from "../../../components/RegionsDropDown"
 import "./ListingRow.scss"
 import OpenAI from "openai";
 import { getStorageValue } from "../../../Util/general";
+
 import axios from "axios";
+import constants from "../../../Util/constants"
 
 const Listingrow = (props) => {
   const { property, fullCalendar, id, agent, agency, partner, xdata, updateXdata, listingAddressFull, listingAddressZipExists } = props
@@ -87,6 +89,14 @@ const Listingrow = (props) => {
   });
 
 
+const token2 = 'eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2NvdW50X29iamVjdF9pZCI6Mzk5MTU4NzUsInVzZXJfaWQiOiI0MDY2NTAyMSIsInVzZXJfbmFtZSI6InN5c3RlbStsdW5hLTh5NXljIiwic2NvcGUiOlsiYnJpdm8uYXBpIl0sImF0aSI6ImI5MTliYmJiLTA1ZWItNDlmOC05MjlhLWM0MTJlYzY3NWI2YyIsImlzc3VlZCI6IjE2NzUzNzA2NDMzNzMiLCJleHAiOjIyOTczMzM3MjcsInNlcnZpY2VfdG9rZW4iOm51bGwsImF1dGhvcml0aWVzIjpbIlJPTEVfU1VQRVJfQURNSU4iLCJST0xFX0FETUlOIl0sImp0aSI6IjExODQzYjg2LWIyYzUtNGMwNS1hYWZlLTcxZTI4NGIyNjNlOCIsImNsaWVudF9pZCI6IjkzOTFlYjVkLWUwNmUtNDY4MS1iNTdhLWQwZTU3NDhhM2RlZSIsIndoaXRlX2xpc3RlZCI6ZmFsc2V9.Mqmx7onIVz_EVAunhwqBAhAmlsGXMQ18hh_EV_61KQIpaGXlrgXgx1hOOdNWLFriG3Un6jfS7H7vwMAYmBT6-8yl9L7VB7Cpxva49XozuSJazQ42UDDlTOsnWAmatzmFna-Uzjc8MDfVQbR8AwMiFq_Jb9ViaJ4XBkj2KhEKs1g';
+
+const userRequest = axios.create({
+    headers: {
+        Authorization: `Bearer ${token2}`
+    }
+});
+  
 //By Jaison 2025-04-22 - START  
 /*
   const [listingIdsToUpdate, setListingIdsToUpdate] = useState([]);
@@ -104,9 +114,10 @@ const Listingrow = (props) => {
   //const allZipcodes = JSON.parse(getStorageValue('allZipcodes') );
   const extranet_vt_logged_in_role = localStorage.getItem('extranet-vt-logged-in-role');
 
-
   const [newRegionFromOpenAI, setNewRegionFromOpenAI] =useState('');
   async function regionLookUpOpenAI(country, zipcode) {
+
+    setNewRegionFromOpenAI('')
 
     const country_belongs_to = country;
     const zipcode_to_search = zipcode;
@@ -119,7 +130,9 @@ try {
           messages: [
             {
               role: 'user',
-              content: `What is the region for ZIP code ${zipcode_to_search} in ${country_belongs_to}?`,
+              //content: `What is the region for ZIP code ${zipcode_to_search} in ${country_belongs_to}? Return only the region name`,
+              content: `What is the known touristic destination in {country_belongs_to} zipcode ${zipcode_to_search}? return only the destination name`,
+              
             },
           ],
           temperature: 0,
@@ -133,8 +146,28 @@ try {
       );
 
       const result = response.data.choices[0].message.content;
-      alert(result);
-      console.log(result);
+
+      if(result) {
+        console.log('NEW REGION:::', result);
+        setNewRegionFromOpenAI(result);
+
+          
+          swal({
+          show: true,
+          icon: 'success',
+          title: `Found the region "${result}" for zipcode "${zipcode_to_search}" in the country "${country_belongs_to}"`,
+          //text: `Text`
+          })
+                  
+
+      } else {
+          swal({
+          show: true,
+          icon: 'error',
+          title: 'Region not found by AI',
+          //text: `Text`
+          })         
+      }
     } catch (error) {
       console.error('Error fetching region:', error);
     }    
@@ -143,8 +176,65 @@ try {
 
 
   
-  async function saveNewRegionFromOpenAI(country, zipcode, listingId) {
-    alert(listingId)
+  async function saveNewRegionFromOpenAI(country, zipcode, listingId='') {
+
+    if(newRegionFromOpenAI === '' ) {
+        alert('Region is empty');
+        return false;
+    }
+
+    if(country === '' ) {
+        alert('Country is empty');
+        return false;
+    }  
+    
+    if(zipcode === '' ) {
+        alert('zipcode is empty');
+        return false;
+    }     
+
+   //alert('country: '+country+', zipcode:' + zipcode + ', listingId:'+ listingId +',  newRegionFromOpenAI:'+newRegionFromOpenAI)
+   //console.log('country: '+country+', zipcode:' + zipcode + ', listingId:'+ listingId +',  newRegionFromOpenAI:'+newRegionFromOpenAI)
+
+   let unmapped_properties_mapping_region_data = {country:country, zipcode:zipcode, listingId:listingId, region:newRegionFromOpenAI }
+
+   let confirmMessage = ''
+   if(listingId !== '') {
+    confirmMessage = 'Are you sure to update the region of the unmapped listing "'+listingId+'" with "'+newRegionFromOpenAI+'" (country='+country+', zipcode='+zipcode+') ?'
+   }
+   else { //Update all unmapped under the country, selected and zipcode
+    confirmMessage = 'Are you sure to update the region of ALL unmapped listings with "'+newRegionFromOpenAI+'" (country='+country+', zipcode='+zipcode+') ?'
+   }
+
+
+   if( window.confirm(confirmMessage) ) {
+    // unmapped_properties_mapping_region_data to new api on shub-vthub and update
+    const ShubResponse = await userRequest.post(constants.SHUB_URL+'/local/listings/update-unmapped-region-single-or-all-properties-under-country-zipcode', unmapped_properties_mapping_region_data);
+
+    console.log('ShubResponse:::', ShubResponse)
+
+    if(ShubResponse.data.success===true) {
+          swal({
+          show: true,
+          icon: 'success',
+          title: ShubResponse.data.message,
+          //text: `Text`
+          })
+
+          //window.location.reload();
+    }
+    else if(ShubResponse.data.success===false) {
+          swal({
+          show: true,
+          icon: 'error',
+          title: ShubResponse.data.message,
+          //text: `Text`
+          })
+    }
+
+
+   }
+
   }
 //By Jaison 2025-04-22 - STOP   
 
@@ -551,13 +641,21 @@ try {
      <td  className="px-4 p-6 ">
       {xdata.region==='unmapped' ? <span style={{color:'red','font-weight':'bold'}}>unmapped</span> : <span>Mapped</span> }
 
-      {/*xdata.region==='unmapped' && 
+      {xdata.region==='unmapped' && 
       <div>
-      <input type="text" value={newRegionFromOpenAI} onChange={ (e)=> setNewRegionFromOpenAI(e.target.value) } />
+      {/*<input type="text" value={newRegionFromOpenAI} onChange={ (e)=> setNewRegionFromOpenAI(e.target.value) } />*/}
       <button class="btn btn-primary" onClick={()=>regionLookUpOpenAI(property.address.country, property.address.zipcode)}>Region Lookup</button>
-      <button class="btn btn-success" onClick={()=>saveNewRegionFromOpenAI(property.address.country, property.address.zipcode, property.id)}>Update Region</button>      
+      
+      {newRegionFromOpenAI &&
+      <div>
+      <button class="btn btn-success" onClick={()=>saveNewRegionFromOpenAI(property.address.country, property.address.zipcode, property._id)}>Update Single</button> 
+
+      <button class="btn btn-primary" onClick={()=>saveNewRegionFromOpenAI(property.address.country, property.address.zipcode)}>Update All</button> 
       </div>
-      */}
+      }
+        
+      </div>
+      }
      </td>
     <td  className="px-4 p-6 ">
       

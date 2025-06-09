@@ -33,7 +33,10 @@ export const PATH_EPARTNERS = '/external-partners';
 
 export const PATH_ADMIN_LOGIN = '/adminlogin';
 
-export const OPEN_AI_KEY = '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';
+//export const OPEN_AI_KEY = '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';
+
+export const OPEN_AI_KEY = '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';
+
 
 const constants = {
 	ENV: 'LOCAL',
