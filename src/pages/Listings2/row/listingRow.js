@@ -67,6 +67,7 @@ import constants from "../../../Util/constants"
 const Listingrow = (props) => {
   const { property, fullCalendar, id, agent, agency, partner, xdata, updateXdata, listingAddressFull, listingAddressZipExists } = props
 
+  const OPEN_AI_KEY = process.env.REACT_APP_OPEN_AI_KEY;
 
   const [chk, setChk] = useState([])
   const [tags, setTags] = useState(xdata?.tags)

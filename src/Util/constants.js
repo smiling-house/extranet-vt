@@ -34,13 +34,13 @@ export const PATH_EPARTNERS = '/external-partners';
 export const PATH_ADMIN_LOGIN = '/adminlogin';
 
 
-export const OPEN_AI_KEY = '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';
+export const OPEN_AI_KEY = process.env.OPEN_AI_KEY;
  
 const constants = {
 	ENV: 'LOCAL',
 	BASE_URL: 'https://backend.villatracker.com',
-	SHUB_URL: 'http://localhost:3333',
-	//SHUB_URL: 'https://api.villatracker.com', //'https://api.triangle.luxury'
+	//SHUB_URL: 'http://localhost:3333',
+	SHUB_URL: 'https://api.villatracker.com', //'https://api.triangle.luxury'
 	//BASE_URL: 'http://localhost:8080',
 	BASE_URL2: 'https://vt-backend-8zwvrrlxf-smiling-house.vercel.app',
 	BASE_URL1: 'http://vtbackend-env.eba-b3vxhzrg.us-east-2.elasticbeanstalk.com',
