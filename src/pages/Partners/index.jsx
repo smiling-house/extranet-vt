@@ -164,7 +164,7 @@ const showOrHideSideBarMenu=()=> {
 		} else {
 			defaultPageNumber = page;			
 		}
-		const [pageNumber, setPageNumber] = useState(page);
+		const [pageNumber, setPageNumber] = useState(defaultPageNumber);
 
 
 
