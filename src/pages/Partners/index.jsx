@@ -105,6 +105,7 @@ const NEW_PARTNER_VT = {
 
 const Partners = (props) => {
 
+
 const dispatch = useDispatch();	
 localStorage.removeItem('property_status_to_filter');
 
@@ -151,7 +152,20 @@ const showOrHideSideBarMenu=()=> {
 	const [filterPartners, setFilterPartners] = useState();
 	// console.log("filterPartners >>>>", filterPartners);
 	const [searchPartners, setSearchPartners] = useState("");
-	const [pageNumber, setPageNumber] = useState(0);
+
+
+	//const [pageNumber, setPageNumber] = useState(page);
+		//added by jaison for Liron 2025-June 11
+		let defaultPageNumber =0;
+		let queryParams = new URLSearchParams(window.location.search);
+		let page = parseInt( queryParams.get('page') );	
+		if(!page) {
+			defaultPageNumber = 0;
+		} else {
+			defaultPageNumber = page;			
+		}
+		const [pageNumber, setPageNumber] = useState(page);
+
 
 
 //Task: EXTRANET VT - Check the possibilities of adding admin login
@@ -355,10 +369,15 @@ localStorage.setItem('partnerPropertiesUniqueZipcodes', JSON.stringify(partnerPr
 
 	const onChangePage = pageNumber => {
 		console.log("page=", pageNumber + 1);
-		setPageNumber(pageNumber);
-		doSearch(pageNumber);
 		
+		localStorage.setItem('partnersPageLastPageNumber', pageNumber); //added by jaison for Liron 2025-June 11
+
+		setPageNumber(pageNumber); //default
+
+		doSearch(pageNumber);
+
 		setSerialNumber(pageNumber * constants.PAGING_PARTNERS_SIZE);
+
 	};
 
 	const menuStyle = () => {

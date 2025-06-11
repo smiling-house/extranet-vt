@@ -122,56 +122,44 @@ const userRequest = axios.create({
 
     const country_belongs_to = country;
     const zipcode_to_search = zipcode;
-    
-try {
-      const response = await axios.post(
-        'https://api.openai.com/v1/chat/completions',
-        {
-          model: 'gpt-4',
-          messages: [
-            {
-              role: 'user',
-              //content: `What is the region for ZIP code ${zipcode_to_search} in ${country_belongs_to}? Return only the region name`,
-              content: `What is the known touristic destination in {country_belongs_to} zipcode ${zipcode_to_search}? return only the destination name`,
-              
-            },
-          ],
-          temperature: 0,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${OPEN_AI_KEY}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+ 
+  
+    const res = await userRequest.post(constants.SHUB_URL+'/local/get-touristic-destination-open-ai', {country:country_belongs_to, zipcode:zipcode_to_search} );
 
-      const result = response.data.choices[0].message.content;
+    const response = res.data
+console.log('NEW REGION:::', response)    
 
-      if(result) {
-        console.log('NEW REGION:::', result);
-        setNewRegionFromOpenAI(result);
+      if(response.success===true && response.destination !== '') {
+        console.log('NEW REGION:::', response.destination);
+        setNewRegionFromOpenAI(response.destination);
 
           
           swal({
           show: true,
           icon: 'success',
-          title: `Found the region "${result}" for zipcode "${zipcode_to_search}" in the country "${country_belongs_to}"`,
+          title: response.message,
           //text: `Text`
           })
                   
 
-      } else {
+      }
+      else if(response.success===true && response.destination === '') {
+          swal({
+          show: true,
+          icon: 'success',
+          title: 'AI returned empty region',
+          //text: `Text`
+          })
+      }
+      
+      else if(response.success===false) {
           swal({
           show: true,
           icon: 'error',
-          title: 'Region not found by AI',
+          title: response.message,
           //text: `Text`
           })         
-      }
-    } catch (error) {
-      console.error('Error fetching region:', error);
-    }    
+      }    
 
   }
 

@@ -60,6 +60,8 @@ const NEW_CLIENT = {
 
 const Listings = (props) => {
 
+const partnersPageLastPageNumber = localStorage.getItem('partnersPageLastPageNumber'); //added by jaison for Liron 2025 June 11
+    
 
 const [showSideBarMenu, setShowSideBarMenu] = useState(false);
   const signOut = () => {
@@ -76,7 +78,8 @@ const showOrHideSideBarMenu=()=> {
 }  
 
 const goToPartnersPage = () => {
-    history.push('/partners')
+    //alert(partnersPageLastPageNumber)
+    history.push('/partners?page='+partnersPageLastPageNumber);
 }
 
     const { token, screenSize, activeMenu, handleToggleMenu, setActiveMenu } = props
