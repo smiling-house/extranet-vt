@@ -630,7 +630,7 @@ console.log('NEW REGION:::', response)
      <td  className="px-4 p-6 ">
       {xdata.region==='unmapped' ? <span style={{color:'red','font-weight':'bold'}}>unmapped</span> : <span>Mapped</span> }
 
-      {xdata.region==='unmapped' && 
+      {xdata.region==='unmapped' && extranet_vt_logged_in_role==='admin' &&
       <div>
       {/*<input type="text" value={newRegionFromOpenAI} onChange={ (e)=> setNewRegionFromOpenAI(e.target.value) } />*/}
       <button class="btn btn-primary" onClick={()=>regionLookUpOpenAI(property.address.country, property.address.zipcode)}>Region Lookup</button>
