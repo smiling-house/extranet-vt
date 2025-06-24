@@ -273,6 +273,7 @@ const [serialNumber, setSerialNumber] = useState(0);
 				skip: partnersPagingFrom - 1,
 				pmName: searchInputes.pmName,
 				//channelSource: 'VT',
+				provider:'guesty_channel_api',
 				source:'VT' 
 			} :
 				{
@@ -280,6 +281,7 @@ const [serialNumber, setSerialNumber] = useState(0);
 					skip: partnersPagingFrom - 1,
 					accountId: searchInputes.accountId,
 					//channelSource: 'VT',
+				provider:'guesty_channel_api',					
 				source:'VT'
 				} :
 
@@ -287,6 +289,7 @@ const [serialNumber, setSerialNumber] = useState(0);
 				limit: constants.PAGING_PARTNERS_SIZE,
 				skip: partnersPagingFrom - 1,
 				//channelSource: 'VT',
+				provider:'guesty_channel_api',
 				source:'VT'
 			}
 		console.log('loading search:', params)

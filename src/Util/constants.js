@@ -34,7 +34,6 @@ export const PATH_EPARTNERS = '/external-partners';
 export const PATH_ADMIN_LOGIN = '/adminlogin';
 
  
-export const OPEN_AI_KEY = process.env.OPEN_AI_KEY;
  
 const constants = {
 	ENV: 'LOCAL',

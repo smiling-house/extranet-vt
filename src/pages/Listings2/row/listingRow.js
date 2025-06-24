@@ -1,6 +1,6 @@
 import Checkbox from "../../../components/Checkbox";
 import React, { useCallback, useEffect, useState } from "react"
-import { PATH_PROPERTY,OPEN_AI_KEY } from "../../../Util/constants"
+import { PATH_PROPERTY } from "../../../Util/constants"
 import { useHistory } from "react-router-dom"
 import swal from "sweetalert"
 import canOff from "../../../assets/property/can-off.svg";
@@ -67,7 +67,6 @@ import constants from "../../../Util/constants"
 const Listingrow = (props) => {
   const { property, fullCalendar, id, agent, agency, partner, xdata, updateXdata, listingAddressFull, listingAddressZipExists } = props
 
-  const OPEN_AI_KEY = process.env.REACT_APP_OPEN_AI_KEY;
 
   const [chk, setChk] = useState([])
   const [tags, setTags] = useState(xdata?.tags)
