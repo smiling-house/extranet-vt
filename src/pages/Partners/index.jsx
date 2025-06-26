@@ -185,6 +185,14 @@ const filterByPropertyStatus = (event) => {
 	setFilterPropertyStatus(event.target.value);
 }
 */
+
+
+	const [filterPropertyStatus, setFilterPropertyStatus] = useState('');
+	const filterByPropertyStatus = (event) => {
+		console.log(event.target.value)
+		setFilterPropertyStatus(event.target.value);      
+	}
+
 const [serialNumber, setSerialNumber] = useState(0);
 //By Jaison on 2025-04-21 - END	
 
@@ -274,7 +282,8 @@ const [serialNumber, setSerialNumber] = useState(0);
 				pmName: searchInputes.pmName,
 				//channelSource: 'VT',
 				provider:'guesty_channel_api',
-				source:'VT' 
+				source:'VT',
+				status:filterPropertyStatus 
 			} :
 				{
 					limit: constants.PAGING_PARTNERS_SIZE,
@@ -282,7 +291,8 @@ const [serialNumber, setSerialNumber] = useState(0);
 					accountId: searchInputes.accountId,
 					//channelSource: 'VT',
 				provider:'guesty_channel_api',					
-				source:'VT'
+				source:'VT',
+				status:filterPropertyStatus
 				} :
 
 			{
@@ -290,9 +300,10 @@ const [serialNumber, setSerialNumber] = useState(0);
 				skip: partnersPagingFrom - 1,
 				//channelSource: 'VT',
 				provider:'guesty_channel_api',
-				source:'VT'
+				source:'VT',
+				status:filterPropertyStatus
 			}
-		console.log('loading search:', params)
+		console.log('loading search::::', params)
 
 
 //Task: EXTRANET VT - Check the possibilities of adding admin login
@@ -330,7 +341,7 @@ if(agent_role) {
 			console.log('partnerLogin: (should see only the PM listings)', partnerLogin, partnerName)
 		}
 		getSearchPartners()
-	}, []);
+	}, [filterPropertyStatus]);
 
 	useEffect(() => {
 		console.log('search:', searchInputes)
@@ -636,7 +647,7 @@ localStorage.setItem('partnerPropertiesUniqueZipcodes', JSON.stringify(partnerPr
 
 
 
-{/*extranet_vt_logged_in_role==='admin' &&
+{extranet_vt_logged_in_role==='admin' &&
 <div className="row">
 <div className="col-12">
                     <div className="listings-search-container row">
@@ -653,7 +664,7 @@ localStorage.setItem('partnerPropertiesUniqueZipcodes', JSON.stringify(partnerPr
                     </div>
 </div>
 </div>
-*/}
+}
 
 
 						{<Paging perPage={constants.PAGING_PARTNERS_SIZE} totalItems={localStorage.getItem("partnerCount")} currentPage={pageNumber} onChangePage={onChangePage} />}
