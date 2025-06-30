@@ -29,6 +29,8 @@ export const PATH_INTOUCH = '/intouch';
 export const PATH_FAQ = '/faq';
 export const PATH_ADMIN = '/admin';
 export const PATH_PARTNERS = '/partners';
+export const PATH_PARTNERS_BP = '/partners-bp';
+export const PATH_PARTNERS_RU = '/partners-ru';
 export const PATH_EPARTNERS = '/external-partners';
 
 export const PATH_ADMIN_LOGIN = '/adminlogin';

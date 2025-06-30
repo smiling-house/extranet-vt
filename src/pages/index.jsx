@@ -15,6 +15,8 @@ import Listings from "./Listings2";
 import Tasks from "./Tasks";
 import Reservations from "./Reservations";
 import Partners from "./Partners";
+import PartnersBP from "./PartnersBP";
+import PartnersRU from "./PartnersRU";
 import EPartners from "./EPartners";
 // material ui
 import Welcome from "./Welcome";
@@ -35,6 +37,8 @@ import PropertyReservePage from "./PropertyReserve";
 import Admin from "./Admin";
 import {
   PATH_PARTNERS,
+  PATH_PARTNERS_BP,
+  PATH_PARTNERS_RU,
   PATH_EPARTNERS,
   PATH_ADMIN,
   PATH_ADMIN_LOGIN,
@@ -341,6 +345,32 @@ function MainPage(props) {
         </Route>
         <Route exact path={[PATH_PARTNERS]}>
           <Partners
+            agency={agency}
+            agent={agent}
+            token={token}
+            setProfile={setProfile}
+            screenSize={screenSize}
+            setScreenSize={setScreenSize}
+            activeMenu={activeMenu}
+            handleToggleMenu={handleToggleMenu}
+            setActiveMenu={setActiveMenu}
+          />
+        </Route>
+        <Route exact path={[PATH_PARTNERS_BP]}>
+          <PartnersBP
+            agency={agency}
+            agent={agent}
+            token={token}
+            setProfile={setProfile}
+            screenSize={screenSize}
+            setScreenSize={setScreenSize}
+            activeMenu={activeMenu}
+            handleToggleMenu={handleToggleMenu}
+            setActiveMenu={setActiveMenu}
+          />
+        </Route>
+        <Route exact path={[PATH_PARTNERS_RU]}>
+          <PartnersRU
             agency={agency}
             agent={agent}
             token={token}
