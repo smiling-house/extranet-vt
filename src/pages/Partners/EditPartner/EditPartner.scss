@@ -20,7 +20,7 @@
 		display: grid;
 		grid-template-columns: 1fr 1fr;
 		padding: 20px;
-		border-top: 1px solid #E7E7E7;
+		// border-top: 1px solid #E7E7E7;
 		border-bottom: 1px solid #E7E7E7;
 		overflow-y: show;
 	}
@@ -33,10 +33,15 @@
 
 	.edit-partner-footer {
 		background-color: #FDFDFD;
-		height: 100px;
+		height: 85px;
 		display: flex;
 		align-items: center;
 		justify-content: flex-end;
-		margin-right: 20px;
+		margin-right: 10px;
 	}
+}
+
+.form-control.pm-bnk-det-inp {
+	font-size: 15px;
+	height: unset;
 }

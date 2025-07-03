@@ -27,6 +27,8 @@ import eventsIconOn from "../../assets/special-collection/icons/events-on.svg";
 import eventsIconOnBlue from "../../assets/special-collection/icons/events-on-blue.svg";
 import eventsLabel from "../../assets/special-collection/icons/label-events.svg";
 
+import addTitleIcon from "../../assets/icons/admin/add-title-icon.svg";
+import editTitleIcon from "../../assets/icons/admin/edit-title-icon.svg";
 
 import editIcon from '../../assets/icons/admin-edit-icon.png';
 import editAdminIcon from '../../assets/icons/admin/menu/edit.svg';
@@ -587,9 +589,84 @@ localStorage.setItem('partnerPropertiesUniqueZipcodes', JSON.stringify(partnerPr
 						</Popup>
 					}
 					{selectedPartnerToEdit &&
-						<div className="popup-wrapper" >
-							<div className="popup-container p-2" style={{ width: "730px" }} >
-								<EditPartner
+						/* Bootstrap Modal for EditPartner with fixed height, scroll, and dynamic right shift if sidebar is open */
+						<div
+							className="modal fade show"
+							tabIndex="-1"
+							role="dialog"
+							style={{
+								display: 'block',
+								backgroundColor: 'rgba(0,0,0,0.5)',
+								zIndex: 1050,
+								position: 'fixed',
+								top: 0,
+								left: showSideBarMenu ? '200px' : 0, // adjust 320px to your sidebar width
+								right: 0,
+								bottom: 0,
+								transition: 'left 0.3s',
+							}}
+						>
+							<div className="modal-dialog modal-lg" role="document">
+								<div className="modal-content">
+								<div className="modal-header">
+									<h4 className="modal-title" style={{
+										fontSize: '25px',
+										padding: '10px 0px 10px 15px'
+									}}>
+										{editClickedId ? (
+											<>
+												<span>
+													<img src={editTitleIcon} alt="" style={{ width: 28, height: 28, marginRight: 16 }} />
+												</span>
+												<span>
+													Property Manager Details
+												</span>
+												<span style={{ fontWeight: 400, fontSize: 18, color: '#888' }}>
+													| {selectedPartnerToEdit?.source ? selectedPartnerToEdit?.source === 'SH' ? 'Smiling House' : 'Villa Tracker' : ''}
+												</span>
+											</>
+											
+										 ) : (
+											<>
+												<span>
+													<img src={addTitleIcon} alt="" style={{ width: 28, height: 28, marginRight: 16 }} />
+												</span>
+												<span>
+													Add Partner
+												</span>
+												<span style={{ fontWeight: 400, fontSize: 18, color: '#888' }}>
+													&nbsp;| {selectedPartnerToEdit?.source ? selectedPartnerToEdit?.source === 'SH' ? 'Smiling House' : 'Villa Tracker' : ''}
+												</span>
+											</>
+										 )
+										}
+									</h4>
+									<button
+										type="button"
+										className="close"
+										aria-label="Close"
+										onClick={onClose}
+										style={{
+											fontSize: '2.2rem',
+											fontWeight: 700,
+											color:'#212121',
+											opacity: 1,
+											background: 'none',
+											marginLeft: 'auto',
+											marginRight: '20px',
+											marginTop: '-10px',
+											zIndex: 20,
+											cursor: 'pointer',
+											lineHeight: 1
+										}}
+										onMouseOver={e => (e.currentTarget.style.color ='#5f5f5f')}
+										onMouseOut={e => (e.currentTarget.style.color = '#212121')}
+										>
+										<span aria-hidden="true">&times;</span>
+									</button>
+								</div>
+								<div className="modal-body" style={{ padding: 0, maxHeight: '85vh', overflowY: 'auto' }}>
+									<EditPartner
 									agent={agent}
 									newPartnerID={parseInt(totalPartners) + 1}
 									editClickedId={editClickedId}
@@ -597,7 +674,9 @@ localStorage.setItem('partnerPropertiesUniqueZipcodes', JSON.stringify(partnerPr
 									partner={selectedPartnerToEdit}
 									partners={partners}
 									onClose={onClose}
-								/>
+									/>
+								</div>
+								</div>
 							</div>
 						</div>
 					}
