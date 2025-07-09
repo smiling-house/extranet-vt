@@ -385,7 +385,8 @@ const agentLoggedIn = JSON.parse( localStorage.getItem('agent') );
         const accountId = partner?.accountId ? partner?.accountId : ''//585a39dbe43900100017e9e8 // 640625ea0620e40031b8597d
         const params= { 
             //source:(accountId!=='585a39dbe43900100017e9e8')?source:'SH',
-            source:(accountId!=='585a39dbe43900100017e9e8')?source:'SH',
+            source:'guesty_channel_api',
+            channelSource:'VT',
             accountId,
             limit: constants.PAGING_LISTING_SIZE, 
             skip: clientPagingFrom - 1,
