@@ -379,7 +379,7 @@ const agentLoggedIn = JSON.parse( localStorage.getItem('agent') );
             Authorization: `Bearer ${token2}`
         }
     })
-
+ 
     const getAllListings = async () => {
 
         const accountId = partner?.accountId ? partner?.accountId : ''//585a39dbe43900100017e9e8 // 640625ea0620e40031b8597d
