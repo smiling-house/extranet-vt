@@ -282,7 +282,6 @@ const [serialNumber, setSerialNumber] = useState(0);
 				limit: constants.PAGING_PARTNERS_SIZE,
 				skip: partnersPagingFrom - 1,
 				pmName: searchInputes.pmName,
-				//channelSource: 'VT',
 				provider:'guesty_channel_api',
 				source:'VT',
 				status:filterPropertyStatus 
@@ -291,7 +290,6 @@ const [serialNumber, setSerialNumber] = useState(0);
 					limit: constants.PAGING_PARTNERS_SIZE,
 					skip: partnersPagingFrom - 1,
 					accountId: searchInputes.accountId,
-					//channelSource: 'VT',
 				provider:'guesty_channel_api',					
 				source:'VT',
 				status:filterPropertyStatus
@@ -300,11 +298,16 @@ const [serialNumber, setSerialNumber] = useState(0);
 			{
 				limit: constants.PAGING_PARTNERS_SIZE,
 				skip: partnersPagingFrom - 1,
-				//channelSource: 'VT',
 				provider:'guesty_channel_api',
 				source:'VT',
 				status:filterPropertyStatus
 			}
+
+
+if(extranet_vt_logged_in_role==='admin') {	//By Jaison 2025 July 11
+	delete params.source
+}			
+
 		console.log('loading search::::', params)
 
 
@@ -482,7 +485,12 @@ localStorage.setItem('partnerPropertiesUniqueZipcodes', JSON.stringify(partnerPr
 		},  {
 			name: 'Account ID',
 			width: '250px'
-		}, {
+		},
+		{
+			name: 'GS Channel',
+			width: '250px'
+		},		
+		{
 			name: 'Listings',
 			width: '100px'
 		}, {
@@ -769,6 +777,8 @@ localStorage.setItem('partnerPropertiesUniqueZipcodes', JSON.stringify(partnerPr
 												</h4></td>
 												<td className="pmName px-4 p-3  text-primary  cst-cursor" ><h4>{item.pmName != null ? item.pmName : ""}</h4></td>
 												<td className="accountId px-4 p-3 text-primary text-decoration-underline cst-cursor"><h4 onClick={() => onEditPartner(item._id, item)}>{item.accountId !== null ? item.accountId : ""}</h4></td>
+
+<td className="accountId px-4 p-3 text-primary cst-cursor"><h4>{item.source}</h4></td>												
 
 {/*<td className="Listings px-4 p-3 text-primary text-decoration-underline cst-cursor"><h4 onClick={() => GoToPartnerListings(item, item.accountId)}>{item.offsetRead ? item.offsetRead : "No listings"}/({item.count ? item.count : ""})</h4></td>*/}
 

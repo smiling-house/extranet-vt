@@ -386,7 +386,7 @@ const agentLoggedIn = JSON.parse( localStorage.getItem('agent') );
         const params= { 
             //source:(accountId!=='585a39dbe43900100017e9e8')?source:'SH',
             source:'guesty_channel_api',
-            channelSource:'VT',
+            channelSource:partner.source,
             accountId,
             limit: constants.PAGING_LISTING_SIZE, 
             skip: clientPagingFrom - 1,
