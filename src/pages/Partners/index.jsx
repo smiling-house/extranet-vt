@@ -355,8 +355,9 @@ if(agent_role) {
 	const GoToPartnerListings = async(partner, accountId, property_status_to_filter='') => {
 
 const responseDataUniqueZips = await userRequest.post(`local/partners/properties-unique-zipcodes`,
-	{ accountId: accountId },
+	{ accountId: accountId, channelSource: partner.source },
 );
+
 const partnerPropertiesUniqueZipcodes = responseDataUniqueZips.data;
 localStorage.setItem('partnerPropertiesUniqueZipcodes', JSON.stringify(partnerPropertiesUniqueZipcodes));
 
@@ -367,10 +368,10 @@ localStorage.setItem('partnerPropertiesUniqueZipcodes', JSON.stringify(partnerPr
 			swal({
 				show: true,
 				icon: 'error',
-				title: 'Opps!!',
+				title: 'Oops!!',
 				text: "No Data Found on Account ID :" + accountId + ' channel: ' + partner.source
 			})
-		} else {
+		} else {			
 			history.push(PATH_LISTINGS, { partner, accountId, source: partner.source });
 		}
 

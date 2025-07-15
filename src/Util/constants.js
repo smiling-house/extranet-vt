@@ -35,7 +35,9 @@ export const PATH_EPARTNERS = '/external-partners';
 
 export const PATH_ADMIN_LOGIN = '/adminlogin';
 
- 
+export const PATH_LISTINGS_BP = '/listings-bp';
+export const PATH_LISTINGS_RU = '/listings-ru';
+
 const constants = {
 	ENV: 'LOCAL',
 	BASE_URL: 'https://backend.villatracker.com',

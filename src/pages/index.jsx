@@ -12,6 +12,7 @@ import { Link, Route, Switch, useHistory, useLocation, useParams } from "react-r
 import Profile from "./Profile/Profile";
 import AgencyProfile from "./AgencyProfile/AgencyProfile";
 import Listings from "./Listings2";
+
 import Tasks from "./Tasks";
 import Reservations from "./Reservations";
 import Partners from "./Partners";
@@ -69,6 +70,8 @@ import {
   PATH_SIGNUP,
   PATH_PROPERTY_ID,
   PATH_CLIENTS,
+  PATH_LISTINGS_BP,
+  PATH_LISTINGS_RU
 
 } from "../Util/constants";
 import AuthService from "../services/auth.service";
@@ -79,8 +82,11 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import VerifyCodePage from "./ResetPasswordPage/VerifyCodePage";
 import ResetChangePasswordPage from "./ResetPasswordPage/ResetChangePasswordPage";
-const logintoken = localStorage.getItem('jToken');
 
+import ListingsBP from "./ListingsBP";
+import ListingsRU from "./ListingsRU";
+
+const logintoken = localStorage.getItem('jToken');
 
 export const drawerWidth = 240;
 const changeFontColor = {
@@ -227,6 +233,18 @@ function MainPage(props) {
             agency={agency}
           />
         </Route>
+        <Route path={[PATH_LISTINGS_BP]}>
+          <ListingsBP
+            agent={agent}
+            agency={agency}
+          />
+        </Route>   
+        <Route path={[PATH_LISTINGS_RU]}>
+          <ListingsRU
+            agent={agent}
+            agency={agency}
+          />
+        </Route>              
         <Route path={[PATH_TASKS]}>
           <Tasks
             agent={agent}
