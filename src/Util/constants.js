@@ -41,7 +41,7 @@ export const PATH_LISTINGS_RU = '/listings-ru';
 const constants = {
 	ENV: 'LOCAL',
 	BASE_URL: 'https://backend.villatracker.com',
-	//SHUB_URL: 'http://localhost:3333',
+	//SHUB_URL: 'http://localhost:3331',
 	SHUB_URL: 'https://api.villatracker.com', //'https://api.triangle.luxury'
 	//BASE_URL: 'http://localhost:8080',
 	BASE_URL2: 'https://vt-backend-8zwvrrlxf-smiling-house.vercel.app',
