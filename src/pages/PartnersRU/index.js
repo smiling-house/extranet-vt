@@ -724,8 +724,8 @@ localStorage.setItem('partnerPropertiesUniqueZipcodes', JSON.stringify(partnerPr
 
                         <div className="agencies-title">
                             
-{extranet_vt_logged_in_role==='admin' && <span>BP PM List</span> }
-{extranet_vt_logged_in_role==='partner' && <span>BP PM Home</span> }
+{extranet_vt_logged_in_role==='admin' && <span>RU PM List</span> }
+{extranet_vt_logged_in_role==='partner' && <span>RU PM Home</span> }
 
                             {!partnerLogin && (<>
                                 {/*<a class="dropdown-item" href="#" onClick={onAddPartnerSH}><img src={addAdminIcon} /> connect GUESTY PM partner SH = Smiling House </a>*/}

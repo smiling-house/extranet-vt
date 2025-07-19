@@ -62,7 +62,7 @@ const NEW_CLIENT = {
 }
 
 
-const ListingsBP = (props) => {
+const ListingsRU = (props) => {
 const partnersPageLastPageNumber = localStorage.getItem('partnersPageLastPageNumber'); //added by jaison for Liron 2025 June 11
     
 
@@ -969,4 +969,4 @@ const validateEmail = (email) =>
         )
 const validateAge = (age) => age >= 18 && age <= 50
 
-export default ListingsBP
+export default ListingsRU
