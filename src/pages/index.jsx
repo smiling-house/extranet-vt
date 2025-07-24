@@ -71,8 +71,9 @@ import {
   PATH_PROPERTY_ID,
   PATH_CLIENTS,
   PATH_LISTINGS_BP,
-  PATH_LISTINGS_RU
-
+  PATH_LISTINGS_RU,
+  PATH_EPS_LISTINGS,
+  PATH_SELECT
 } from "../Util/constants";
 import AuthService from "../services/auth.service";
 import { baseURL } from "../core";
@@ -85,6 +86,9 @@ import ResetChangePasswordPage from "./ResetPasswordPage/ResetChangePasswordPage
 
 import ListingsBP from "./ListingsBP";
 import ListingsRU from "./ListingsRU";
+
+import EListings from "./EListings";
+import EPSSelect from "./EPSSelect";
 
 const logintoken = localStorage.getItem('jToken');
 
@@ -413,6 +417,20 @@ function MainPage(props) {
             setActiveMenu={setActiveMenu}
           />
         </Route>
+        <Route path={[PATH_EPS_LISTINGS]}>
+          <EListings
+            agent={agent}
+            agency={agency}
+            token={token}
+          />
+          </Route>
+          <Route path={[PATH_SELECT]}>
+            <EPSSelect
+              agent={agent}
+              agency={agency}
+              token={token}
+            />
+          </Route>        
         <div className="page-container">
           <div className="page-header">Villa Tracker Extranet</div>
           <Sidebar

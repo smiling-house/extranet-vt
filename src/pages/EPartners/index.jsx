@@ -42,6 +42,8 @@ import EditEPartner from "./EditEPartner/index.js";
 import {
 	PATH_EPARTNERS,
 	PATH_LISTINGS,
+	PATH_EPS_LISTINGS,
+	PATH_SELECT
 } from "../../Util/constants.js";
 
 import { data } from "./makeData.js";
@@ -111,7 +113,7 @@ const EPartners = (props) => {
 			{ params: { limit: constants.PAGING_EPARTNERS_SIZE, skip: EPartnersPagingFrom - 1 } },
 		);
 		setIsLoading(false)
-		console.log("response:", EpartnersResponse.data)
+		console.log("EpartnersResponse data:", EpartnersResponse.data)
 		if (EpartnersResponse.data) {
 			localStorage.setItem("EpartnerCount", EpartnersResponse.data.count);
 			setEPartners(EpartnersResponse.data.partners);
@@ -161,7 +163,10 @@ const EPartners = (props) => {
 	const GoToEPartnerListings = (Epartner, partnerId) => {
 		console.log("see listings for partner:", partnerId, Epartner);
 		localStorage.setItem("Epartner", JSON.stringify(Epartner))
-		if (!Epartner.shared) {
+		localStorage.setItem("EpartnerIds", JSON.stringify(Epartner.ids))
+		//console.log('::Epartner.ids::', Epartner.ids)
+		//if (!Epartner.shared) {
+		if (!Epartner.ids) {
 			swal({
 				show: true,
 				icon: 'error',
@@ -169,7 +174,7 @@ const EPartners = (props) => {
 				text: "still No shared listings Data Found for partner ID :" + partnerId
 			})
 		} else {
-			history.push(PATH_LISTINGS, { Epartner, partnerId });
+			history.push(PATH_EPS_LISTINGS, { Epartner, partnerId });
 		}
 
 	};
@@ -262,14 +267,14 @@ const EPartners = (props) => {
 			width: '250px'
 		},
 		{
-			name: 'APPROVED',
+			name: 'connected',
 			sortable: true,
 			width: '150px'
 		}, {
-			name: 'PENDING',
+			name: 'pending',
 			width: '150px'
 		}, {
-			name: 'DECLINED',
+			name: 'disconnected',
 			width: '150px'
 		}, {
 			name: 'uploading agent',
@@ -307,7 +312,7 @@ const EPartners = (props) => {
 
 	return (
 		<div className="page-container">
-			<div className="page-header">S-Hub Control Panel : External Partners</div>
+			<div className="page-header">VT-Extranet : External Partners</div>
 			<Sidebar
 				agency={agency}
 				agent={agent}
@@ -385,16 +390,47 @@ const EPartners = (props) => {
 								</thead>
 								<tbody>
 									{EPartners?.map((item, index) => {
+
+
+//External Partner API - By Jaison - 2025 July 24 - START
+let connected_count = 0;
+let disconnected_count = 0;
+let pending_count = 0;
+let shared_count = 0;
+
+if (item?.ids && typeof item.ids === 'object') {
+  // Iterate over the values of the object
+  Object.values(item.ids).forEach((idObj) => {
+    switch (idObj.status) {
+      case 'connected':
+        connected_count++;
+        break;
+      case 'disconnected':
+        disconnected_count++;
+        break;
+      case 'pending':
+        pending_count++;
+        break;
+      default:
+        break;
+    }
+  });
+}
+
+shared_count = connected_count + disconnected_count + pending_count;
+
+//External Partner API - By Jaison - 2025 July 24 - END
+
 										//console.log("item ", index, item)
 										return <>
 											<tr >
 												<td className="pmName px-4 p-3  text-primary text-decoration-underline cst-cursor" ><h4 onClick={() => onEditEPartner(item._id, item)}>{totalEPartners - EPartnersPagingFrom - index + 1}</h4></td>
 												<td className="pmName px-4 p-3  text-primary text-decoration-underline cst-cursor" ><h4 onClick={() => onEditEPartner(item._id, item)}>{item.partnerName != null ? item.partnerName : ""}</h4></td>
 												<td className="accountId px-4 p-3 text-primary text-decoration-underline cst-cursor"><h4 onClick={() => onEditEPartner(item._id, item)}>{item.partnerId !== null ? item.partnerId : ""}</h4></td>
-												<td className="Listings px-4 p-3 text-primary text-decoration-underline cst-cursor"><h4 onClick={() => GoToEPartnerListings(item, item.partnerId)}>{item.count?.shared ? item.count?.shared : "No listings"}</h4></td>
-												<td className="VT provider px-4 p-3 text-primary text-decoration-underline cst-cursor"><h4 onClick={() => onEditEPartner(item._id, item)}>{ item.count?.approved}</h4></td>
-												<td className="SH provider px-4 p-3 text-primary text-decoration-underline cst-cursor"><h4 onClick={() => onEditEPartner(item._id, item)}>{ item.count?.pending}</h4></td>
-												<td className="SH provider px-4 p-3 text-primary text-decoration-underline cst-cursor"><h4 onClick={() => onEditEPartner(item._id, item)}>{ item.count?.declined}</h4></td>
+<td className="Listings px-4 p-3 text-primary text-decoration-underline cst-cursor"><h4 onClick={() => GoToEPartnerListings(item, item.partnerId)}>{/*item.count?.shared ? item.count?.shared : "No listings"*/}{shared_count}</h4></td>
+<td className="VT provider px-4 p-3 text-primary text-decoration-underline cst-cursor"><h4 onClick={() => GoToEPartnerListings(item, item.partnerId)}>{/*item.count?.approved*/}{connected_count}</h4></td>
+<td className="SH provider px-4 p-3 text-primary text-decoration-underline cst-cursor"><h4 onClick={() => GoToEPartnerListings(item, item.partnerId)}>{/*item.count?.pending*/}{pending_count}</h4></td>
+<td className="SH provider px-4 p-3 text-primary text-decoration-underline cst-cursor"><h4 onClick={() => GoToEPartnerListings(item, item.partnerId)}>{/*item.count?.declined*/}{disconnected_count}</h4></td>
 												<td className="SH provider px-4 p-3 text-primary text-decoration-underline cst-cursor"><h4 onClick={() => onEditEPartner(item._id, item)}>{item?.agent}</h4></td>
 												<td className="contactName px-4 p-3  text-primary text-decoration-underline cst-cursor" ><h4 onClick={() => onEditEPartner(item._id, item)}>{item.contactName != null ? item.contactName : ""}</h4></td>
 												<td className="pmPhone px-4 p-3  text-primary text-decoration-underline cst-cursor" ><h4 onClick={() => onEditEPartner(item._id, item)}>{item.pmPhone != null ? item.pmPhone : ""}</h4></td>

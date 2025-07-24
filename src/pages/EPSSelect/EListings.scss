@@ -1,0 +1,226 @@
+.column-header,
+.column-body {
+    border-right: 1px solid #ccc;
+	padding: 5px 15px !important;
+	font-size: 16px;
+	vertical-align: middle;
+}
+.selectlisting-input {
+	height: 30px;
+}
+.column-header:first-child,
+.column-body:first-child {
+	text-align: center;
+	cursor: pointer;
+	width: 100px
+}
+.column-header:last-child,
+.column-body:last-child {
+    border-right: none;
+}
+.two-line-cell {
+    display: flex;
+    flex-direction: row;
+    gap: 4px; /* Space between lines */
+    padding: 8px;
+}
+
+.line-one {
+    display: flex;
+    align-items: center;
+    gap: 8px; /* Space between image and text */
+}
+
+.main-photo {
+    width: 150px;
+    height: 90px;
+    border-radius: 5%;
+    object-fit: cover;
+}
+
+.nick-title {
+    font-size: 16px;
+    color: #333;
+}
+
+.line-two {
+    font-size: 12px;
+    color: #666;
+    display: flex;
+	flex-direction: column;
+    gap: 4px;
+}
+.line-two-line-one {
+	display: flex;
+    align-items: center;
+    gap: 8px; 
+}
+.line-two-line-two {
+	display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+.line-two-line-two.flx-dr-rw {
+	flex-direction: row;
+}
+.line-two-line-two > .base-price,
+.line-two-line-two > .channel,
+.line-two-line-two > .collections {
+	display: flex;
+	flex-direction: column;
+	gap: 1px; 
+	font-size: 14px;
+	border-right: 1px solid #ccc;
+	padding: 2px;
+	padding-right: 20px;
+}
+.line-two-line-two > .collections {
+	border-right: 1px solid #ccc;
+	flex-direction: row;
+}
+.line-two-line-two > .channel {
+	border-right: none;
+	align-content: center;
+}
+.pd-l10p {
+	padding-left: 10px;
+}
+
+.btn-custom01 {
+	padding: 15px 15px;
+	font-size: 15px;
+	font-weight: bold;
+	margin: 0px 5px;
+}
+.btn-custom01.span {
+	color: #808080
+}
+.btn-custom02 {
+	padding: 15px 15px;
+	font-size: 15px;
+	font-weight: bold;
+	margin: 0px 5px;
+	color: #0D6EFD;
+	border-color: #0D6EFD;
+	background-color: #fff;
+}
+.btn-custom02:hover {
+	color: #0D6EFD;
+	border-color: #0D6EFD;
+	background-color: #f2f2f2;
+}
+.mg-0-5-p {
+	margin: 0px 5px;
+}
+
+
+.listings-container {
+	background-repeat: repeat-x;
+
+	.listings-main {
+		background-color: #FFF;
+
+		.listings-title {
+			font-size: 18px;
+			font-weight: 500;
+			color: #06254d;
+			padding: 3px 13px;
+		}
+
+		.listings-paging {
+			font-size: 18px;
+			font-weight: 500;
+			color: #133C73;
+			padding: 0px 15px;
+		}
+		.nickname {
+			font-size: 16px;
+			font-weight: 700;
+			color: #252627;
+			padding: 0px 15px;
+		  }
+
+		.property-main-picture-container {
+			display: flex;
+			flex-direction: column;
+			width: 300px;
+			justify-content: center;
+			align-items: center;
+			.img-slider {
+			  display: flex;
+			  justify-content: center;
+			  align-items: center;
+			  min-width: 700px;
+			}
+			.text-title {
+				font-size: 8px;
+				font-weight: 300;
+				color: #07294c;
+				padding: 0px 15px;
+			  }
+	  
+			.property-main-picture {
+			  width: 200px;
+			  height: 100px;
+			  position: relative;
+			}
+	  
+			.property-page-prev-next-pic {
+			  padding: 8px;
+			}
+			.garbage-can {
+				position: relative;
+				top: 3px;
+				text-align: center;
+				z-index: 10;
+			}
+		}
+	}
+
+	.listings-search-container {
+		padding: 2px;
+		display: flex;
+		align-items: center;
+		background-color: rgba(19, 59, 113, 0.8);
+		row-gap: 20px;
+		//overflow: hidden;
+		position: sticky;
+		.listings-filter-channel {
+			color: white;
+			font-size: 12px;
+			font-weight: 500;
+		}
+		.search-main-selection-icons {
+			padding-top: 5px;
+			display: grid;
+			grid-template-columns: 60px 60px 60px 60px;
+			justify-items: center;
+		}
+		.listings-search-input {
+			border-radius: 5px;
+			font-size: 16px !important;
+			padding: 4px;
+			height: 60px;
+			outline: none;
+			border: 0;
+			margin-right: 20px;
+		}
+
+		.listings-search-separator {
+			margin: 0 20px;
+			height: 50px;
+			width: 1px;
+			border-right: 1px solid white;
+		}
+
+		.listings-search-add-client-button {
+			display: flex;
+			align-items: center;
+			color: white;
+			font-size: 12px;
+			font-weight: 500;
+			user-select: none;
+			cursor: pointer;
+		}
+	}
+}

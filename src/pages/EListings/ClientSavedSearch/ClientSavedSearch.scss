@@ -1,0 +1,76 @@
+.saved-search-container {
+	border-radius: 10px;
+
+	.saved-search-datagrid-property {
+		display: flex;
+	}
+
+	.saved-search-title {
+		font-size: 35px;
+		font-weight: 500;
+		color: #133C73;
+		padding: 30px;
+		text-align: center;
+	}
+
+	.saved-search-header {
+		display: flex;
+		background-color: #F5F5F2;
+		padding: 30px 40px;
+		column-gap: 30px;
+
+		.saved-search-header-title {
+			padding: 5px;
+			font-size: 25px;
+		}
+
+		.saved-search-header-value {
+			background-color: #FFFFFF;
+			border-radius: 6px;
+			width: 300px;
+			padding: 10px;
+			font-size: 25px;
+		}
+	}
+
+	.saved-search-travel-details {
+		padding: 20px 40px;
+		display: flex;
+		column-gap: 30px;
+		color: #707070;
+		font-size: 25px;
+	}
+
+	.saved-search-footer {
+		background-color: #FDFDFD;
+		height: 100px;
+		display: flex;
+		align-items: center;
+		justify-content: flex-end;
+		margin-right: 20px;
+	}
+
+	.saved-search-blue-button {
+		display: flex;
+		align-items: center;
+		background-color: #0F2E4B;
+		color: #FFF;
+		border-radius: 6px;
+		cursor: pointer;
+		user-select: none;
+		padding: 10px;
+		margin-bottom: 15px;
+	}
+
+	.saved-search-white-button {
+		display: flex;
+		align-items: center;
+		background-color: #FFF;
+		color: #0F2E4B;
+		border: 1px solid #ECEDEE;
+		border-radius: 6px;
+		cursor: pointer;
+		user-select: none;
+		padding: 10px;
+	}
+}
