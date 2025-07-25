@@ -41,7 +41,7 @@ export const PATH_LISTINGS_RU = '/listings-ru';
 //External Partner API
 export const PATH_EPS_LISTINGS = '/eps-listings';
 export const PATH_SELECT = '/eps-select-listings';
-
+ 
 const constants = {
 	ENV: 'LOCAL',
 	BASE_URL: 'https://backend.villatracker.com',
