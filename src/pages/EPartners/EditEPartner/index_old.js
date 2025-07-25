@@ -1,27 +1,23 @@
-import React, { useState, useEffect, useRef } from "react";
-import { useLocation, useHistory } from "react-router-dom";
+import React, { useState, useEffect } from "react";
 import Button from "../../../components/Buttons/Button/Button";
 import InputField from "../../../components/InputField";
 import addTitleIcon from "../../../assets/icons/admin/add-title-icon.svg";
 import editTitleIcon from "../../../assets/icons/admin/edit-title-icon.svg";
 import closeIcon from "../../../assets/icons/closeIcon.png";
-import {PATH_SELECT} from "../../../Util/constants";
+
 import "./EditEPartner.scss";
 import AuthService from "../../../services/auth.service";
 import swal from "sweetalert";
 import { log } from "loglevel";
 import Checkbox from "../../../components/Checkbox";
 import { v4 as uuidv4 } from 'uuid'
-
-
 const EditEPartner = (props) => {
   const { newPartnerID, agent, agency, partner, onClose, partners, editClickedId, editPartnerId } = props;
-  const csvInputRef = useRef(null);
   useEffect(() => {
     console.log("clicked partner:", partner)
   }, [partner]);
 
-  const history = useHistory();
+
   const [filterDataSingle, setfilterDataSingle] = useState(
     partners.filter((iteam) => iteam._id == partner)
   );
@@ -30,10 +26,7 @@ const EditEPartner = (props) => {
   const [contactName, setContactName] = useState(partner.contactName)
   const [email, setEmail] = useState(partner.email)
   const [phone, setPhone] = useState(partner.partnerPhone)
-  const [CSV, setCSV] = useState(partner.ids)
   const [partnerID, setPartnerID] = useState(partner.partnerId)
-  const [calendarUrl, setCalendarUrl] = useState(partner.calendarUrl)
-  const [staticUrl, setStaticUrl] = useState(partner.staticUrl)
   const [token, setToken] = useState(partner.bearerToken)
 
   const handleSaveButton = () => {
@@ -43,8 +36,6 @@ const EditEPartner = (props) => {
         partnerName: partnerName,
         contactName: contactName,
         partnerPhone: phone,
-        calendarUrl,
-        staticUrl,
         agent: agent.firstName+' '+agent.lastName,
         email: email,
         bearerToken: token,
@@ -137,7 +128,7 @@ const EditEPartner = (props) => {
           swal({
             show: true,
             icon: "success",
-            title: `deleted external Partner ${deletePayLoad.partnerName} (${deletePayLoad.email}) from SHUB`,
+            title: "deleted external Partner from SHUB",
             text: response.message,
           });
           setTimeout(() => {
@@ -202,100 +193,43 @@ const EditEPartner = (props) => {
     }
   };
 
-  const handleCsvClick = () => {
-    if (csvInputRef.current) {
-      csvInputRef.current.click();
-    }
-  }
-
-  const handleCSVButton = (event) => {
-    const file = event.target.files[0];
-    // console.log('csvfile', file)
-    let csvdata = {};
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const text = e.target.result;
-        const now = new Date().toISOString();
-        // const parsedData = text?.split("\n")?.length ? text?.split("\n").map((row) => row.split(",")[0].replace(/\r/g, "")) : [];
-
-        // Parse CSV and build the required structure
-        const parsedData = text
-          ?.split("\n")
-          ?.filter(row => row.trim() !== "")
-          .map((row) => {
-            const id = row.split(",")[0].replace(/\r/g, "");
-            return {
-              [id]: {
-                status: "pending",
-                updateStatic: false,
-                updateCalendar: false,
-                staticUpdated: now,
-                calendarUpdated: now
-              }
-            };
+  const handleResyncButton = () => {
+    var resyncPayLoad = {
+      partnerName: partnerName,
+      contactName: contactName,
+      partnerPhone: phone,
+      email: email,
+      partnerId: partnerID,
+      token: token,
+      source: partner.source
+    };
+    console.log("Resync partner", resyncPayLoad)
+    AuthService.resyncPartner(resyncPayLoad.partnerId, resyncPayLoad.source)
+      .then((response) => {
+        console.log(response);
+        swal({
+          show: true,
+          icon: "success",
+          title: "resync PM listings started on SHUB",
+          text: response.message,
         });
-        
-        csvdata = { 'ids' : parsedData }
-        // console.log("CSV data:", csvdata);
-        setCSV(csvdata);
-        if (editClickedId) {
-          var uploadPayLoad = {
-            content: csvdata,
-            partnerId: partnerID,
-            token: token,
-          };
-          // console.log("UPLOAD CSV partner", partnerID,uploadPayLoad)
-          AuthService.uploadSelectedListings(partnerID,uploadPayLoad)
-            .then((response) => {
-              console.log(response);
-              if(response && response.data && response.data.success) {
-                swal({
-                  show: true,
-                  icon: "success",
-                  title: `${parsedData.length} ${parsedData.length > 1 ? 'ids' : 'id'} updated for external Partner ${partnerName} (${email})`,
-                  text: "Successfully updated listings",
-                }).then(() => {
-                  onClose();
-                });
-              } else {
-                  throw new Error(`Error updating listings: ${response?.data?.message || 'Unknown error'}`);
-              }
-      
-            })
-            .catch((e) => {
-              swal({
-                show: true,
-                icon: "error",
-                title: "Opps!!",
-                text: `Error updating listings: ${e.response?.data?.message || e.message}`,
-              }).then(() => {
-                onClose();
-              });
-            });
-        };
-      }
-      reader.readAsText(file);
-    }
-    
-  }
-
-  const handleSelectListings = () => {
-    if (editClickedId) {
-      var uploadPayLoad = {
-        content: CSV,
-        partnerId: partnerID,
-        token: token,
-      };
-      console.log("Add Listings for partner", partnerID,uploadPayLoad)
-      localStorage.setItem("Epartner", JSON.stringify(partner))
-      history.push(PATH_SELECT, { partner, partnerID });
-  }
-}
+        setTimeout(() => {
+          onClose()();
+        }, 1000);
+      })
+      .catch((e) => {
+        swal({
+          show: true,
+          icon: "error",
+          title: "Opps!!",
+          text: e.response.data.message,
+        });
+      });
+  };  
 
   return (
     <>
-      <img src={closeIcon} className="popup-close-icon" onClick={onClose} alt="Close tab" />
+      <img src={closeIcon} className="popup-close-icon" onClick={onClose} />
       <div className="container edit-partner-container">
         <div className="edit-partner-header">
           <img src={partner.id === "-1" ? addTitleIcon : editTitleIcon} alt="" />
@@ -367,49 +301,8 @@ const EditEPartner = (props) => {
               />
             </div>
           </div>
-          <div className="row">
-            <div className="col-6">
-              <InputField
-                label="Static WH URL"
-                value={staticUrl}
-                onChange={setStaticUrl}
-                placeholder={"Enter partner Static URL"}
-                style={{ marginTop: "20px" }}
-              />
-            </div>
-            <div className="col-6">
-            <InputField
-                label="Calendar WH URL"
-                placeholder={"Enter partner Calendar URL"}
-                //onChange={setToken}
-                readOnly={false}
-                value={calendarUrl}
-                onChange={setCalendarUrl}
-                style={{ marginTop: "20px" }}
-              />
-            </div>
-          </div>
         </div>
         <div className="edit-partner-footer">
-        <Button
-              style={{ fontSize: "18px", marginRight: "30px" }}
-              variant="blue"
-              text="Upload CSV Listings"
-              onClick={handleCsvClick}
-            />
-            <input
-              type="file"
-              ref={csvInputRef}
-              style={{ display: 'none' }}
-              accept=".csv"
-              onChange={handleCSVButton}
-            />
-        <Button
-                style={{ fontSize: "18px", marginRight: "30px" }}
-                variant="green"
-                text="Add shared Listings"
-                onClick={handleSelectListings}
-              />
           {partner.id !== "-1"
             ? (<>
               <Button
@@ -418,7 +311,6 @@ const EditEPartner = (props) => {
                 text="Remove Partner"
                 onClick={handleDeleteButton}
               /></>) : (<></>)}
-            
           <Button
             style={{ fontSize: "18px", marginRight: "30px" }}
             variant="link"

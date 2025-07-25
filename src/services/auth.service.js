@@ -38,7 +38,8 @@ const updatePartner = async (accountId, payload, source) => {
 
 const updateEPartner = async (partnerId, payload) => {
     console.log("updateAPI:", partnerId, payload)
-    const ShubResponse = await userRequest.post(constants.SHUB_URL + `/update-external-partner/` + partnerId, payload);
+    //const ShubResponse = await userRequest.post(constants.SHUB_URL + `/update-external-partner/` + partnerId, payload);
+    const ShubResponse = await userRequest.post(constants.SHUB_URL + `/eps/update-external-partner/` + partnerId, payload);
     return ShubResponse
 };
 
@@ -48,7 +49,8 @@ const deletePartner = async (accountId, source) => {
 };
 
 const deleteEPartner = async (partnerId) => {
-    const ShubResponse = await userRequest.post(constants.SHUB_URL + `/delete-external-partner/` + partnerId);
+    //const ShubResponse = await userRequest.post(constants.SHUB_URL + `/delete-external-partner/` + partnerId);
+    const ShubResponse = await userRequest.post(constants.SHUB_URL + `/eps/delete-external-partner/` + partnerId);
     return ShubResponse
 };
 
@@ -249,15 +251,14 @@ const DestinationsOptions = () => {
     const headersForupdate = {
         "authorization": `Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2NvdW50X29iamVjdF9pZCI6Mzk5MTU4NzUsInVzZXJfaWQiOiI0MDY2NTAyMSIsInVzZXJfbmFtZSI6InN5c3RlbStsdW5hLTh5NXljIiwic2NvcGUiOlsiYnJpdm8uYXBpIl0sImlzc3VlZCI6IjE2NzUxMTI3NDYxMzYiLCJleHAiOjE2NzUxMTI4MDYsInNlcnZpY2VfdG9rZW4iOm51bGwsImF1dGhvcml0aWVzIjpbIlJPTEVfU1VQRVJfQURNSU4iLCJST0xFX0FETUlOIl0sImp0aSI6ImVmNzY1MDIyLTZhNzctNGZkMy04Njg1LTFhZTFhZmEzOTJhZSIsImNsaWVudF9pZCI6IjkzOTFlYjVkLWUwNmUtNDY4MS1iNTdhLWQwZTU3NDhhM2RlZSIsIndoaXRlX2xpc3RlZCI6ZmFsc2V9.N9MIeiLyrT3hBUtMJsTvwbYW5Z_o7ZSBuZmir2ytrb8DiE4MoXcmh8C6KriWhmnRqUnSMBRtuLcauVbqjFTorOcWMOd2RQGmisPgXBm1tHT30Hl0i57rQuLZHAVW201ot-TdQwW9oEZ3n2HTGu_A6tRhTizVmG6NRAd5KhOB2_c`,
     }
-    return axios.get(`https://api.triangle.luxury/local/destinations`, {
+    return axios.get(`https://api.villatracker.com/local/destinations`, {
         headers: headersForupdate
     })
         .then((response) => {
-            console.log(response.data.destinations)
-            const regions = response.data.destinations.allRegions
-            const countries = response.data.destinations.allCountries
-            const cities = response.data.destinations.allCities
-            const destinations = response.data.destinations
+            const regions = response?.data.data[0]?.allRegions
+            const countries = response?.data.data[0]?.allCountries
+            const cities = response?.data.data[0]?.allCities
+            const destinations = response?.data.data[0]?.destinations
             console.log('loaded destinations:',destinations)
             localStorage.setItem('destinations', JSON.stringify(destinations))
             localStorage.setItem('regions', JSON.stringify(regions))
@@ -307,8 +308,8 @@ const trianglLuxuryApiPerId = (id) => {
     const headersForupdate = {
         Authorization: `Bearer ${token2}`
     }
-    console.log(`getting listings https://api.triangle.luxury/local/listings/${id}`)
-    return axios.get(`https://api.triangle.luxury/local/listings/${id}`, {
+    console.log(`getting listings https://api.villatracker.com/local/listings/${id}`)
+    return axios.get(`https://api.villatracker.com/local/listings/${id}`, {
         headers: headersForupdate
     }).then((response) => {
         console.log("Res API:", response.data)
@@ -323,8 +324,8 @@ const trianglLuxuryApi = (params) => {
     }
     console.log(params)
     const queryString = Object.keys(params).map(key => key + '=' + params[key]).join('&');
-    console.log(`getting listings https://api.triangle.luxury/local/listings?${queryString}`)
-    return axios.get(`https://api.triangle.luxury/local/listings?${queryString}`, {
+    console.log(`getting listings https://api.villatracker.com/local/listings?${queryString}`)
+    return axios.get(`https://api.villatracker.com/local/listings?${queryString}`, {
         //    return axios.get(constants.SHUB_URL_LOCAL + `/local/listings?${data}`, {
         headers: headersForupdate
     }).then((response) => {

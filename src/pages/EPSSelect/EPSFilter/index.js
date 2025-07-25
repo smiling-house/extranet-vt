@@ -50,7 +50,6 @@ const EPSFilter = (props) => {
     }, [])
 
     const handlefilterbyval = (val) => {
-    
         let newfilterbyval = JSON.parse(JSON.stringify(filterbyval));
         let newfilterbyvaldata = JSON.parse(JSON.stringify(filterbyvaldata));
         let newSearchTerm = JSON.parse(JSON.stringify(searchTerm));
@@ -139,8 +138,7 @@ const EPSFilter = (props) => {
     }
 
     const handleFilterSearch = (e, filterIndex) => {
-        
-       
+               
         const value = e.target.value;
         const newSearchTerm = JSON.parse(JSON.stringify(searchTerm));
         let newsearchFilteredListData = JSON.parse(JSON.stringify(searchFilteredListData));

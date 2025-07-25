@@ -168,7 +168,7 @@ function MainPage(props) {
       }
     }).catch((e) => {
       console.log(e)
-      console.log('cuold not read shub destinations!')
+      console.log('COULD not read shub destinations!')
     })
   }, []);
 

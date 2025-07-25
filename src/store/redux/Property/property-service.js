@@ -33,8 +33,8 @@ export const loadProperties = async (pageNumber,token) => {
 	};
 	console.log("params:", params);
 	const queryString = Object.keys(params).map(key => key + '=' + params[key]).join('&');
-	const guestySearch='https://api.triangle.luxury/services/guesty/openapi/listings?';
-	const shubSearch='https://api.triangle.luxury/local/listings?';
+	const guestySearch='https://api.villatracker.com/services/guesty/openapi/listings?';
+	const shubSearch='https://api.villatracker.com/local/listings?';
 	return reqInstance.get(`${shubSearch}${queryString}`)
 		.then(async response => {
 			const res = response.data;
@@ -70,8 +70,8 @@ export const loadFavorites = async (favorites,token) => {
 	});
 
 	const queryString = Object.keys(favorites).map(key => favorites[key]).join(' ');
-	const guestySearch='https://api.triangle.luxury/services/guesty/openapi/listings?ids=';
-	const shubSearch='https://api.triangle.luxury/local/listings?ids=';
+	const guestySearch='https://api.villatracker.com/services/guesty/openapi/listings?ids=';
+	const shubSearch='https://api.villatracker.com/local/listings?ids=';
 	console.log("API FAVORITES REQUEST=",`${shubSearch}"${queryString}"`);
 	return reqInstance.get(`${shubSearch}"${queryString}"`)
 		.then(async response => {

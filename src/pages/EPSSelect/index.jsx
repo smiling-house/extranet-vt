@@ -174,7 +174,7 @@ const Listings = (props) => {
     console.log('epartnerSharedId: ' + epartnerSharedId, connected?'connect it!':'disconnect it!')
     console.log('ids to update:',data)
     setIsLoading(true)
-    const ShubResponse = await userRequest.post(constants.SHUB_URL + `/update-external-partner-id-status/${partnerId}`, data)
+    const ShubResponse = await userRequest.post(constants.SHUB_URL + `/eps/update-external-partner-id-status/${partnerId}`, data)
     console.log('res:',ShubResponse)
     if (ShubResponse.data?.success) {
         await swal({
