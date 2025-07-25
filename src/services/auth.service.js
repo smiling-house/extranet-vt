@@ -54,6 +54,15 @@ const deleteEPartner = async (partnerId) => {
     return ShubResponse
 };
 
+const uploadCSVPartner = async (partnerId,data) => {
+    const ShubResponse = await userRequest.post(constants.SHUB_URL + `/eps/csv-external-partner/` + partnerId, data);
+    return ShubResponse
+};
+const uploadSelectedListings = async (partnerId,data) => {
+    const ShubResponse = await userRequest.post(constants.SHUB_URL + `/eps/upload-external-partner-listings/` + partnerId, data);
+    return ShubResponse
+};
+
 const resyncPartner = async (accountId, source) => {
     const ShubResponse = await userRequest.post(constants.SHUB_URL + `/resync/` + accountId + '/' + source);
     return ShubResponse
@@ -410,7 +419,8 @@ const AuthService = {
     travelAgencyApproval,
     trianglLuxuryApi,
     AddSubAgentApi,
-    trianglLuxuryApiPerId
+    trianglLuxuryApiPerId,
+    uploadSelectedListings
 };
 
 export default AuthService;
