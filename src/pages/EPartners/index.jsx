@@ -43,7 +43,8 @@ import {
 	PATH_EPARTNERS,
 	PATH_LISTINGS,
 	PATH_EPS_LISTINGS,
-	PATH_SELECT
+	PATH_SELECT,
+	PATH_EPS_EPARTNER_MANAGE
 } from "../../Util/constants.js";
 
 import { data } from "./makeData.js";
@@ -179,6 +180,12 @@ const EPartners = (props) => {
 
 	};
 
+	const goToEpartnerManage = (ePartnerEmail, ePartner) => {
+		localStorage.setItem('ePartnerEmail', ePartnerEmail)
+		localStorage.setItem('Epartner', JSON.stringify(ePartner))
+		history.push(PATH_EPS_EPARTNER_MANAGE);
+	}
+
 	const doSearch = pageNumber => {
 		EPartnersPagingFrom = 1 + pageNumber * constants.PAGING_EPARTNERS_SIZE;
 		EPartnersPagingTo = (EPartnersPagingFrom + constants.PAGING_EPARTNERS_SIZE > totalEPartners) ? totalEPartners : EPartnersPagingFrom + constants.PAGING_EPARTNERS_SIZE
@@ -262,7 +269,12 @@ const EPartners = (props) => {
 		}, {
 			name: 'partner ID',
 			width: '80px'
-		}, {
+		},
+			{
+			name: 'Status',
+			width: '80px'
+		},		
+		{
 			name: 'shared ids',
 			width: '250px'
 		},
@@ -427,6 +439,9 @@ shared_count = connected_count + disconnected_count + pending_count;
 												<td className="pmName px-4 p-3  text-primary text-decoration-underline cst-cursor" ><h4 onClick={() => onEditEPartner(item._id, item)}>{totalEPartners - EPartnersPagingFrom - index + 1}</h4></td>
 												<td className="pmName px-4 p-3  text-primary text-decoration-underline cst-cursor" ><h4 onClick={() => onEditEPartner(item._id, item)}>{item.partnerName != null ? item.partnerName : ""}</h4></td>
 												<td className="accountId px-4 p-3 text-primary text-decoration-underline cst-cursor"><h4 onClick={() => onEditEPartner(item._id, item)}>{item.partnerId !== null ? item.partnerId : ""}</h4></td>
+
+<td className="px-4 p-3 text-primary cst-cursor"><h4 onClick={() => goToEpartnerManage(item.email, item)}>{item.status}</h4></td>
+
 <td className="Listings px-4 p-3 text-primary text-decoration-underline cst-cursor"><h4 onClick={() => GoToEPartnerListings(item, item.partnerId)}>{/*item.count?.shared ? item.count?.shared : "No listings"*/}{shared_count}</h4></td>
 <td className="VT provider px-4 p-3 text-primary text-decoration-underline cst-cursor"><h4 onClick={() => GoToEPartnerListings(item, item.partnerId)}>{/*item.count?.approved*/}{connected_count}</h4></td>
 <td className="SH provider px-4 p-3 text-primary text-decoration-underline cst-cursor"><h4 onClick={() => GoToEPartnerListings(item, item.partnerId)}>{/*item.count?.pending*/}{pending_count}</h4></td>
