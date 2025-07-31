@@ -38,9 +38,11 @@ export const PATH_ADMIN_LOGIN = '/adminlogin';
 export const PATH_LISTINGS_BP = '/listings-bp';
 export const PATH_LISTINGS_RU = '/listings-ru';
 
+ 
 //External Partner API
 export const PATH_EPS_LISTINGS = '/eps-listings';
 export const PATH_SELECT = '/eps-select-listings';
+
 
 export const PATH_EPS_EPARTNER_MANAGE = '/eps-epartner-manage';
 
