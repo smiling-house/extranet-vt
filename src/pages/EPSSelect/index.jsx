@@ -273,7 +273,7 @@ const Listings = (props) => {
         const params= { 
             filters,
             limit: constants.PAGING_LISTING_SIZE, 
-            skip: page,
+            skip: skip,
             sortBy: 'data.nickname:1'
         }
         const queryString = Object.keys(params).map(key => key + '=' + params[key]).join("&")
@@ -782,7 +782,7 @@ const updateFilteredListings = () => {
                 title: `${selectedfilteredlistings.length} ${selectedfilteredlistings.length > 1 ? 'ids' : 'id'} updated for external Partner ${Epartner.partnerName} (${Epartner.email})`,
                 text: "Successfully updated listings",
             }).then(() => {
-                history.push(PATH_EPARTNERS);
+                // history.push(PATH_EPARTNERS);
             })
 
         } else {
@@ -797,7 +797,7 @@ const updateFilteredListings = () => {
             title: "Opps!!",
             text: `Error updating listings: ${e.response?.data?.message || e.message}`,
         }).then(() => {
-            history.push(PATH_EPARTNERS);
+            // history.push(PATH_EPARTNERS);
         });
         
     })
