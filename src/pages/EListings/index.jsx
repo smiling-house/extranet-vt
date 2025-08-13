@@ -57,7 +57,14 @@ const Listings = (props) => {
     const [isLoading, setIsLoading] = useState(false)
     const [onlyConnected, setOnlyConnected] = useState(false)
     const [onlyDisConnected, setOnlyDisConnected] = useState(false)
-    const [filteredIds, setFilteredIds] = useState({})
+    const [onlyPending, setOnlyPending] = useState(false)
+
+    const Epartner = JSON.parse(localStorage.getItem("Epartner"));
+    const partnerId = Epartner.partnerId
+
+    const EpartnerIds = JSON.parse(localStorage.getItem("EpartnerIds"));
+        
+    const [filteredIds, setFilteredIds] = useState(EpartnerIds)
 
     const [slicedIds, setSlicedIds] = useState({})
     
@@ -72,10 +79,7 @@ const Listings = (props) => {
     const history = useHistory();
     const location = useLocation(); 
 
-    const Epartner = JSON.parse(localStorage.getItem("Epartner"));
-    const partnerId = Epartner.partnerId
 
-    const EpartnerIds = JSON.parse(localStorage.getItem("EpartnerIds"));
 
 
     //console.log('partnerId:' + partnerId)
@@ -204,7 +208,8 @@ const limit = constants.PAGING_LISTING_SIZE; // Number of items to take
 const skip = clientPagingFrom-1;  // Number of items to skip
 
 //filteredIds
-const slicedIds = Object.entries(EpartnerIds)
+//const slicedIds = Object.entries(EpartnerIds)
+const slicedIds = Object.entries(filteredIds)
   .slice(skip, skip + limit) // Apply skip and limit
   .reduce((acc, [key, value]) => {
     acc[key] = value;
@@ -313,6 +318,7 @@ useEffect(() => {
     setFilteredIds(Epartner.ids)
 
 }, [])
+*/
 
  useEffect(() => {
      console.log("useEffect 2 - refresh!:",refresh)
@@ -321,13 +327,13 @@ useEffect(() => {
 //     setRefresh(false)
 
  }, [refresh,isRefresh,filteredIds])
-*/
+
 
 
 
 useEffect(() => {
     
-    setFilteredIds(EpartnerIds);
+    //setFilteredIds(EpartnerIds);
 
     /*
     const setFilterIdsSlicedIds = async () => {
@@ -361,8 +367,15 @@ useEffect(() => {
     const transformedData = Object.fromEntries(
     Object.values(connectedIds).map(([id, details]) => [id, details])
   );
-    setFilteredIds(transformedData)
-    console.log("Only Connected",transformedData)
+    console.log('transformedData:::', transformedData)      
+    
+    if( !Object.keys(transformedData).length ) {
+        setFilteredIds({})
+    } else {
+        setFilteredIds(transformedData);
+    }    
+    
+    //console.log("Only Connected",transformedData)
     getAllListings();
 }
 
@@ -382,8 +395,35 @@ const handleOnlyDisConnected = () => {
     const transformedData = Object.fromEntries(
         Object.values(disconnectedIds).map(([id, details]) => [id, details])
       );
-    setFilteredIds(transformedData)
+console.log('transformedData:::', transformedData)  
+
+    if( !Object.keys(transformedData).length ) {
+        setFilteredIds({})
+    } else {
+        setFilteredIds(transformedData);
+    }
+
     console.log("Only Disconnected",transformedData)
+
+}
+
+const handleOnlyPending = () => {
+    setOnlyConnected(false);
+    setOnlyDisConnected(true);
+    // Filtering the ids where status is 'disconnected'
+    const disconnectedIds = Object.entries(Epartner.ids).filter(([key, value]) => value.status === "pending");
+    const transformedData = Object.fromEntries(
+        Object.values(disconnectedIds).map(([id, details]) => [id, details])
+      );
+console.log('transformedData:::', transformedData)  
+
+    if( !Object.keys(transformedData).length ) {
+        setFilteredIds({})
+    } else {
+        setFilteredIds(transformedData);
+    }
+
+    console.log("Only Pending",transformedData)
 
 }
 
@@ -437,9 +477,45 @@ const handleSearchButton = () => {
 
 
 const headerSearchRow = () => {
+
+//External Partner API - By Jaison - 2025 August 13 - END
+let connected_count = 0;
+let disconnected_count = 0;
+let pending_count = 0;
+let shared_count = 0;
+
+if (EpartnerIds && typeof EpartnerIds === 'object') {
+  // Iterate over the values of the object
+  Object.values(EpartnerIds).forEach((idObj) => {
+    switch (idObj.status) {
+      case 'connected':
+        connected_count++;
+        break;
+      case 'disconnected':
+        disconnected_count++;
+        break;
+      case 'pending':
+        pending_count++;
+        break;
+      default:
+        break;
+    }
+  });
+}
+
+shared_count = connected_count + disconnected_count + pending_count;
+//External Partner API - By Jaison - 2025 August 13 - END
+
+/*
     const connectedButton=`${Epartner.count?.connected} connected`
     const disconnectedButton=`${Epartner.count?.disconnected} disconnected`
     const allButton=`${Epartner.count?.shared} ALL`
+*/
+    const connectedButton=`${connected_count} connected`
+    const disconnectedButton=`${disconnected_count} disconnected`
+    const pendingButton=`${pending_count} pending`
+    const allButton=`${shared_count} ALL`
+
     return ( //comment
         <div className="listings-search-container row">
             <div className="col-sm-2">
@@ -458,6 +534,9 @@ const headerSearchRow = () => {
             <div className="col-sm-2">
                 <Button style={{ height: '60px', width: '160px', fontSize: '15px', borderRadius: '5px' }} variant={onlyDisConnected?"blue":"green" } text={disconnectedButton} onClick={handleOnlyDisConnected} />
             </div>
+            <div className="col-sm-2">
+                <Button style={{ height: '60px', width: '160px', fontSize: '15px', borderRadius: '5px' }} variant={onlyPending?"blue":"green" } text={pendingButton} onClick={handleOnlyPending} />
+            </div>            
             <div className="col-sm-2">
                 <Button style={{ height: '60px', width: '160px', fontSize: '15px', borderRadius: '5px' }} variant={!onlyDisConnected&&!onlyConnected?"blue":"green" } text={allButton} onClick={handleAllStatuses} />
             </div>
