@@ -118,10 +118,12 @@ function MainPage(props) {
   const [propertyId, setPropertyId] = useState('');
   const [partner, setPartner] = useState(localStorage.getItem("partner"));
   const [property, setProperty] = useState(localStorage.getItem("property"));
-  const [regions, setRegions] = useState(localStorage.getItem('regions') ? JSON.parse(localStorage.getItem('regions')) : [])
-  const [destinations, setDestinations] = useState(localStorage.getItem('destinations') ? JSON.parse(localStorage.getItem('destinations')) : [])
-  const [cities, setCities] = useState(localStorage.getItem('cities') ? JSON.parse(localStorage.getItem('cities')) : [])
-  const [countries, setCountries] = useState(localStorage.getItem('countries') ? JSON.parse(localStorage.getItem('countries')) : [])
+
+  //const [regions, setRegions] = useState(typeof localStorage.getItem('regions') !== 'undefined' && localStorage.getItem('regions')  ? JSON.parse(localStorage.getItem('regions')) : [])
+  const [regions, setRegions] = useState(localStorage.getItem('regions') !== 'undefined' && localStorage.getItem('regions') !== null ? JSON.parse(localStorage.getItem('regions')) : [])
+  const [destinations, setDestinations] = useState(localStorage.getItem('destinations')  !== 'undefined' && localStorage.getItem('destinations')  !== null ? JSON.parse(localStorage.getItem('destinations')) : [])
+  const [cities, setCities] = useState(localStorage.getItem('cities')  !== 'undefined' && localStorage.getItem('cities')  !== null ? JSON.parse(localStorage.getItem('cities')) : [])
+  const [countries, setCountries] = useState(localStorage.getItem('countries')  !== 'undefined' && localStorage.getItem('countries')  !== null ? JSON.parse(localStorage.getItem('countries')) : [])
 
   const userRequest = axios.create({
     baseURL: baseURL,
