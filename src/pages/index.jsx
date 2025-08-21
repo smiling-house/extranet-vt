@@ -74,7 +74,9 @@ import {
   PATH_LISTINGS_RU,
   PATH_EPS_LISTINGS,
   PATH_SELECT,
-  PATH_EPS_EPARTNER_MANAGE
+  PATH_EPS_EPARTNER_MANAGE,
+  PATH_EPS_EPARTNERS_RESERVATIONS,
+  PATH_EPS_EPARTNER_RESERVATIONS_PROPERTIES
 } from "../Util/constants";
 import AuthService from "../services/auth.service";
 import { baseURL } from "../core";
@@ -92,7 +94,9 @@ import EListings from "./EListings";
 import EPSSelect from "./EPSSelect";
 
 import EPartnerManage from "./EPartnerManage";
+import EPartnersReservations from "./EPartnersReservations";
 
+import EPartnerReservationsProperties from "./EPartnerReservationsProperties";
 
 const logintoken = localStorage.getItem('jToken');
 
@@ -443,7 +447,21 @@ function MainPage(props) {
             agency={agency}
             token={token}
           />
-          </Route>                 
+          </Route> 
+        <Route path={[PATH_EPS_EPARTNERS_RESERVATIONS]}>
+          <EPartnersReservations
+            agent={agent}
+            agency={agency}
+            token={token}
+          />
+          </Route>     
+        <Route path={[PATH_EPS_EPARTNER_RESERVATIONS_PROPERTIES]}>
+          <EPartnerReservationsProperties
+            agent={agent}
+            agency={agency}
+            token={token}
+          />
+          </Route>                               
         <div className="page-container">
           <div className="page-header">Villa Tracker Extranet</div>
           <Sidebar
