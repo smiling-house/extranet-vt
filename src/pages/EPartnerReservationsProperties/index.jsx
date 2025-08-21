@@ -129,7 +129,6 @@ const [reservations, setReservations] = useState([]);
 
 
 
-
     const toggleFilterChannel = (channel) => {
         var newFilters = filterChannel// saving the currentXdata
 
