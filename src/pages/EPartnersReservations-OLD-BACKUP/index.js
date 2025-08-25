@@ -101,7 +101,7 @@ const EPartners = (props) => {
     });
     const getAllEPSReservations = async () => {
         setIsLoading(true)
-        const EpartnersResponse = await userRequest.get(`local/external-partners`,
+        const EpartnersResponse = await userRequest.get(`eps/get-all-reservations`,
             { params: { limit: constants.PAGING_EPARTNERS_SIZE, skip: EPartnersPagingFrom - 1 } },
         );
         setIsLoading(false)
@@ -110,7 +110,7 @@ const EPartners = (props) => {
             localStorage.setItem("EpartnerCount", EpartnersResponse.data.count);
             setEPartners(EpartnersResponse.data.partners);
             setTotalEPartners(parseInt(EpartnersResponse.data.count))
-        } else { console.log("error on reading Epartners api from shub/local/external-partners") }
+        } else { console.log("error on reading Epartners api from eps/get-all-reservations") }
     };
     const getSearchEPartners = async () => {
         setIsLoading(true)
@@ -131,7 +131,7 @@ const EPartners = (props) => {
                 skip: EPartnersPagingFrom - 1,
             }
         console.log('loading search:', params)
-        const EpartnersResponse = await userRequest.get(`local/external-partners`,
+        const EpartnersResponse = await userRequest.get(`eps/get-all-reservations`,
             {
                 params
             },
@@ -155,6 +155,8 @@ const EPartners = (props) => {
     const GoToEPartnerReservations = (Epartner, partnerId) => {
         console.log("see listings for partner:", partnerId, Epartner);
         localStorage.setItem("EpartnerReservation", JSON.stringify(Epartner))
+        localStorage.setItem("epartner-id-reservations", partnerId)
+
         //localStorage.setItem("EpartnerIds", JSON.stringify(Epartner.ids))
         //console.log('::Epartner.ids::', Epartner.ids)
         //if (!Epartner.shared) {
@@ -376,7 +378,7 @@ shared_count = connected_count + disconnected_count + pending_count;
                                                 <td className="pmName px-4 p-3  text-primary text-decoration-underline cst-cursor" ><h4 >{item.partnerName != null ? item.partnerName : ""}</h4></td>
                                                 <td className="accountId px-4 p-3 text-primary text-decoration-underline cst-cursor"><h4 >{item.partnerId !== null ? item.partnerId : ""}</h4></td>
 
-<td className="px-4 p-3 text-primary cst-cursor"><h4 onClick={() => goToEpartnerManage(item.email, item)}>{item.status}</h4></td>
+<td className="px-4 p-3 text-primary cst-cursor"><h4>{item.status}</h4></td>
 
 <td className="Listings px-4 p-3 text-primary text-decoration-underline cst-cursor"><h4 onClick={() => GoToEPartnerReservations(item, item.partnerId)}>{/*item.count?.shared ? item.count?.shared : "No listings"*/}{shared_count}</h4></td>
 <td className="VT provider px-4 p-3 text-primary text-decoration-underline cst-cursor"><h4 onClick={() => GoToEPartnerReservations(item, item.partnerId)}>{/*item.count?.approved*/}{connected_count}</h4></td>

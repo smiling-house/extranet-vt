@@ -337,10 +337,9 @@ useEffect(() => {
     }
 
     const token2 = 'eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2NvdW50X29iamVjdF9pZCI6Mzk5MTU4NzUsInVzZXJfaWQiOiI0MDY2NTAyMSIsInVzZXJfbmFtZSI6InN5c3RlbStsdW5hLTh5NXljIiwic2NvcGUiOlsiYnJpdm8uYXBpIl0sImF0aSI6ImI5MTliYmJiLTA1ZWItNDlmOC05MjlhLWM0MTJlYzY3NWI2YyIsImlzc3VlZCI6IjE2NzUzNzA2NDMzNzMiLCJleHAiOjIyOTczMzM3MjcsInNlcnZpY2VfdG9rZW4iOm51bGwsImF1dGhvcml0aWVzIjpbIlJPTEVfU1VQRVJfQURNSU4iLCJST0xFX0FETUlOIl0sImp0aSI6IjExODQzYjg2LWIyYzUtNGMwNS1hYWZlLTcxZTI4NGIyNjNlOCIsImNsaWVudF9pZCI6IjkzOTFlYjVkLWUwNmUtNDY4MS1iNTdhLWQwZTU3NDhhM2RlZSIsIndoaXRlX2xpc3RlZCI6ZmFsc2V9.Mqmx7onIVz_EVAunhwqBAhAmlsGXMQ18hh_EV_61KQIpaGXlrgXgx1hOOdNWLFriG3Un6jfS7H7vwMAYmBT6-8yl9L7VB7Cpxva49XozuSJazQ42UDDlTOsnWAmatzmFna-Uzjc8MDfVQbR8AwMiFq_Jb9ViaJ4XBkj2KhEKs1g'
-
+    
     const userRequest = axios.create({
         headers: {
-            //Authorization: `Bearer ${token2}`
             Authorization: `Bearer ${Epartner.bearerToken}`
         }
     })
@@ -362,7 +361,10 @@ const skip = clientPagingFrom-1;  // Number of items to skip
     const queryString = Object.keys(params).map(key => key + '=' + params[key]).join("&")
 
     if (true) {
-        const shubSearch=constants.SHUB_URL+'/eps/get-reservations/'+partnerId+'?';
+        
+        //const shubSearch=constants.SHUB_URL+'/eps/get-reservations/'+partnerId+'?';
+        const shubSearch=constants.SHUB_URL+'/eps/get-all-reservations/'+'?';
+
         console.log(`get ${shubSearch}${queryString}`)
         setIsLoading(true)
         userRequest.get(`${shubSearch}${queryString}`).then(async response => {
@@ -605,10 +607,10 @@ shared_count = connected_count + disconnected_count + pending_count;
 }
 
 const columns = [
-    {
+    /*{
         id: 'checkBox',
-        name: '',
-    },    
+        name: '#',
+    },*/    
     {
         id: 'PartnerName',
         name: 'Partner Name',
@@ -755,12 +757,17 @@ return (
                 </div>
 
                 <div className="listings-main">
+
+                    {/*
                     <div className="listings-title">{Epartner?.pmName ? Epartner?.pmName : ''} /{Epartner?.contactName ? Epartner?.contactName : ''} / {Epartner?.email ? Epartner?.email : ''} / AccountID {Epartner?.accountId ? Epartner?.accountId : ''}/ source: {Epartner?.source ? Epartner?.source : ''}</div>
                     <div className="listings-paging">Displaying  {ListingsPagingFrom}-{ListingsPagingTo} of {totalListings ? totalListings : "?"} Listings</div>
+                    */}
+
                     {<Paging perPage={constants.PAGING_LISTING_SIZE} totalItems={totalListings} currentPage={pageNumber} onChangePage={onChangePage} />}
 
 
-{extranet_vt_logged_in_role==='admin' &&
+{/* extranet_vt_logged_in_role==='admin' &&
+
     <section>
 <div style={{'padding':'10px', 'display':'flex', 'align-items':'center', 'row-gap':'20px', 'position':'sticky'}}>
     <div class="col-3">
@@ -793,14 +800,17 @@ return (
     </div>
 </div>
 
+
 <div style={{'padding':'10px', 'display':'flex', 'align-items':'center', 'row-gap':'20px', 'position':'sticky'}}>
     <div class="col-3">
         <button class="btn btn-primary" onClick={updateSelectedListingsStatus}>Update Status</button>        
     </div>       
 </div>
 
+
 </section>
-}            
+
+*/}           
 
 
 

@@ -232,11 +232,13 @@ const EPSListingrow = (props) => {
   //main xdata return here:
   return <>
 
+    {/*
     <td>
-      {eps_reservation_data.guestBookingStatus==='pending' &&
+      eps_reservation_data.guestBookingStatus==='pending' &&
           <input type="checkbox" value={eps_reservation_data.reservationID} name="reservation_ids_to_update[]"  />
-      }&nbsp;
+      &nbsp;
     </td>
+    */}
 
     <td className="px-3 p-3 text-primary"><h5 >
           {eps_reservation_data.partnerName}
