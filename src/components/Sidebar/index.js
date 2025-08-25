@@ -37,7 +37,8 @@ import {
   PATH_MAP,
   PATH_RESERVATIONS,
   PATH_SIGNOUT,
-  PATH_EPS_EPARTNERS_RESERVATIONS
+  PATH_EPS_EPARTNERS_RESERVATIONS,
+  PATH_EPS_EPARTNER_RESERVATIONS_PROPERTIES
 } from "../../Util/constants";
 
 const Sidebar = ({ activeMenu, setActiveMenu, handleToggleMenu }) => {
@@ -132,7 +133,7 @@ const Sidebar = ({ activeMenu, setActiveMenu, handleToggleMenu }) => {
       }      
       
       {admin&&renderItem("External Partners", PATH_EPARTNERS, adminIcon) }
-      {admin&&renderItem("EPS Reservations", PATH_EPS_EPARTNERS_RESERVATIONS, adminIcon) }
+      {admin&&renderItem("EPS Reservations", PATH_EPS_EPARTNER_RESERVATIONS_PROPERTIES, adminIcon) }
       {admin&&renderItem("Listings", PATH_LISTINGS, customersIcon)}
       {admin&&renderItem("Tasks", PATH_TASKS, customersIcon)}
       {admin&&renderItem("VT Reservations", PATH_RESERVATIONS, reservationsIcon)}
