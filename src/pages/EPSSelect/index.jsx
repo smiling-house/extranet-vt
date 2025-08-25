@@ -249,7 +249,7 @@ const Listings = (props) => {
                 }
             })
             dontsend = false;
-        } else {
+        } /*else {
             const slicedIds = Object.entries(filteredIds)
             .slice(skip, skip + limit) // Apply skip and limit
             .reduce((acc, [key, value]) => {
@@ -262,6 +262,8 @@ const Listings = (props) => {
             if(idsString === '') { dontsend = true; } else { dontsend = false; }
             filters= filters + '{"field":"ids", "operator":"$in", "value": ["'+idsString+'"]}';
         }
+        */
+
         filters = filters + "]";
         console.log('filters:',filters)
         console.log(searchbytagvalue)
@@ -278,7 +280,7 @@ const Listings = (props) => {
         }
         const queryString = Object.keys(params).map(key => key + '=' + params[key]).join("&")
         console.log(queryString)
-        const shubSearch=constants.SHUB_URL+'/local/listings?';
+        const shubSearch=constants.SHUB_URL+'/local/listings-search?';
         if(!dontsend) {
             setIsLoading(true)
             userRequest.get(`${shubSearch}${queryString}&isListed=true`).then(async response => {
@@ -349,7 +351,7 @@ const Listings = (props) => {
     const queryString = Object.keys(params).map(key => key + '=' + params[key]).join("&")
     console.log(queryString)
     if (true) {
-        const shubSearch=constants.SHUB_URL+'/local/listings?';
+        const shubSearch=constants.SHUB_URL+'/local/listings-search?';
         console.log(`get ${shubSearch}${queryString}`)
         setIsLoading(true)
         userRequest.get(`${shubSearch}${queryString}&isListed=true`).then(async response => {
