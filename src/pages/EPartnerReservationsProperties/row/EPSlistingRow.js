@@ -65,7 +65,7 @@ import axios from "axios"
 import constants from "../../../Util/constants"
 
 const EPSListingrow = (props) => {
-  const { property, fullCalendar, id, agent, agency, partner, xdata, updateXdata , EPSstatus, handleStatusButton, eps_reservation_data} = props
+  const { property, fullCalendar, id, agent, agency, partner, xdata, updateXdata , EPSstatus, handleStatusButton, eps_reservation_data, changeReservationStatus} = props
   const oldXdata=xdata
   const [chk, setChk] = useState([])
   const [tags, setTags] = useState(xdata?.tags)
@@ -281,9 +281,9 @@ const EPSListingrow = (props) => {
     </td>    
 
     <td>
-    <h5>
-      {eps_reservation_data.guestBookingStatus}
-    </h5>
+      <h5 onClick={() => changeReservationStatus(eps_reservation_data.guestBookingStatus, eps_reservation_data)}>
+        {eps_reservation_data.guestBookingStatus}
+      </h5>
     </td>  
 
     

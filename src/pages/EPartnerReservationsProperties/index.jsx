@@ -17,6 +17,7 @@ import TLChannelIconOn from "../../assets/channels/icons/TLChannel-on.svg"
 import TLChannelIconOnBlue from "../../assets/channels/icons/TLChannel-on-blue.svg"
 import TLChannelLabel from "../../assets/channels/icons/label-TLChannel.svg"
 
+import Popup from "../../components/Popup/index.js";
 import Button from "../../components/Buttons/Button/Button"
 import pageBg from '../../assets/bk_pool.png'
 import { data } from "./makeData.js"
@@ -69,11 +70,14 @@ const [reservations, setReservations] = useState([]);
 const [epartner_id_reservations, setEpartner_id_reservations] = useState('');
 
 const Epartner = JSON.parse(localStorage.getItem("EpartnerReservation"));
-const partnerId = Epartner.partnerId;
+// const partnerId = Epartner.partnerId;
 
 const agentLoggedIn = JSON.parse( localStorage.getItem('agent') );
 const agentData = JSON.parse( localStorage.getItem('agent') );
 const extranet_vt_logged_in_role = localStorage.getItem('extranet-vt-logged-in-role');
+
+const [onReservationStatusChange, setOnReservationStatusChange] = useState(false);
+const [selectedReservations, setSelectedReservations] = useState(null);
 
     const [updateStatusProcess, setUpdateStatusProcess] = useState(0);
     const [propStatus, setPropStatus] = useState('');
@@ -200,7 +204,7 @@ if(propStatus==='Approved') {
 
 
 
-        const reservationDataToUpdate = {'partnerId':partnerId,'reservationID':reservationIdsToUpdate, 'status':propStatus, decliningReason:reason_decline, statusUpdatedBy:agentData.firstName}
+        const reservationDataToUpdate = {'reservationID':reservationIdsToUpdate, 'status':propStatus, decliningReason:reason_decline, statusUpdatedBy:agentData.firstName}
 
 alert('i am here');
 return false;
@@ -340,8 +344,9 @@ useEffect(() => {
 
     const userRequest = axios.create({
         headers: {
-            //Authorization: `Bearer ${token2}`
-            Authorization: `Bearer ${Epartner.bearerToken}`
+            'x-api-key': 'swwSK4tqWyYHP4GvRF7qHNOoSGVs7nwSekPKyLQD'
+            // Authorization: `Bearer ${token2}`
+            // Authorization: `Bearer ${Epartner.bearerToken}`
         }
     })
 
@@ -351,18 +356,19 @@ useEffect(() => {
         // Slicing the JSON
 const limit = constants.PAGING_LISTING_SIZE; // Number of items to take
 const skip = clientPagingFrom-1;  // Number of items to skip
-        
+        // filter=pending&sortBy=startDate:desc
         const params= {
-            limit: constants.PAGING_LISTING_SIZE, 
-            skip: 0,
-            sortBy: 'data.nickname:1'
+            // limit: constants.PAGING_LISTING_SIZE, 
+            // skip: 0,
+            // filter: 'pending',
+            sortBy: 'startDate:desc'
         }
     
     console.log('getting from /listings:',params)
     const queryString = Object.keys(params).map(key => key + '=' + params[key]).join("&")
 
     if (true) {
-        const shubSearch=constants.SHUB_URL+'/eps/get-reservations/'+partnerId+'?';
+        const shubSearch=constants.SHUB_URL+'/eps/get-all-reservations'+'?';
         console.log(`get ${shubSearch}${queryString}`)
         setIsLoading(true)
         userRequest.get(`${shubSearch}${queryString}`).then(async response => {
@@ -395,7 +401,7 @@ const skip = clientPagingFrom-1;  // Number of items to skip
                 localStorage.setItem("count", response?.data?.count)
                 */
 
-console.log(':::::partnerId:::::', partnerId)
+// console.log(':::::partnerId:::::', partnerId)
 console.log(':::::reservations:::::',reservations)
 return                
 
@@ -686,11 +692,11 @@ if (totalListings < ListingsPagingTo) {
     const newStatus=connected?'connected':'disconnected'   
     updateEpartnerShareData[epartnerSharedId].status = newStatus
     const data = {id: epartnerSharedId, status:newStatus}
-    console.log('partnerId : ' + partnerId)
+    // console.log('partnerId : ' + partnerId)
     console.log('epartnerSharedId: ' + epartnerSharedId, connected?'connect it!':'disconnect it!')
     console.log('ids to update:',data)
     setIsLoading(true)
-    const ShubResponse = await userRequest.post(constants.SHUB_URL + `/eps/update-external-partner-id-status/${partnerId}`, data)
+    const ShubResponse = await userRequest.post(constants.SHUB_URL + `/eps/update-external-partner-id-status/`, data)
     console.log('res:',ShubResponse)
     if (ShubResponse.data?.success) {
         await swal({
@@ -720,6 +726,22 @@ if (totalListings < ListingsPagingTo) {
   }
 
 
+  const changeReservationStatus = (status, reservation) => {
+    setOnReservationStatusChange(status)
+    setSelectedReservations(reservation)
+  }
+  const onCloseResStatus = () => {
+    // update reservation status here to declined.....
+    // then change the state to hide popup.....
+    setOnReservationStatusChange(false)
+    setSelectedReservations(null)
+  }
+  const onSubmitResStatus = () => {
+    // update reservation status here to approved.....
+    // then change the state to hide popup.....
+    setOnReservationStatusChange(false)
+    setSelectedReservations(null)
+  }
 
 
 
@@ -759,6 +781,42 @@ return (
                     <div className="listings-paging">Displaying  {ListingsPagingFrom}-{ListingsPagingTo} of {totalListings ? totalListings : "?"} Listings</div>
                     {<Paging perPage={constants.PAGING_LISTING_SIZE} totalItems={totalListings} currentPage={pageNumber} onChangePage={onChangePage} />}
 
+    {
+        selectedReservations && (
+            <Popup>
+                <div className="approve-agent-container">
+                    <div className="approve-agent-header">
+                        <div className="approve-agent-title">Approving by Admin:</div>
+                        <div className="approve-agent-sub-header">
+                            <div>Main Agent : <b></b></div>
+                            <div className="approve-agent-sub-header-separator" />
+                            <div>Agency: <b></b></div>
+                        </div>
+                    </div>
+
+                    <div className="approve-agent-main">
+
+                        {/* <InputField label="Emails will be sent to agent at :" labelStyle={{ fontWeight: 500, fontSize: '20px', color: '#707070' }} value={agency?.agency?.email} onChange={setHoldersName} placeholder={"Enter email address"} />
+                        <InputField label="Internal CC to:" labelStyle={{ fontWeight: 500, fontSize: '20px', color: '#707070' }} value={address} onChange={setAddress} placeholder={"Enter email address"} style={{ marginTop: '20px' }} /> */}
+                    </div>
+
+                    <div className="approve-agent-footer">
+                        <Button
+                            style={{ fontSize: '18px', marginRight: '30px' }}
+                            variant="link"
+                            text="Cancel"
+                            onClick={onCloseResStatus}
+                        />
+                        <Button
+                            style={{ fontSize: '18px' }}
+                            text="Confirm"
+                            onClick={() => onSubmitResStatus(selectedReservations)}
+                        />
+                    </div>
+                </div>
+            </Popup>
+        )
+    }
 
 {extranet_vt_logged_in_role==='admin' &&
     <section>
@@ -819,13 +877,13 @@ return (
                                     <tbody>
                                         {reservations.map((item, index) => {
                                             //console.log("listing item:",index+1,item, Epartner.ids)
-
-                                            const ApropertyId = item.listing?._id
-                                            const fullCalendar = item.fullCalendar
+                                            console.log(item)
+                                            const ApropertyId = item.reservationID
+                                            // const fullCalendar = item.fullCalendar
                                             //find the status on the partner per id 
-                                            const EPSStatus = constants.AVAIL_STATUS.includes(
-                                                Epartner.ids[ApropertyId]?.status?.toLowerCase()
-                                              ) ?Epartner.ids[ApropertyId]?.status.toLowerCase():  '-'          
+                                            // const EPSStatus = constants.AVAIL_STATUS.includes(
+                                            //     Epartner.ids[ApropertyId]?.status?.toLowerCase()
+                                            //   ) ?Epartner.ids[ApropertyId]?.status.toLowerCase():  '-'          
                                                 //console.log('status:',ApropertyId,EPSStatus)
                                             return <>
                                                 <tr>
@@ -836,12 +894,13 @@ return (
                                                         xdata={item.xdata}
                                                         agent={agent}
                                                         Epartner={Epartner}
-                                                        EPSstatus={EPSStatus}
+                                                        EPSstatus={'-'}
                                                         id={ApropertyId}
-                                                        fullCalendar={fullCalendar}
+                                                        fullCalendar={[]}
                                                         uid="row{item.listing._id}"
 
                                                         eps_reservation_data={item}
+                                                        changeReservationStatus={changeReservationStatus}
                                                     />}
                                                 </tr>
                                             </>
