@@ -3,6 +3,8 @@ import React, { useCallback, useEffect, useState } from "react"
 import { PATH_PROPERTY } from "../../../Util/constants"
 import { useHistory } from "react-router-dom"
 import swal from "sweetalert"
+
+/*
 import canOff from "../../../assets/property/can-off.svg";
 import canOn from "../../../assets/property/can-on.svg";
 import starOff from "../../../assets/property/star-off.svg";
@@ -31,7 +33,7 @@ import TLChannelIcon from "../../../assets/channels/icons/TLChannel.svg"
 import TLChannelIconOn from "../../../assets/channels/icons/TLChannel-on.svg"
 import TLChannelIconOnBlue from "../../../assets/channels/icons/TLChannel-on-blue.svg"
 import TLChannelLabel from "../../../assets/channels/icons/label-TLChannel.svg"
-
+*/
 import eventsIcon from "../../../assets/special-collection/icons/events.svg"
 import eventsIconOn from "../../../assets/special-collection/icons/events-on.svg"
 import eventsIconOnBlue from "../../../assets/special-collection/icons/events-on-blue.svg"
@@ -44,16 +46,18 @@ import dogsLabel from "../../../assets/special-collection/icons/label-pets.svg"
 
 import greenIcon from "../../../assets/special-collection/icons/green.svg"
 import greenIconOn from "../../../assets/special-collection/icons/green-on.svg"
-import greenIconOnBlue from "../../../assets/special-collection/icons/green-on-blue.svg"
+//import greenIconOnBlue from "../../../assets/special-collection/icons/green-on-blue.svg"
 import greenLabel from "../../../assets/special-collection/icons/label-sustainable.svg"
 
 import familiesIcon from "../../../assets/special-collection/icons/kids.svg"
 import familiesIconOn from "../../../assets/special-collection/icons/kids-on.svg"
 import familiesIconOnBlue from "../../../assets/special-collection/icons/kids-on-blue.svg"
 import familiesLabel from "../../../assets/special-collection/icons/label-families.svg"
+/*
 import bathIcon from "../../../assets/property/baths.png";
 import bedsIcon from "../../../assets/property/beds.png";
 import peopleIcon from "../../../assets/property/people.png";
+*/
 
 import CollectionIcon from "../../../components/CollectionIcon"
 import RegionsDropDown from "../../../components/RegionsDropDown"
@@ -232,11 +236,12 @@ const EPSListingrow = (props) => {
   //main xdata return here:
   return <>
 
-    <td>
+   {/* <td>
       {eps_reservation_data.guestBookingStatus==='pending' &&
           <input type="checkbox" value={eps_reservation_data.reservationID} name="reservation_ids_to_update[]"  />
       }&nbsp;
     </td>
+    */}
 
     <td className="px-3 p-3 text-primary"><h5 >
           {eps_reservation_data.partnerName}

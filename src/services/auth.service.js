@@ -388,6 +388,49 @@ const AddSubAgentApi = (data) => {
     });
 };
 
+const updateReservationStatus = async (reservationData, status, statusUpdatedBy, guestyReservationId) => {
+
+  try {
+    const response = await axios.put(
+      `${ShubURL}/eps/update-reservations/${reservationData.partnerId}`,
+      { reservationID:reservationData.reservationID, status, statusUpdatedBy, guestyReservationId, reservationData }, 
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${reservationData.partnerToken}`,
+        },
+      }
+    );
+    console.log('Reservation status updated:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Error updating reservation status:', error);
+    throw error;
+  }
+};
+
+
+const declineReservation = async(reservationData, status, statusUpdatedBy) => {
+  try {
+    const response = await axios.put(
+      `${ShubURL}/eps/decline-reservations/${reservationData.partnerId}`,
+      { reservationID:reservationData.reservationID, status, statusUpdatedBy, reservationData }, 
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${reservationData.partnerToken}`,
+        },
+      }
+    );
+    console.log('Reservation status updated:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Error updating reservation status:', error);
+    throw error;
+  }
+}
+
+
 const AuthService = {
     updateXdata,
     addNewPartner,
@@ -420,7 +463,9 @@ const AuthService = {
     trianglLuxuryApi,
     AddSubAgentApi,
     trianglLuxuryApiPerId,
-    uploadSelectedListings
+    uploadSelectedListings,
+    updateReservationStatus,
+    declineReservation
 };
 
 export default AuthService;

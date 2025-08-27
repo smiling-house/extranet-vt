@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react"
 import { Dialog, DialogActions, DialogContent, DialogTitle, Stack, } from "@mui/material"
+/*
 import Icon from 'react-web-vector-icons'
 import { useDispatch, useSelector } from "react-redux";
 import VTChannelIcon from "../../assets/channels/icons/VTChannel.svg"
@@ -16,13 +17,13 @@ import TLChannelIcon from "../../assets/channels/icons/TLChannel.svg"
 import TLChannelIconOn from "../../assets/channels/icons/TLChannel-on.svg"
 import TLChannelIconOnBlue from "../../assets/channels/icons/TLChannel-on-blue.svg"
 import TLChannelLabel from "../../assets/channels/icons/label-TLChannel.svg"
-
+import { baseURL } from "../../core/index.js"
+*/
 import Popup from "../../components/Popup/index.js";
 import Button from "../../components/Buttons/Button/Button"
 import pageBg from '../../assets/bk_pool.png'
 import { data } from "./makeData.js"
 import axios from "axios"
-import { baseURL } from "../../core/index.js"
 import PageHeader from "../../components/PageHeader"
 import { PATH_PROPERTY } from "../../Util/constants"
 import { useLocation, useHistory } from "react-router-dom";
@@ -30,18 +31,23 @@ import { useLocation, useHistory } from "react-router-dom";
 import "./EListings.scss"
 import Paging from "../../components/Paging"
 import constants from "../../Util/constants"
-import closeIcon from '../../assets/icons/closeIcon.png'
 import { BsChevronDown } from "react-icons/bs"
+/*
+import closeIcon from '../../assets/icons/closeIcon.png'
 import { IoIosSearch } from "react-icons/io"
 import { BiCalendarCheck } from "react-icons/bi"
+import CollectionIcon from "../../components/CollectionIcon"
+import * as propertyActions from "../../store/redux/Property/actions";
+import EPartners from "../EPartners/index.jsx";
+*/
 import AuthService from "../../services/auth.service"
 import swal from "sweetalert"
 import LoadingBox from "../../components/LoadingBox"
-import CollectionIcon from "../../components/CollectionIcon"
-import * as propertyActions from "../../store/redux/Property/actions";
+
 import Sidebar from "../../components/Sidebar";
 import EPSListingrow from "./row/EPSlistingRow"
-import EPartners from "../EPartners/index.jsx";
+
+/*
 const NEW_CLIENT = {
     id: "-1",
     firstName: "",
@@ -50,7 +56,9 @@ const NEW_CLIENT = {
     state: "",
     phone: "",
 }
+*/
 
+import dayjs from 'dayjs'
 
 const EPartnerReservationsProperties = (props) => {
     const { token, screenSize, activeMenu, handleToggleMenu, setActiveMenu } = props
@@ -131,7 +139,7 @@ const checkUncheckAll = () => {
 
 
     async function updateSelectedListingsStatus() {
-       
+return; //This function is not in use. Delete this later if not required       
 
 if(propStatus==='Declined' && decliningReason==='') {
 
@@ -206,8 +214,7 @@ if(propStatus==='Approved') {
 
         const reservationDataToUpdate = {'reservationID':reservationIdsToUpdate, 'status':propStatus, decliningReason:reason_decline, statusUpdatedBy:agentData.firstName}
 
-alert('i am here');
-return false;
+
 
         if(reservationDataToUpdate.length > 0 && propStatus !== '') {
             const ShubResponse = await userRequest.post(constants.SHUB_URL+'/local/listings/update-multiple-listings-status11', reservationDataToUpdate);
@@ -611,10 +618,10 @@ shared_count = connected_count + disconnected_count + pending_count;
 }
 
 const columns = [
-    {
+    /* {
         id: 'checkBox',
         name: '',
-    },    
+    }, */    
     {
         id: 'PartnerName',
         name: 'Partner Name',
@@ -744,6 +751,158 @@ if (totalListings < ListingsPagingTo) {
   }
 
 
+//Copied from VT-Front\src\pages\Reservations\EditReservation\index.js
+  const handleResConfirmation = async (reservationData) => {
+    /*
+    console.log('selected Reservation:::', reservationData);
+    console.log('status:::', status);
+
+    console.log('partnerId:', reservationData.partnerId)
+    console.log('partnerName:', reservationData.partnerName)
+    console.log('partnerToken:', reservationData.partnerToken)
+    console.log('propertyName:', reservationData.propertyName)
+    console.log('bookingId:', reservationData.bookingId)
+    console.log('currency:', reservationData.currency)
+    console.log('guestBookingStatus:', reservationData.guestBookingStatus)
+    console.log('guestEmail:', reservationData.guestEmail)
+    console.log('reservationID:', reservationData.reservationID)
+    console.log('status:', reservationData.status)
+    console.log('propertyId:', reservationData.propertyId) 
+    */  
+
+
+
+    const guestyReservationId = `EPS-Villatracker_test_${reservationData?.reservationID}`;
+    //const guestyReservationId = `EPS-Villatracker_${reservationData?.reservationID}`;
+
+
+    let data = JSON.stringify({
+      "client": {
+        "firstName": reservationData?.guestFirstName,
+        "lastName": reservationData?.guestLastName,
+        "phone": reservationData?.guestPhoneNumbers,
+        "email": reservationData?.guestEmail
+      },
+      "dateFrom": dayjs(reservationData?.startDate).format("MM.DD.YYYY"),
+      "dateTo": dayjs(reservationData?.endDate).format("MM.DD.YYYY"),
+      "currency": reservationData?.currency,
+      "adults": reservationData?.adults,
+      "children": reservationData?.children,
+      "resChannel": "VT",
+      "reservationId": guestyReservationId,
+      "ResStatus": "Commit"
+
+    });
+
+    let config = {
+      method: 'put',
+      maxBodyLength: Infinity,
+      url: constants.SHUB_URL+'/reserve/' + reservationData?.propertyId,
+      headers: {
+        'Authorization': 'bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2NvdW50X29iamVjdF9pZCI6Mzk5MTU4NzUsInVzZXJfaWQiOiI0MDY2NTAyMSIsInVzZXJfbmFtZSI6InN5c3RlbStsdW5hLTh5NXljIiwic2NvcGUiOlsiYnJpdm8uYXBpIl0sImlzc3VlZCI6IjE2NzUxMTI3NDYxMzYiLCJleHAiOjE2NzUxMTI4MDYsInNlcnZpY2VfdG9rZW4iOm51bGwsImF1dGhvcml0aWVzIjpbIlJPTEVfU1VQRVJfQURNSU4iLCJST0xFX0FETUlOIl0sImp0aSI6ImVmNzY1MDIyLTZhNzctNGZkMy04Njg1LTFhZTFhZmEzOTJhZSIsImNsaWVudF9pZCI6IjkzOTFlYjVkLWUwNmUtNDY4MS1iNTdhLWQwZTU3NDhhM2RlZSIsIndoaXRlX2xpc3RlZCI6ZmFsc2V9.N9MIeiLyrT3hBUtMJsTvwbYW5Z_o7ZSBuZmir2ytrb8DiE4MoXcmh8C6KriWhmnRqUnSMBRtuLcauVbqjFTorOcWMOd2RQGmisPgXBm1tHT30Hl0i57rQuLZHAVW201ot-TdQwW9oEZ3n2HTGu_A6tRhTizVmG6NRAd5KhOB2_c',
+        'Account-Id': '640625ea0620e40031b8597d',
+        'Content-Type': 'application/json'
+      },
+      data: data
+    };
+
+
+
+
+    axios.request(config)
+      .then(async (response) => {
+        console.log('GUESTY RESPONSE DATA:::', response.data);
+        console.log('GUESTY RESPONSE DATA STRINGIFY:::', JSON.stringify(response.data));
+        if (response.data.success) { 
+            
+            console.log('GUESTY BOOKING SUCCESS!');
+            
+            console.log('guestyReservationId:::', guestyReservationId);
+            
+            
+            //update VTHUB db status,agent,guestyReservationId in collection eps_reservations
+            const response = await AuthService.updateReservationStatus(reservationData, 'approved', agentData.firstName, guestyReservationId);
+            //console.log('response.data from VTHUB:::', response.data)    
+                
+            //swal
+            if(response.success) {
+                //swal("success", "Reservation is approved! " + response.data.message, "success");
+                swal({
+                    show: true,
+                    title: 'Success',
+                    text: "Reservation is approved! " + response.message + ' (GUESTY RESERVATION ID : '+guestyReservationId+')',
+                    icon: "success"
+                })                
+            } else {
+                //swal("error", response.data.message, "error");
+                swal({
+                    show: true,
+                    title: 'Error',
+                    text: response.message,
+                    icon: "error"
+                })                
+            }                    
+
+            //reload
+            
+        } else {
+           // swal("error", 'Guesty reservation failed!', "error");
+            swal({
+                show: true,
+                title: 'Error',
+                text: 'Guesty reservation failed!',
+                icon: "error"
+            })            
+        }
+
+      })
+      .catch((error) => {
+        console.log('error RES:', error);
+      });
+
+
+
+    /*
+    const response = await AuthService.updateReservationStatus(reservationData, 'approved', agentData.firstName);
+    console.log(response);
+    swal("Success", "Reservation is approved", "success");
+    // } catch (error) {
+    //   console.error("Error confirming reservation:", error);
+    //   swal("Error", "Failed to approve reservation", "error");
+    // }    
+    onClose();
+    */
+
+  }
+
+  
+    const handleResDecline = async (reservationData) => {
+
+        
+            const response = await AuthService.declineReservation(reservationData, 'declined', agentData.firstName);
+            //console.log('response.data from VTHUB:::', response.data)    
+                
+            //swal
+            if(response.success) {
+                //swal("success", , "success");
+                swal({
+                    show: true,
+                    title: 'Success',
+                    text: "Reservation is declined! " + response.message,
+                    icon: "success"
+                })                
+            } else {
+                //swal("error", response.data.message, "error");
+                swal({
+                    show: true,
+                    title: 'Error',
+                    text: response.message,
+                    icon: "error"
+                })                
+            }         
+        
+    }
+
 
 return (
     
@@ -778,7 +937,7 @@ return (
 
                 <div className="listings-main">
                     <div className="listings-title">{Epartner?.pmName ? Epartner?.pmName : ''} /{Epartner?.contactName ? Epartner?.contactName : ''} / {Epartner?.email ? Epartner?.email : ''} / AccountID {Epartner?.accountId ? Epartner?.accountId : ''}/ source: {Epartner?.source ? Epartner?.source : ''}</div>
-                    <div className="listings-paging">Displaying  {ListingsPagingFrom}-{ListingsPagingTo} of {totalListings ? totalListings : "?"} Listings</div>
+                    <div className="listings-paging">Displaying  {ListingsPagingFrom}-{ListingsPagingTo} of {totalListings ? totalListings : "?"} Reservations</div>
                     {<Paging perPage={constants.PAGING_LISTING_SIZE} totalItems={totalListings} currentPage={pageNumber} onChangePage={onChangePage} />}
 
     {
@@ -788,16 +947,24 @@ return (
                     <div className="approve-agent-header">
                         <div className="approve-agent-title">Approving by Admin:</div>
                         <div className="approve-agent-sub-header">
-                            <div>Main Agent : <b></b></div>
+                            <div>Main Agent : <b>{agentData.firstName}</b></div>
                             <div className="approve-agent-sub-header-separator" />
-                            <div>Agency: <b></b></div>
+                            <div>Agency: <b>{agentData.agencyName}</b></div>
                         </div>
                     </div>
 
                     <div className="approve-agent-main">
 
-                        {/* <InputField label="Emails will be sent to agent at :" labelStyle={{ fontWeight: 500, fontSize: '20px', color: '#707070' }} value={agency?.agency?.email} onChange={setHoldersName} placeholder={"Enter email address"} />
-                        <InputField label="Internal CC to:" labelStyle={{ fontWeight: 500, fontSize: '20px', color: '#707070' }} value={address} onChange={setAddress} placeholder={"Enter email address"} style={{ marginTop: '20px' }} /> */}
+                        <div class="row">
+                            <div class="col-6">
+                                <input type="button" class="btn btn-primary" value="Approve" onClick={()=>handleResConfirmation(selectedReservations)} />
+                            </div>
+
+                            <div class="col-6">
+                                <input type="button" class="btn btn-danger" value="Decline" onClick={()=>handleResDecline(selectedReservations)} />
+                            </div>                            
+                        </div>
+
                     </div>
 
                     <div className="approve-agent-footer">
@@ -807,18 +974,18 @@ return (
                             text="Cancel"
                             onClick={onCloseResStatus}
                         />
-                        <Button
+                        {/* <Button
                             style={{ fontSize: '18px' }}
                             text="Confirm"
                             onClick={() => onSubmitResStatus(selectedReservations)}
-                        />
+                        /> */}
                     </div>
                 </div>
             </Popup>
         )
     }
 
-{extranet_vt_logged_in_role==='admin' &&
+{/* extranet_vt_logged_in_role==='admin' &&
     <section>
 <div style={{'padding':'10px', 'display':'flex', 'align-items':'center', 'row-gap':'20px', 'position':'sticky'}}>
     <div class="col-3">
@@ -858,7 +1025,7 @@ return (
 </div>
 
 </section>
-}            
+*/}
 
 
 
