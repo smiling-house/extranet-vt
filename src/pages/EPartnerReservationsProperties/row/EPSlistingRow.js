@@ -287,7 +287,7 @@ const EPSListingrow = (props) => {
 
     <td>
       <h5 onClick={() => changeReservationStatus(eps_reservation_data.guestBookingStatus, eps_reservation_data)}>
-        {eps_reservation_data.guestBookingStatus}
+        {eps_reservation_data.status}
       </h5>
     </td>  
 
