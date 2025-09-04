@@ -388,12 +388,12 @@ const AddSubAgentApi = (data) => {
     });
 };
 
-const updateReservationStatus = async (reservationData, status, statusUpdatedBy, guestyReservationId) => {
+const updateReservationStatus = async (reservationData, status, statusUpdatedBy, reservationUniqueID) => {
 
   try {
     const response = await axios.put(
       `${ShubURL}/eps/update-reservations/${reservationData.partnerId}`,
-      { reservationID:reservationData.reservationID, status, statusUpdatedBy, guestyReservationId, reservationData }, 
+      { reservationID:reservationData.reservationID, status, statusUpdatedBy, reservationUniqueID, reservationData }, 
       {
         headers: {
           'Content-Type': 'application/json',

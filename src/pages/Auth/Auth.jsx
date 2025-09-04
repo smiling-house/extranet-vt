@@ -345,7 +345,7 @@ export const SignIn = () => {
 								<Logo />
 							</div>
 						</div>
-						<h1>EXTRANET</h1>
+						<h1>VT EXTRANET</h1>
 
 						<div className="row justify-content-center mt-4">
 							<div className="col-8">
@@ -416,7 +416,7 @@ export const SignIn = () => {
 									className="btn btn-primary p-3 col-12"
 									fullwidth={true}
 									loading={state.loading}
-									text="Extranet login"
+									text="VT-Extranet login"
 									onClick={(e) => {
 										setState({ ...state, error: undefined });
 										//handleSubmitEx(e);
@@ -424,7 +424,7 @@ export const SignIn = () => {
 									}}
 								>
 									{/*codeSent?('Extranet login'):('Send 2FA Code')*/}
-									{'Extranet login'}
+									{'VT-Extranet login'}
 								</button>
 							</div>
 						</div>

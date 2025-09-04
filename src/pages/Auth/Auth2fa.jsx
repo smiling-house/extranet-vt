@@ -252,7 +252,7 @@ export const SignIn = () => {
                 </div>
 			
               </div>
-            	<h1>EXTRANET</h1>  
+            	<h1>VT EXTRANET</h1>  
 
               <div className="row justify-content-center">
                 <div className="col-12 col-md-8">

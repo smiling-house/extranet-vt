@@ -85,6 +85,7 @@ const agentData = JSON.parse( localStorage.getItem('agent') );
 const extranet_vt_logged_in_role = localStorage.getItem('extranet-vt-logged-in-role');
 
 const [onReservationStatusChange, setOnReservationStatusChange] = useState(false);
+const [onCancelReservation, setOnCancelReservation] = useState(false);
 const [selectedReservations, setSelectedReservations] = useState(null);
 
     const [updateStatusProcess, setUpdateStatusProcess] = useState(0);
@@ -741,6 +742,8 @@ if (totalListings < ListingsPagingTo) {
     // update reservation status here to declined.....
     // then change the state to hide popup.....
     setOnReservationStatusChange(false)
+    setOnCancelReservation(false)
+
     setSelectedReservations(null)
   }
   const onSubmitResStatus = () => {
@@ -751,12 +754,22 @@ if (totalListings < ListingsPagingTo) {
   }
 
 
+  const cancelReservation = (status, reservation) => {
+    setOnCancelReservation(status)
+    setSelectedReservations(reservation)
+  }  
+
+
 //Copied from VT-Front\src\pages\Reservations\EditReservation\index.js
-  const handleResConfirmation = async (reservationData) => {
+  const handleResConfirmation = async (reservationData) => {    
+
+const reservationUniqueID = `EPS-VT-TEST_${reservationData?.reservationID}`; //Testing
+//const reservationUniqueID = `EPS-VT_${reservationData?.reservationID}`; //LIVE
+
     /*
     console.log('selected Reservation:::', reservationData);
-    console.log('status:::', status);
-
+    
+    console.log('status:::', reservationData.status);
     console.log('partnerId:', reservationData.partnerId)
     console.log('partnerName:', reservationData.partnerName)
     console.log('partnerToken:', reservationData.partnerToken)
@@ -767,14 +780,7 @@ if (totalListings < ListingsPagingTo) {
     console.log('guestEmail:', reservationData.guestEmail)
     console.log('reservationID:', reservationData.reservationID)
     console.log('status:', reservationData.status)
-    console.log('propertyId:', reservationData.propertyId) 
-    */  
-
-
-
-    const guestyReservationId = `EPS-Villatracker_test_${reservationData?.reservationID}`;
-    //const guestyReservationId = `EPS-Villatracker_${reservationData?.reservationID}`;
-
+    */
 
     let data = JSON.stringify({
       "client": {
@@ -786,18 +792,18 @@ if (totalListings < ListingsPagingTo) {
       "dateFrom": dayjs(reservationData?.startDate).format("MM.DD.YYYY"),
       "dateTo": dayjs(reservationData?.endDate).format("MM.DD.YYYY"),
       "currency": reservationData?.currency,
+      "numberOfGuests":reservationData.numberOfGuests,
       "adults": reservationData?.adults,
       "children": reservationData?.children,
       "resChannel": "VT",
-      "reservationId": guestyReservationId,
+      "reservationId": reservationUniqueID,
       "ResStatus": "Commit"
-
     });
 
     let config = {
       method: 'put',
       maxBodyLength: Infinity,
-      url: constants.SHUB_URL+'/reserve/' + reservationData?.propertyId,
+      url: constants.SHUB_URL+'/reserve/' + reservationData?.propertyId + '?reservation_request_from=eps',
       headers: {
         'Authorization': 'bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2NvdW50X29iamVjdF9pZCI6Mzk5MTU4NzUsInVzZXJfaWQiOiI0MDY2NTAyMSIsInVzZXJfbmFtZSI6InN5c3RlbStsdW5hLTh5NXljIiwic2NvcGUiOlsiYnJpdm8uYXBpIl0sImlzc3VlZCI6IjE2NzUxMTI3NDYxMzYiLCJleHAiOjE2NzUxMTI4MDYsInNlcnZpY2VfdG9rZW4iOm51bGwsImF1dGhvcml0aWVzIjpbIlJPTEVfU1VQRVJfQURNSU4iLCJST0xFX0FETUlOIl0sImp0aSI6ImVmNzY1MDIyLTZhNzctNGZkMy04Njg1LTFhZTFhZmEzOTJhZSIsImNsaWVudF9pZCI6IjkzOTFlYjVkLWUwNmUtNDY4MS1iNTdhLWQwZTU3NDhhM2RlZSIsIndoaXRlX2xpc3RlZCI6ZmFsc2V9.N9MIeiLyrT3hBUtMJsTvwbYW5Z_o7ZSBuZmir2ytrb8DiE4MoXcmh8C6KriWhmnRqUnSMBRtuLcauVbqjFTorOcWMOd2RQGmisPgXBm1tHT30Hl0i57rQuLZHAVW201ot-TdQwW9oEZ3n2HTGu_A6tRhTizVmG6NRAd5KhOB2_c',
         'Account-Id': '640625ea0620e40031b8597d',
@@ -806,33 +812,33 @@ if (totalListings < ListingsPagingTo) {
       data: data
     };
 
-
-
-
     axios.request(config)
       .then(async (response) => {
-        console.log('GUESTY RESPONSE DATA:::', response.data);
-        console.log('GUESTY RESPONSE DATA STRINGIFY:::', JSON.stringify(response.data));
+        console.log('RESPONSE:::', response);
+        console.log('RESPONSE DATA:::', response.data);
+        console.log('RESPONSE DATA STRINGIFY:::', JSON.stringify(response.data));
         if (response.data.success) { 
-            
-            console.log('GUESTY BOOKING SUCCESS!');
-            
-            console.log('guestyReservationId:::', guestyReservationId);
-            
-            
-            //update VTHUB db status,agent,guestyReservationId in collection eps_reservations
-            const response = await AuthService.updateReservationStatus(reservationData, 'approved', agentData.firstName, guestyReservationId);
+
+            console.log('RESERVATION/BOOKING SUCCESS!');
+            console.log('reservationUniqueID:::', reservationUniqueID);            
+
+            //update VTHUB db status,agent,reservationUniqueID in collection eps_reservations
+            const response = await AuthService.updateReservationStatus(reservationData, 'approved', agentData.firstName, reservationUniqueID);
             //console.log('response.data from VTHUB:::', response.data)    
-                
+
             //swal
             if(response.success) {
                 //swal("success", "Reservation is approved! " + response.data.message, "success");
                 swal({
                     show: true,
                     title: 'Success',
-                    text: "Reservation is approved! " + response.message + ' (GUESTY RESERVATION ID : '+guestyReservationId+')',
+                    text: "Reservation is approved! " + response.message + ' (RESERVATION ID : '+reservationUniqueID+')',
                     icon: "success"
-                })                
+                })
+                
+                //re-render this page here
+                getAllListings();
+                
             } else {
                 //swal("error", response.data.message, "error");
                 swal({
@@ -850,7 +856,7 @@ if (totalListings < ListingsPagingTo) {
             swal({
                 show: true,
                 title: 'Error',
-                text: 'Guesty reservation failed!',
+                text: 'Reservation failed! ' + response.data.message,
                 icon: "error"
             })            
         }
@@ -888,9 +894,13 @@ if (totalListings < ListingsPagingTo) {
                 swal({
                     show: true,
                     title: 'Success',
-                    text: "Reservation is declined! " + response.message,
+                    text: "Reservation has been declined! " + response.message,
                     icon: "success"
-                })                
+                })      
+                
+                //re-render this page
+                getAllListings();
+
             } else {
                 //swal("error", response.data.message, "error");
                 swal({
@@ -903,6 +913,113 @@ if (totalListings < ListingsPagingTo) {
         
     }
 
+
+
+
+
+const handleResCancellation = async (reservationData) => { 
+    if(window.confirm('Are you sure you want to cancel this reservation? ' + reservationData.reservationUniqueID)) {
+
+const reservationUniqueID = reservationData?.reservationUniqueID
+
+  if(!reservationUniqueID) {
+        swal({
+        show: true,
+        title: 'Error',
+        text: 'reservationUniqueID can not be empty!',
+        icon: "error"
+    })
+
+    return false;
+  }
+
+
+    let data = JSON.stringify({
+      "client": {
+        "firstName": reservationData?.guestFirstName,
+        "lastName": reservationData?.guestLastName,
+        "phone": reservationData?.guestPhoneNumbers,
+        "email": reservationData?.guestEmail
+      },
+      "dateFrom": dayjs(reservationData?.startDate).format("MM.DD.YYYY"),
+      "dateTo": dayjs(reservationData?.endDate).format("MM.DD.YYYY"),
+      "currency": reservationData?.currency,
+      "numberOfGuests":reservationData.numberOfGuests,
+      "adults": reservationData?.adults,
+      "children": reservationData?.children,
+      "resChannel": "VT",
+      "reservationId": reservationUniqueID,
+      "ResStatus": "Cancel"
+    });
+
+    let config = {
+      method: 'put',
+      maxBodyLength: Infinity,
+      url: constants.SHUB_URL+'/reserve-cancel/' + reservationData?.propertyId + '?reservation_request_from=eps',
+      headers: {
+        'Authorization': 'bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2NvdW50X29iamVjdF9pZCI6Mzk5MTU4NzUsInVzZXJfaWQiOiI0MDY2NTAyMSIsInVzZXJfbmFtZSI6InN5c3RlbStsdW5hLTh5NXljIiwic2NvcGUiOlsiYnJpdm8uYXBpIl0sImlzc3VlZCI6IjE2NzUxMTI3NDYxMzYiLCJleHAiOjE2NzUxMTI4MDYsInNlcnZpY2VfdG9rZW4iOm51bGwsImF1dGhvcml0aWVzIjpbIlJPTEVfU1VQRVJfQURNSU4iLCJST0xFX0FETUlOIl0sImp0aSI6ImVmNzY1MDIyLTZhNzctNGZkMy04Njg1LTFhZTFhZmEzOTJhZSIsImNsaWVudF9pZCI6IjkzOTFlYjVkLWUwNmUtNDY4MS1iNTdhLWQwZTU3NDhhM2RlZSIsIndoaXRlX2xpc3RlZCI6ZmFsc2V9.N9MIeiLyrT3hBUtMJsTvwbYW5Z_o7ZSBuZmir2ytrb8DiE4MoXcmh8C6KriWhmnRqUnSMBRtuLcauVbqjFTorOcWMOd2RQGmisPgXBm1tHT30Hl0i57rQuLZHAVW201ot-TdQwW9oEZ3n2HTGu_A6tRhTizVmG6NRAd5KhOB2_c',
+        'Account-Id': '640625ea0620e40031b8597d',
+        'Content-Type': 'application/json'
+      },
+      data: data
+    };
+
+    axios.request(config)
+      .then(async (response) => {
+        console.log('RESPONSE DATA:::', response.data);
+        console.log('RESPONSE DATA STRINGIFY:::', JSON.stringify(response.data));
+        if (response.data.success) { 
+
+            console.log('CANCELLATION SUCCESS!');
+            console.log('reservationUniqueID:::', reservationUniqueID)
+
+            //update VTHUB db status,agent,reservationUniqueID in collection eps_reservations
+            const response = await AuthService.updateReservationStatus(reservationData, 'cancelled', agentData.firstName, reservationUniqueID);
+            //console.log('response.data from VTHUB:::', response.data)    
+
+            //swal
+            if(response.success) {
+                //swal("success", "Reservation is approved! " + response.data.message, "success");
+                swal({
+                    show: true,
+                    title: 'Success',
+                    text: "Cancellation is done! " + response.message + ' (RESERVATION ID : '+reservationUniqueID+')',
+                    icon: "success"
+                })
+                
+                //re-render this page here
+                getAllListings();
+                
+            } else {
+                //swal("error", response.data.message, "error");
+                swal({
+                    show: true,
+                    title: 'Error',
+                    text: response.message,
+                    icon: "error"
+                })                
+            }                    
+
+            //reload
+            
+        } else {
+           // swal("error", 'Guesty reservation failed!', "error");
+            swal({
+                show: true,
+                title: 'Error',
+                text: 'Cancellation failed!',
+                icon: "error"
+            })            
+        }
+
+      })
+      .catch((error) => {
+        console.log('error RES:', error);
+      });
+
+
+    }
+}
 
 return (
     
@@ -957,12 +1074,55 @@ return (
 
                         <div class="row">
                             <div class="col-6">
-                                <input type="button" class="btn btn-primary" value="Approve" onClick={()=>handleResConfirmation(selectedReservations)} />
+                                <input type="button" class="btn btn-primary" value="Approve Reservation" onClick={()=>handleResConfirmation(selectedReservations)} />
                             </div>
 
                             <div class="col-6">
-                                <input type="button" class="btn btn-danger" value="Decline" onClick={()=>handleResDecline(selectedReservations)} />
+                                <input type="button" class="btn btn-danger" value="Decline Reservation" onClick={()=>handleResDecline(selectedReservations)} />
                             </div>                            
+                        </div>
+
+                    </div>
+
+                    <div className="approve-agent-footer">
+                        <Button
+                            style={{ fontSize: '18px', marginRight: '30px' }}
+                            variant="link"
+                            text="Cancel"
+                            onClick={onCloseResStatus}
+                        />
+                        {/* <Button
+                            style={{ fontSize: '18px' }}
+                            text="Confirm"
+                            onClick={() => onSubmitResStatus(selectedReservations)}
+                        /> */}
+                    </div>
+                </div>
+            </Popup>
+        )
+    }
+
+
+
+    {onCancelReservation &&
+(
+            <Popup>
+                <div className="approve-agent-container">
+                    <div className="approve-agent-header">
+                        <div className="approve-agent-title">Cancelling Reservation by Admin:</div>
+                        <div className="approve-agent-sub-header">
+                            <div>Main Agent : <b>{agentData.firstName}</b></div>
+                            <div className="approve-agent-sub-header-separator" />
+                            <div>Agency: <b>{agentData.agencyName}</b></div>
+                        </div>
+                    </div>
+
+                    <div className="approve-agent-main">
+
+                        <div class="row">
+                            <div class="col-12">
+                                <input type="button" class="btn btn-danger" value="Cancel Reservation" onClick={()=>handleResCancellation(selectedReservations)} />
+                            </div>                           
                         </div>
 
                     </div>
@@ -1068,6 +1228,7 @@ return (
 
                                                         eps_reservation_data={item}
                                                         changeReservationStatus={changeReservationStatus}
+                                                        cancelReservation={cancelReservation}
                                                     />}
                                                 </tr>
                                             </>

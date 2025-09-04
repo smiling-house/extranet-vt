@@ -260,7 +260,7 @@ localStorage.removeItem("partnerName");
 								<Logo />
 							</div>
 						</div>
-						<h1>EXTRANET-ADMIN LOGIN</h1>
+						<h1>VT-EXTRANET ADMIN LOGIN</h1>
 
 						<div className="row justify-content-center mt-4">
 							<div className="col-8">
@@ -329,7 +329,7 @@ localStorage.removeItem("partnerName");
 									className="btn btn-primary p-3 col-12"
 									fullwidth={true}
 									loading={state.loading}
-									text="Extranet login"
+									text="VT-Extranet login"
 									onClick={(e) => {
 										setState({ ...state, error: undefined });
 										handleSubmit(e);
