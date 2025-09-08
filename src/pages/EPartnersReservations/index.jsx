@@ -23,7 +23,7 @@ import { data } from "./makeData.js"
 import axios from "axios"
 import { baseURL } from "../../core/index.js"
 import PageHeader from "../../components/PageHeader"
-import { PATH_PROPERTY } from "../../Util/constants"
+import { PATH_PROPERTY, APP_DISPLAY_NAME } from "../../Util/constants"
 import { useLocation, useHistory } from "react-router-dom";
 
 import "./EListings.scss"
@@ -727,7 +727,7 @@ return (
     
     <div className="page-container">
         
-        <div className="page-header">VT-Extranet- EPartner Reservation Properties</div>
+        <div className="page-header">{APP_DISPLAY_NAME} - EPartner Reservation Properties</div>
         <Sidebar
             agency={agency}
             agent={agent}

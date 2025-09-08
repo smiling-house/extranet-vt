@@ -76,7 +76,8 @@ import {
   PATH_SELECT,
   PATH_EPS_EPARTNER_MANAGE,
   PATH_EPS_EPARTNERS_RESERVATIONS,
-  PATH_EPS_EPARTNER_RESERVATIONS_PROPERTIES
+  PATH_EPS_EPARTNER_RESERVATIONS_PROPERTIES,
+  APP_DISPLAY_NAME
 } from "../Util/constants";
 import AuthService from "../services/auth.service";
 import { baseURL } from "../core";
@@ -97,6 +98,10 @@ import EPartnerManage from "./EPartnerManage";
 import EPartnersReservations from "./EPartnersReservations";
 
 import EPartnerReservationsProperties from "./EPartnerReservationsProperties";
+
+
+import menuIcon from '../assets/icons8-menu-50.png'
+
 
 const logintoken = localStorage.getItem('jToken');
 
@@ -128,6 +133,28 @@ function MainPage(props) {
   const [destinations, setDestinations] = useState(localStorage.getItem('destinations')  !== 'undefined' && localStorage.getItem('destinations')  !== null ? JSON.parse(localStorage.getItem('destinations')) : [])
   const [cities, setCities] = useState(localStorage.getItem('cities')  !== 'undefined' && localStorage.getItem('cities')  !== null ? JSON.parse(localStorage.getItem('cities')) : [])
   const [countries, setCountries] = useState(localStorage.getItem('countries')  !== 'undefined' && localStorage.getItem('countries')  !== null ? JSON.parse(localStorage.getItem('countries')) : [])
+
+
+
+
+const agentData = JSON.parse(agent);
+//localStorage.removeItem('property_status_to_filter');
+
+const [showSideBarMenu, setShowSideBarMenu] = useState(false);
+  const signOut = () => {
+  localStorage.clear();
+  dispatch(userActions.signOut());
+  history.push(PATH_LOGIN);
+  };
+const showOrHideSideBarMenu=()=> {
+  if(showSideBarMenu===true) {
+    setShowSideBarMenu(false);
+  } else if(showSideBarMenu===false) {
+    setShowSideBarMenu(true);
+  }
+}  
+
+
 
   const userRequest = axios.create({
     baseURL: baseURL,
@@ -463,7 +490,7 @@ function MainPage(props) {
           />
           </Route>                               
         <div className="page-container">
-          <div className="page-header">Villa Tracker Extranet</div>
+          <div className="page-header"><img src={menuIcon} style={{'width':'25px'}} className="cst-cursor" onClick={showOrHideSideBarMenu} />&nbsp;{APP_DISPLAY_NAME} - {agentData.firstName} (<span className="cst-cursor" onClick={signOut}>Sign Out</span>)</div>
           <Sidebar
             agency={agency}
             agent={agent}
@@ -473,10 +500,17 @@ function MainPage(props) {
             activeMenu={activeMenu}
             handleToggleMenu={handleToggleMenu}
           />
+
+          {/*
           <div className={activeMenu ? `${"page-body"}` : "page-body-sm"} onClick={() => screenSize < 768 && setActiveMenu((preValue) => false)} >
 
-
           </div>
+          */}
+          <div className={showSideBarMenu ? `${"page-body"}` : "page-body-nomargin"} >
+            
+          </div>
+
+
         </div>
       </Switch >
       <ToastContainer />

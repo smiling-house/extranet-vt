@@ -38,7 +38,8 @@ import {
   PATH_RESERVATIONS,
   PATH_SIGNOUT,
   PATH_EPS_EPARTNERS_RESERVATIONS,
-  PATH_EPS_EPARTNER_RESERVATIONS_PROPERTIES
+  PATH_EPS_EPARTNER_RESERVATIONS_PROPERTIES,
+  APP_DISPLAY_NAME
 } from "../../Util/constants";
 
 const Sidebar = ({ activeMenu, setActiveMenu, handleToggleMenu }) => {
@@ -114,7 +115,7 @@ const Sidebar = ({ activeMenu, setActiveMenu, handleToggleMenu }) => {
           onClick={() => history.push(PATH_HOME)}
         >
           <div style={{ width: "180px", cursor: "pointer", color:"#0000FF" }}>
-          <h1>Villa Tracker Extranet</h1>
+          <h1>{APP_DISPLAY_NAME}</h1>
           </div>
         </div>
       )

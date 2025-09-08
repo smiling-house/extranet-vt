@@ -47,7 +47,8 @@ import {
     PATH_PARTNERS,
     PATH_LISTINGS_BP,
     PATH_SIGNOUT,
-    PATH_LOGIN,    
+    PATH_LOGIN,   
+    APP_DISPLAY_NAME 
 } from "../../Util/constants";
 
 //import { data } from "./makeData.js"; //COMMENTED OUT AS IT IS NOT USED
@@ -552,7 +553,7 @@ localStorage.setItem('partnerPropertiesUniqueZipcodes', JSON.stringify(partnerPr
 
     return (
         <div className="page-container">			
-            <div className="page-header"><img src={menuIcon} style={{'width':'25px'}} className="cst-cursor" onClick={showOrHideSideBarMenu} />&nbsp;Villa Tracker Extranet : PMs - {agentData.firstName} (<span className="cst-cursor" onClick={signOut}>Sign Out</span>)</div>
+            <div className="page-header"><img src={menuIcon} style={{'width':'25px'}} className="cst-cursor" onClick={showOrHideSideBarMenu} />&nbsp;{APP_DISPLAY_NAME} : PMs - {agentData.firstName} (<span className="cst-cursor" onClick={signOut}>Sign Out</span>)</div>
 {showSideBarMenu===true &&			
             <Sidebar
                 agency={agency}

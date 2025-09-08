@@ -44,7 +44,9 @@ import {
 	PATH_LISTINGS,
 	PATH_EPS_LISTINGS,
 	PATH_SELECT,
-	PATH_EPS_EPARTNER_MANAGE
+	PATH_EPS_EPARTNER_MANAGE,
+	APP_DISPLAY_NAME,
+	PATH_LOGIN
 } from "../../Util/constants.js";
 
 import { data } from "./makeData.js";
@@ -63,6 +65,13 @@ import ClientOfferLog from "./ClientOfferLog/index.js";
 import Sidebar from "../../components/Sidebar/index.js";
 import LoadingBox from "../../components/LoadingBox/index.js";
 import { v4 as uuidv4 } from 'uuid'
+
+
+import menuIcon from '../../assets/icons8-menu-50.png'
+import * as userActions from "../../store/redux/User/actions";
+import { useDispatch, useSelector } from "react-redux";
+
+
 const NEW_EPARTNER = {
 	id: "-1",
 	partnerName: "",
@@ -73,7 +82,12 @@ const NEW_EPARTNER = {
 	bearerToken: uuidv4()
 };
 
+
+
+
 const EPartners = (props) => {
+
+
 	const { token, agency, agent, screenSize, activeMenu, handleToggleMenu, setActiveMenu } = props
 	const divRefs = React.useRef([]);
 
@@ -101,6 +115,8 @@ const EPartners = (props) => {
 	const [pageNumber, setPageNumber] = useState(0);
 	let EPartnersPagingFrom = 1 + pageNumber * constants.PAGING_EPARTNERS_SIZE;
 	let EPartnersPagingTo = (EPartnersPagingFrom + constants.PAGING_EPARTNERS_SIZE > totalEPartners) ? totalEPartners : EPartnersPagingFrom + constants.PAGING_PARTNERS_SIZE
+
+
 
 	const userRequest = axios.create({
 		baseURL: constants.SHUB_URL,
@@ -322,9 +338,30 @@ const EPartners = (props) => {
 	}
 
 
+const agentData = JSON.parse(agent);
+const dispatch = useDispatch();	
+localStorage.removeItem('property_status_to_filter');
+
+
+const [showSideBarMenu, setShowSideBarMenu] = useState(false);
+  const signOut = () => {
+	localStorage.clear();
+	dispatch(userActions.signOut());
+	history.push(PATH_LOGIN);
+  };
+const showOrHideSideBarMenu=()=> {
+	if(showSideBarMenu===true) {
+		setShowSideBarMenu(false);
+	} else if(showSideBarMenu===false) {
+		setShowSideBarMenu(true);
+	}
+} 
+
 	return (
 		<div className="page-container">
-			<div className="page-header">VT-Extranet : External Partners</div>
+			<div className="page-header"><img src={menuIcon} style={{'width':'25px'}} className="cst-cursor" onClick={showOrHideSideBarMenu} />&nbsp;{APP_DISPLAY_NAME} :  External Partners - {agentData.firstName}</div>
+
+{showSideBarMenu===true &&			
 			<Sidebar
 				agency={agency}
 				agent={agent}
@@ -333,7 +370,8 @@ const EPartners = (props) => {
 				activeMenu={activeMenu}
 				handleToggleMenu={handleToggleMenu}
 			/>
-			<div className={activeMenu ? `${"page-body"}` : "page-body"} >
+}
+			<div className={showSideBarMenu ? `${"page-body"}` : "page-body-nomargin"} >
 
 				<div className="agencies-container" >
 					<LoadingBox visible={isLoading} />

@@ -22,7 +22,11 @@ import DeleteAgency from "./DeleteAgency";
 import axios from "axios";
 import { baseURL } from "../../core/index.js";
 import Paging from "../../components/Paging";
+
 import constants from "../../Util/constants";
+import {APP_DISPLAY_NAME} from "../../Util/constants";
+
+
 import countryList from "../../Util/data/countries.json";
 import { RawOff } from "@mui/icons-material";
 import { BsChevronDown } from "react-icons/bs";
@@ -297,7 +301,7 @@ const Admin = (props) => {
 	}
 	return (
 		<div className="agencies-container" >
-			<div className="page-header">Villa Tracker Extranet</div>
+			<div className="page-header">{APP_DISPLAY_NAME}</div>
 			<Sidebar
 				agency={agency}
 				agent={agent}
