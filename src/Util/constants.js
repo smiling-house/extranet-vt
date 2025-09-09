@@ -31,6 +31,7 @@ export const PATH_ADMIN = '/admin';
 export const PATH_PARTNERS = '/partners';
 export const PATH_PARTNERS_BP = '/partners-bp';
 export const PATH_PARTNERS_RU = '/partners-ru';
+export const PATH_PARTNERS_BART = '/partners-bart';
 export const PATH_EPARTNERS = '/external-partners';
 
 export const PATH_ADMIN_LOGIN = '/adminlogin';

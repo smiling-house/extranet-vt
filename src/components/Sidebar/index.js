@@ -25,6 +25,7 @@ import {
   PATH_PARTNERS,
   PATH_PARTNERS_BP,
   PATH_PARTNERS_RU,
+  PATH_PARTNERS_BART,
   PATH_EPARTNERS,
   PATH_RESERVE,
   PATH_COLLECTIONS,
@@ -128,6 +129,9 @@ const Sidebar = ({ activeMenu, setActiveMenu, handleToggleMenu }) => {
       }
       {extranet_vt_logged_in_role==='admin' &&
         renderItem("RU PMs", PATH_PARTNERS_RU, adminIcon) 
+      }
+      {extranet_vt_logged_in_role==='admin' &&
+        renderItem("BART PMs", PATH_PARTNERS_BART, adminIcon) 
       }
       {extranet_vt_logged_in_role==='partner' &&
         renderItem("Partner Home", PATH_PARTNERS, adminIcon) 
