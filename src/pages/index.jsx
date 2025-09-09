@@ -104,7 +104,6 @@ import EPartnerReservationsProperties from "./EPartnerReservationsProperties";
 
 import menuIcon from '../assets/icons8-menu-50.png'
 
-
 const logintoken = localStorage.getItem('jToken');
 
 export const drawerWidth = 240;
