@@ -276,12 +276,13 @@ const Listings = (props) => {
             filters,
             limit: constants.PAGING_LISTING_SIZE, 
             skip: skip,
-            sortBy: 'data.nickname:1'
+            sortBy: 'data.nickname:1',
+            source: 'guesty_channel_api' //need only guesty properties for external partners now
         }
         const queryString = Object.keys(params).map(key => key + '=' + params[key]).join("&")
         console.log(queryString)
-        const shubSearch=constants.SHUB_URL+'/local/listings-search?';
-        if(!dontsend) {
+        const shubSearch=constants.SHUB_URL+'/local/listings?';
+        if(!dontsend) { 
             setIsLoading(true)
             userRequest.get(`${shubSearch}${queryString}&isListed=true`).then(async response => {
                 setIsLoading(false)
@@ -344,14 +345,15 @@ const Listings = (props) => {
             filters:filter_ids,
             limit: constants.PAGING_LISTING_SIZE, 
             skip: 0,
-            sortBy: 'data.nickname:1'            
+            sortBy: 'data.nickname:1' ,
+            source: 'guesty_channel_api' //need only guesty properties for external partners now          
     }
     
     console.log('getting from /listings:',params)
     const queryString = Object.keys(params).map(key => key + '=' + params[key]).join("&")
     console.log(queryString)
     if (true) {
-        const shubSearch=constants.SHUB_URL+'/local/listings-search?';
+        const shubSearch=constants.SHUB_URL+'/local/listings?';
         console.log(`get ${shubSearch}${queryString}`)
         setIsLoading(true)
         userRequest.get(`${shubSearch}${queryString}&isListed=true`).then(async response => {
