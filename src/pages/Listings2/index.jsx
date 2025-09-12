@@ -385,7 +385,7 @@ const agentLoggedIn = JSON.parse( localStorage.getItem('agent') );
         const accountId = partner?.accountId ? partner?.accountId : ''//585a39dbe43900100017e9e8 // 640625ea0620e40031b8597d
         const params= { 
             //source:(accountId!=='585a39dbe43900100017e9e8')?source:'SH',
-            source:'guesty_channel_api',
+            source: partner?.source || 'guesty_channel_api',
             channelSource:partner.source,
             accountId,
             limit: constants.PAGING_LISTING_SIZE, 
@@ -658,9 +658,9 @@ return (
                     searchOpen={true} 
                     topBgColor="rgb(119 198 85)">
                     </PageHeader> */}
-{extranet_vt_logged_in_role==='admin' &&                    
+{/*extranet_vt_logged_in_role==='admin' &&                    
                     headerSearchRow()
-}                    
+*/}                    
                 </div>
 
                 <div className="listings-main">
@@ -671,7 +671,7 @@ return (
     <Button style={{ margin:'10px', height: '30px', width: '100px', fontSize: '15px', borderRadius: '5px' }} variant="green" text="GO BACK" onClick={goToPartnersPage} />
 </div>
 
-{extranet_vt_logged_in_role==='admin' &&
+{/*extranet_vt_logged_in_role==='admin' &&
                     <div className="listings-search-container row">
                     <div className="col-sm-2">
                         <label style={{'color':'white'}}><strong>Filter by Status</strong></label>
@@ -705,9 +705,9 @@ return (
                     </div>
 
                     </div>
-}                    
+*/}                    
             
-{extranet_vt_logged_in_role==='admin' &&
+{/*extranet_vt_logged_in_role==='admin' &&
     <section>
 <div style={{'padding':'10px', 'display':'flex', 'align-items':'center', 'row-gap':'20px', 'position':'sticky'}}>
     <div class="col-3">
@@ -751,7 +751,7 @@ return (
 </div>
 
 </section>
-}            
+*/}            
 
                     {<Paging perPage={constants.PAGING_LISTING_SIZE} totalItems={totalListings} currentPage={pageNumber} onChangePage={onChangePage} />}
                     <div style={{ padding: '0 20px' }}>
@@ -759,11 +759,11 @@ return (
                                 <table class="table">
                                     <thead style={{ backgroundColor: "#f9f9f7" }} >
 
-{extranet_vt_logged_in_role==='admin' &&                                        
+{/*extranet_vt_logged_in_role==='admin' &&                                        
 <tr>
    <td><span onClick={checkUncheckAll}  className="cst-cursor">Check/Uncheck All</span></td> 
 </tr>
-}
+*/}
                                         <tr>
                                             {columns?.map((iteam, index) => {
                                                 return <>

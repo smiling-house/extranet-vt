@@ -503,7 +503,7 @@ const showOrHideSideBarMenu=()=> {
             token={token}
           />
           </Route>                               
-        <div className="page-container">
+        {/* <div className="page-container">
           <div className="page-header"><img src={menuIcon} style={{'width':'25px'}} className="cst-cursor" onClick={showOrHideSideBarMenu} />&nbsp;{APP_DISPLAY_NAME} - {agentData?.firstName} (<span className="cst-cursor" onClick={signOut}>Sign Out</span>)</div>
           <Sidebar
             agency={agency}
@@ -513,19 +513,19 @@ const showOrHideSideBarMenu=()=> {
             screenSize={screenSize}
             activeMenu={activeMenu}
             handleToggleMenu={handleToggleMenu}
-          />
+          /> */}
 
           {/*
           <div className={activeMenu ? `${"page-body"}` : "page-body-sm"} onClick={() => screenSize < 768 && setActiveMenu((preValue) => false)} >
 
           </div>
           */}
-          <div className={showSideBarMenu ? `${"page-body"}` : "page-body-nomargin"} >
+          {/* <div className={showSideBarMenu ? `${"page-body"}` : "page-body-nomargin"} >
             
           </div>
 
 
-        </div>
+        </div> */}
       </Switch >
       <ToastContainer />
     </>

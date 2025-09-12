@@ -72,17 +72,7 @@ import * as userActions from "../../store/redux/User/actions";
 import { useDispatch, useSelector } from "react-redux";
 
 
-const NEW_PARTNER = {
-	id: "-1",
-	partnerName: "",
-	contactName: "",
-	email: "",
-	token: "",
-	phone: "",
-	basicChannels: [],
-	source: 'SH',
-	accountChannel: "Smiling House"
-};
+
 const NEW_PARTNER_SH = {
 	accountChannel: "Smiling House",
 	id: "-1",
@@ -141,15 +131,15 @@ const showOrHideSideBarMenu=()=> {
 	})
 	const history = useHistory();
 	const location = useLocation();
-	const [editClickedId, seteditClickedId] = useState("")
+	
 	const [editPartnerId, seteditPartnerId] = useState("")
 	const [SelectedPartner, setSelectedPartner] = useState(null);
-	const [selectedRowToEdit, setSelectedRowToEdit] = useState(null);
-	const [selectedPartnerToEdit, setSelectedPartnerToEdit] = useState(null);
+	
+	
 	const [selectedPartnerToDelete, setSelectedPartnerToDelete] = useState(null);
 	const [partnerToApprove, setPartnerToApprove] = useState(null);
 	const [partnerToDisApprove, setPartnerToDisApprove] = useState(null);
-	const [totalPartners, setTotalPartners] = useState(null);
+	
 	const [partners, setPartners] = useState([]);
 	const [isLoading, setIsLoading] = useState(false)
 	// console.log("Partners >>>>", Partners);
@@ -245,8 +235,7 @@ const [serialNumber, setSerialNumber] = useState(0);
 
 	  };
 
-	let partnersPagingFrom = 1 + pageNumber * constants.PAGING_PARTNERS_SIZE;
-	let partnersPagingTo = (partnersPagingFrom + constants.PAGING_PARTNERS_SIZE > totalPartners) ? totalPartners : partnersPagingFrom + constants.PAGING_PARTNERS_SIZE
+	
 
 	const userRequest = axios.create({
 		baseURL: constants.SHUB_URL,
@@ -279,38 +268,48 @@ const [serialNumber, setSerialNumber] = useState(0);
 	const getSearchPartners = async () => {
 
 		setIsLoading(true)
-		const params = (searchInputes.pmName !== '' || searchInputes.accountId !== '') ?
-			(searchInputes.pmName !== '') ? {
-				limit: constants.PAGING_PARTNERS_SIZE,
-				skip: partnersPagingFrom - 1,
-				pmName: searchInputes.pmName,
-				provider:'myvillasinstbarth_channel_api',
-				source:'VT',
-				status:filterPropertyStatus 
-			} :
-				{
-					limit: constants.PAGING_PARTNERS_SIZE,
-					skip: partnersPagingFrom - 1,
-					accountId: searchInputes.accountId,
-				provider:'myvillasinstbarth_channel_api',					
-				source:'VT',
-				status:filterPropertyStatus
-				} :
+		const params = {
+			limit: constants.PAGING_PARTNERS_SIZE,
+			skip: partnersPagingFrom - 1,
+			provider:'VillasInStBarth',
+			source:'VillasInStBarth'
+		}
+		const partnersResponse = await userRequest.get(`local/partners`,
+		{
+			params
+		});
+		// const params = (searchInputes.pmName !== '' || searchInputes.accountId !== '') ?
+		// 	(searchInputes.pmName !== '') ? {
+		// 		limit: constants.PAGING_PARTNERS_SIZE,
+		// 		skip: partnersPagingFrom - 1,
+		// 		pmName: searchInputes.pmName,
+		// 		provider:'myvillasinstbarth_channel_api',
+		// 		source:'VT',
+		// 		status:filterPropertyStatus 
+		// 	} :
+		// 		{
+		// 			limit: constants.PAGING_PARTNERS_SIZE,
+		// 			skip: partnersPagingFrom - 1,
+		// 			accountId: searchInputes.accountId,
+		// 		provider:'myvillasinstbarth_channel_api',					
+		// 		source:'VT',
+		// 		status:filterPropertyStatus
+		// 		} :
 
-			{
-				limit: constants.PAGING_PARTNERS_SIZE,
-				skip: partnersPagingFrom - 1,
-				provider:'myvillasinstbarth_channel_api',
-				source:'VT',
-				status:filterPropertyStatus
-			}
+			// {
+			// 	limit: constants.PAGING_PARTNERS_SIZE,
+			// 	skip: partnersPagingFrom - 1,
+			// 	provider:'myvillasinstbarth_channel_api',
+			// 	source:'VT',
+			// 	status:filterPropertyStatus
+			// }
 
 
-if(extranet_vt_logged_in_role==='admin') {	//By Jaison 2025 July 11
-	delete params.source
-}			
+// if(extranet_vt_logged_in_role==='admin') {	//By Jaison 2025 July 11
+// 	delete params.source
+// }			
 
-		console.log('loading search::::', params)
+// 		console.log('loading search::::', params)
 
 
 //Task: EXTRANET VT - Check the possibilities of adding admin login
@@ -327,11 +326,11 @@ if(agent_role) {
 //By Jaison on 2025-04-21 - END		
 		
 		//const partnersResponse = await userRequest.get(`local/partners`,
-		const partnersResponse = await userRequest.get(`local/partners`,
-			{
-				params
-			},
-		);
+		// const partnersResponse = await userRequest.get(`local/partners`,
+		// 	{
+		// 		params
+		// 	},
+		// );
 		console.log()
 		setIsLoading(false)
 		localStorage.setItem("partnerCount", partnersResponse.data.count);
@@ -354,28 +353,81 @@ if(agent_role) {
 		console.log('search:', searchInputes)
 	}, [searchInputes]);
 
+	//Praveen -> functions start
+
+	const NEW_PARTNER = {
+		id: "-1",
+		partnerName: "",
+		contactName: "",
+		email: "",
+		token: "VillasInStBarth",
+		phone: "",
+		provider:'VillasInStBarth',
+		basicChannels: 'VillasInStBarth',
+		source: 'VillasInStBarth',
+		accountId: 'VIB-ACCOUNT'
+	};
+
+	const [totalPartners, setTotalPartners] = useState(0);
+	const [editClickedId, seteditClickedId] = useState("");
+	const [selectedPartnerToEdit, setSelectedPartnerToEdit] = useState(null);
+	const [selectedRowToEdit, setSelectedRowToEdit] = useState(null);
+
+	let partnersPagingFrom = 1 + pageNumber * constants.PAGING_PARTNERS_SIZE;
+	let partnersPagingTo = (partnersPagingFrom + constants.PAGING_PARTNERS_SIZE > totalPartners) ? totalPartners : partnersPagingFrom + constants.PAGING_PARTNERS_SIZE
+
+	const goToTop = () => {
+		window.scrollTo({
+			top: 0,
+			behavior: 'smooth',
+		});
+	};
+
+	const clearEditMenu = () => {
+		setSelectedRowToEdit(null);
+		goToTop()
+	};
+
+	const onAddPartnerVT = () => {
+		seteditClickedId(0)
+		setSelectedPartnerToEdit(NEW_PARTNER);
+		document.body.style.overflow = "hidden";
+		clearEditMenu();
+	};
+
+	const onClose = () => {
+		setSelectedRowToEdit(null);
+		setSelectedPartner(null)
+		setSelectedPartnerToDelete(null)
+		setSelectedPartnerToEdit(null)
+		document.body.style.overflow = "auto";
+	};
+
+	//praveen -> function end
+
 	const GoToPartnerListings = async(partner, accountId, property_status_to_filter='') => {
 
-const responseDataUniqueZips = await userRequest.post(`local/partners/properties-unique-zipcodes`,
-	{ accountId: accountId, channelSource: partner.source },
-);
+// const responseDataUniqueZips = await userRequest.post(`local/partners/properties-unique-zipcodes`,
+// 	{ accountId: accountId, channelSource: partner.source },
+// );
 
-const partnerPropertiesUniqueZipcodes = responseDataUniqueZips.data;
-localStorage.setItem('partnerPropertiesUniqueZipcodes', JSON.stringify(partnerPropertiesUniqueZipcodes));
+// const partnerPropertiesUniqueZipcodes = responseDataUniqueZips.data;
+// localStorage.setItem('partnerPropertiesUniqueZipcodes', JSON.stringify(partnerPropertiesUniqueZipcodes));
 
 		console.log("see listings for account:", accountId, partner.source);
 		localStorage.setItem("partner", JSON.stringify(partner))
 		localStorage.setItem("property_status_to_filter", property_status_to_filter)
-		if (!partner.offsetRead) {
-			swal({
-				show: true,
-				icon: 'error',
-				title: 'Oops!!',
-				text: "No Data Found on Account ID :" + accountId + ' channel: ' + partner.source
-			})
-		} else {			
-			history.push(PATH_LISTINGS, { partner, accountId, source: partner.source });
-		}
+		history.push(PATH_LISTINGS, { partner, accountId, source: partner.source });
+		// if (!partner.offsetRead) {
+		// 	swal({
+		// 		show: true,
+		// 		icon: 'error',
+		// 		title: 'Oops!!',
+		// 		text: "No Data Found on Account ID :" + accountId + ' channel: ' + partner.source
+		// 	})
+		// } else {			
+			
+		// }
 
 	};
 
@@ -408,24 +460,8 @@ localStorage.setItem('partnerPropertiesUniqueZipcodes', JSON.stringify(partnerPr
 		return { top: `${top}px`, left: `${pos.left - 170}px` };
 	};
 
-	const goToTop = () => {
-		window.scrollTo({
-			top: 0,
-			behavior: 'smooth',
-		});
-	};
-
-	const clearEditMenu = () => {
-		setSelectedRowToEdit(null);
-		goToTop()
-	};
-	const onClose = () => {
-		setSelectedRowToEdit(null);
-		setSelectedPartner(null)
-		setSelectedPartnerToDelete(null)
-		setSelectedPartnerToEdit(null)
-		document.body.style.overflow = "auto";
-	};
+	
+	
 
 	const onShowEditMenu = (row) => {
 		setSelectedRowToEdit(row);
@@ -449,12 +485,7 @@ localStorage.setItem('partnerPropertiesUniqueZipcodes', JSON.stringify(partnerPr
 		document.body.style.overflow = "hidden";
 		clearEditMenu();
 	};
-	const onAddPartnerVT = () => {
-		seteditClickedId(0)
-		setSelectedPartnerToEdit(NEW_PARTNER_VT);
-		document.body.style.overflow = "hidden";
-		clearEditMenu();
-	};
+	
 
 	const onDeletePartner = () => {
 		setSelectedPartnerToDelete(selectedRowToEdit);
@@ -556,17 +587,19 @@ localStorage.setItem('partnerPropertiesUniqueZipcodes', JSON.stringify(partnerPr
 
 	return (
 		<div className="page-container">			
-			<div className="page-header"><img src={menuIcon} style={{'width':'25px'}} className="cst-cursor" onClick={showOrHideSideBarMenu} />&nbsp;{APP_DISPLAY_NAME} : PMs - {agentData.firstName} (<span className="cst-cursor" onClick={signOut}>Sign Out</span>)</div>
-{showSideBarMenu===true &&			
-			<Sidebar
-				agency={agency}
-				agent={agent}
-				token={token}
-				screenSize={screenSize}
-				activeMenu={activeMenu}
-				handleToggleMenu={handleToggleMenu}
-			/>
-}
+			<div className="page-header">
+				<img src={menuIcon} style={{'width':'25px'}} className="cst-cursor" onClick={showOrHideSideBarMenu} />&nbsp;{APP_DISPLAY_NAME} : PMs - {agentData.firstName} (<span className="cst-cursor" onClick={signOut}>Sign Out</span>)
+			</div>
+			{showSideBarMenu===true &&			
+				<Sidebar
+					agency={agency}
+					agent={agent}
+					token={token}
+					screenSize={screenSize}
+					activeMenu={activeMenu}
+					handleToggleMenu={handleToggleMenu}
+				/>
+			}
 			<div className={showSideBarMenu ? `${"page-body"}` : "page-body-nomargin"} >
 
 				<div className="agencies-container" >
@@ -633,7 +666,8 @@ localStorage.setItem('partnerPropertiesUniqueZipcodes', JSON.stringify(partnerPr
 													Property Manager Details
 												</span>
 												<span style={{ fontWeight: 400, fontSize: 18, color: '#888' }}>
-													| {selectedPartnerToEdit?.source ? selectedPartnerToEdit?.source === 'SH' ? 'Smiling House' : 'Villa Tracker' : ''}
+													| VillasInStBarth
+													{/* {selectedPartnerToEdit?.source ? selectedPartnerToEdit?.source === 'SH' ? 'Smiling House' : 'Villa Tracker' : ''} */}
 												</span>
 											</>
 											
@@ -646,7 +680,8 @@ localStorage.setItem('partnerPropertiesUniqueZipcodes', JSON.stringify(partnerPr
 													Add Partner
 												</span>
 												<span style={{ fontWeight: 400, fontSize: 18, color: '#888' }}>
-													&nbsp;| {selectedPartnerToEdit?.source ? selectedPartnerToEdit?.source === 'SH' ? 'Smiling House' : 'Villa Tracker' : ''}
+													&nbsp;| VillasInStBarth
+													{/* {selectedPartnerToEdit?.source ? selectedPartnerToEdit?.source === 'SH' ? 'Smiling House' : 'Villa Tracker' : ''} */}
 												</span>
 											</>
 										 )
@@ -678,13 +713,11 @@ localStorage.setItem('partnerPropertiesUniqueZipcodes', JSON.stringify(partnerPr
 								</div>
 								<div className="modal-body" style={{ padding: 0, maxHeight: '85vh', overflowY: 'auto' }}>
 									<EditPartner
-									agent={agent}
-									newPartnerID={parseInt(totalPartners) + 1}
-									editClickedId={editClickedId}
-									editPartnerId={editPartnerId}
-									partner={selectedPartnerToEdit}
-									partners={partners}
-									onClose={onClose}
+										agent={agent}
+										editClickedId={editClickedId}
+										partner={selectedPartnerToEdit}
+										partners={partners}
+										onClose={onClose}
 									/>
 								</div>
 								</div>
@@ -701,35 +734,32 @@ localStorage.setItem('partnerPropertiesUniqueZipcodes', JSON.stringify(partnerPr
 					}
 
 					<div className="agencies-main">
-
-
-{extranet_vt_logged_in_role==='admin' &&
-<div className="agencies-search-container">
-          <div className="navigation-bar" style={{ position: "absolute", marginBottom: "110px" }}> </div>
-          <div className="row">
-            <div className="col-sm-8">
-              <input type="text" className="form-control" placeholder="Search by PM Name"  onChange={(e) => handleSearchFuntionality("pmName",e.target.value)} />
-            </div>
-            <div className="col-sm-2">
-              <button className="form-control" style={{ height: "60px", width: "200px", fontSize: "20px", borderRadius: "6px", fontWeight: 100, }} onClick={() => handlSearchButtonAdmin()}>
-                <span>Search</span>
-              </button>
-            </div>
-            <span className=" agencies-search-separator"></span>
-          </div>
-        </div>
-}
+						{extranet_vt_logged_in_role==='admin' &&
+							<div className="agencies-search-container">
+          						<div className="navigation-bar" style={{ position: "absolute", marginBottom: "110px" }}> </div>
+								<div className="row">
+            						<div className="col-sm-8">
+              							<input type="text" className="form-control" placeholder="Search by PM Name"  onChange={(e) => handleSearchFuntionality("pmName",e.target.value)} />
+            						</div>
+            						<div className="col-sm-2">
+              							<button className="form-control" style={{ height: "60px", width: "200px", fontSize: "20px", borderRadius: "6px", fontWeight: 100, }} onClick={() => handlSearchButtonAdmin()}>
+                							<span>Search</span>
+              							</button>
+            						</div>
+            						<span className=" agencies-search-separator"></span>
+          						</div>
+							</div>
+						}
 
 
 						<div className="agencies-title">
-							
-{extranet_vt_logged_in_role==='admin' && <span>Guesty PM List</span> }
-{extranet_vt_logged_in_role==='partner' && <span>Guesty PM Home</span> }
-
-							{!partnerLogin && (<>
-								{/*<a class="dropdown-item" href="#" onClick={onAddPartnerSH}><img src={addAdminIcon} /> connect GUESTY PM partner SH = Smiling House </a>*/}
-								<a class="dropdown-item" href="#" onClick={onAddPartnerVT}><img src={addAdminIcon} /> connect GUESTY PM partner VT = Villa Tracker </a>
-							</>)}
+							{extranet_vt_logged_in_role==='admin' && <span>PM List</span> }
+							{extranet_vt_logged_in_role==='partner' && <span>PM Home</span> }
+							{!partnerLogin && (
+								<a className="dropdown-item" href="#" onClick={onAddPartnerVT}>
+									<img src={addAdminIcon} /> Add Partner 
+								</a>
+							)}
 
 							<div className="agencies-main-subtitle">Displaying PMs {partnersPagingFrom}-{partnersPagingTo} of {totalPartners ? totalPartners : "?"}
 							</div>
@@ -737,79 +767,82 @@ localStorage.setItem('partnerPropertiesUniqueZipcodes', JSON.stringify(partnerPr
 
 
 
-{extranet_vt_logged_in_role==='admin' &&
-<div className="row">
-<div className="col-12">
-                    <div className="listings-search-container row">
-                    <div className="col-sm-2">
-                        <label style={{'color':'white'}}><strong>Filter by Status</strong></label>
-                        <select class="form-control" onChange={(e)=>filterByPropertyStatus(e)}>
-                            <option value="">--All--</option>
-                            <option value="Approved">Approved</option>
-                            <option value="Pending">Pending</option>
-                            <option value="Declined">Declined</option>
-                        </select>                        
-                    </div>
+						{/*extranet_vt_logged_in_role==='admin' &&
+							<div className="row">
+								<div className="col-12">
+                    				<div className="listings-search-container row">
+                    					<div className="col-sm-2">
+                        					<label style={{'color':'white'}}>
+												<strong>Filter by Status</strong>
+											</label>
+											<select class="form-control" onChange={(e)=>filterByPropertyStatus(e)}>
+												<option value="">--All--</option>
+												<option value="Approved">Approved</option>
+												<option value="Pending">Pending</option>
+												<option value="Declined">Declined</option>
+											</select>                        
+                    					</div>
 
-                    </div>
-</div>
-</div>
-}
+                    				</div>
+								</div>
+							</div>
+						*/}
 
 
-						{<Paging perPage={constants.PAGING_PARTNERS_SIZE} totalItems={localStorage.getItem("partnerCount")} currentPage={pageNumber} onChangePage={onChangePage} />}
+						{
+							<Paging perPage={constants.PAGING_PARTNERS_SIZE} totalItems={localStorage.getItem("partnerCount")} currentPage={pageNumber} onChangePage={onChangePage} />
+						}
 						<div className="table-responsive px-3">
 							<table class="table">
 								<thead style={{ backgroundColor: "#f9f9f7" }} >
 									<tr>
-										{columns?.map((item, index) => {
-											return <>
-												{/*<th scope="col" style={{ cursor: "pointer", width: item.width }}><h3>{item.name} <BsChevronDown /></h3></th>*/}
-<th scope="col" style={{ cursor: "pointer", width: item.width }}>{item.name} <BsChevronDown /></th>
-											</>
-										})}
+									{columns?.map((item, index) => {
+										return (
+											<th scope="col" style={{ cursor: "pointer", width: item.width }}>{item.name} <BsChevronDown /></th>
+										)
+										
+									})}
 									</tr>
 								</thead>
 								<tbody>
-									{partners?.map((item, index) => {
-										//console.log("item ", index, item)
-										return <>
-											<tr >
-												<td className="pmName px-4 p-3  text-primary  cst-cursor" ><h4>{/*totalPartners - partnersPagingFrom - index + 1*/}
-												{serialNumber+index+1}
-												</h4></td>
-												<td className="pmName px-4 p-3  text-primary  cst-cursor" ><h4>{item.pmName != null ? item.pmName : ""}</h4></td>
-												<td className="accountId px-4 p-3 text-primary text-decoration-underline cst-cursor"><h4 onClick={() => onEditPartner(item._id, item)}>{item.accountId !== null ? item.accountId : ""}</h4></td>
-
-<td className="accountId px-4 p-3 text-primary cst-cursor"><h4>{item.source}</h4></td>												
-
-{/*<td className="Listings px-4 p-3 text-primary text-decoration-underline cst-cursor"><h4 onClick={() => GoToPartnerListings(item, item.accountId)}>{item.offsetRead ? item.offsetRead : "No listings"}/({item.count ? item.count : ""})</h4></td>*/}
-
-<td className="Listings px-4 p-3 text-primary text-decoration-underline cst-cursor"><h4 onClick={() => GoToPartnerListings(item, item.accountId)}>{item.total_properties_count}</h4></td>
-
-{/*
-<td className="VT provider px-4 p-3 text-primary  cst-cursor"><h4>{(Object.prototype.hasOwnProperty.call(item, 'approved')) && item.approved?.length}</h4></td>
-*/}
-<td className="VT provider px-4 p-3 text-primary  cst-cursor"><h4 onClick={() => GoToPartnerListings(item, item.accountId, 'Approved')}>{item.approved_properties_count}</h4></td>
-{/*
-<td className="SH provider px-4 p-3 text-primary  cst-cursor"><h4>{(Object.prototype.hasOwnProperty.call(item, 'pending')) && item.pending?.length}</h4></td>
-*/}
-<td className="SH provider px-4 p-3 text-primary  cst-cursor"><h4 onClick={() => GoToPartnerListings(item, item.accountId, 'Pending')}>{item.pending_properties_count}</h4></td>
-
-{/*
-<td className="SH provider px-4 p-3 text-primary  cst-cursor"><h4>{(Object.prototype.hasOwnProperty.call(item, 'declined')) && item.declined?.length}</h4></td>
-*/}
-<td className="SH provider px-4 p-3 text-primary  cst-cursor"><h4 onClick={() => GoToPartnerListings(item, item.accountId, 'Declined')}>{item.declined_properties_count}</h4></td>
-
-<td className="Updated px-4 p-3"><h4>{item.updatedAt !== null && item.updatedAt !== "" ? item.updatedAt.slice(0, 10) : ""}</h4></td>
-											</tr >
-										</>
-									})}
+								{partners?.map((item, index) => {
+									return (
+										<tr >
+											<td className="pmName px-4 p-3  text-primary  cst-cursor" >
+												<h4>{serialNumber+index+1}</h4>
+											</td>
+											<td className="pmName px-4 p-3  text-primary  cst-cursor" >
+												<h4>{item.pmName != null ? item.pmName : ""}</h4>
+											</td>
+											<td className="accountId px-4 p-3 text-primary text-decoration-underline cst-cursor">
+												<h4 onClick={() => onEditPartner(item._id, item)}>{item.accountId !== null ? item.accountId : ""}</h4>
+											</td>
+											<td className="accountId px-4 p-3 text-primary cst-cursor">
+												<h4>{item.source}</h4>
+											</td>												
+											<td className="Listings px-4 p-3 text-primary text-decoration-underline cst-cursor">
+												<h4 onClick={() => GoToPartnerListings(item, item.accountId)}>{item.total_properties_count}</h4>
+											</td>
+											<td className="VT provider px-4 p-3 text-primary  cst-cursor">
+												<h4 onClick={() => GoToPartnerListings(item, item.accountId, 'Approved')}>{item.approved_properties_count}</h4>
+											</td>
+											<td className="SH provider px-4 p-3 text-primary  cst-cursor">
+												<h4 onClick={() => GoToPartnerListings(item, item.accountId, 'Pending')}>{item.pending_properties_count}</h4>
+											</td>
+											<td className="SH provider px-4 p-3 text-primary  cst-cursor">
+												<h4 onClick={() => GoToPartnerListings(item, item.accountId, 'Declined')}>{item.declined_properties_count}</h4>
+											</td>
+											<td className="Updated px-4 p-3">
+												<h4>{item.updatedAt !== null && item.updatedAt !== "" ? item.updatedAt.slice(0, 10) : ""}</h4>
+											</td>
+										</tr >
+									)
+								})}
 								</tbody>
 							</table>
 						</div>
 					</div>
-				</div >
+				</div>
 			</div>
 		</div>
 	);

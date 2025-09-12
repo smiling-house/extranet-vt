@@ -14,7 +14,7 @@ import Checkbox from "../../../components/Checkbox";
 import { getStorageValue } from "../../../Util/general";
 
 const EditPartner = (props) => {
-  const { agent, newPartnerID, partner, onClose, partners, editClickedId, editPartnerId } = props;
+  const { agent, partner, onClose, partners, editClickedId } = props;
   useEffect(() => {
     console.log("clicked partner:", partner)
     setChkVT(partner.basicChannels?.includes("VT"));
@@ -61,6 +61,21 @@ const EditPartner = (props) => {
   };
 
   const handleSaveButton = () => {
+    // console.log(partner);
+    // var addPayLoad = {
+    //   pmName: partnerName,
+    //   source: partner.source,
+    //   pmPhone: phone,
+    //   contactName: contactName,
+    //   email: email,
+    //   bearerToken: token,
+    //   accountId: accountID,
+    //   bankDetails: formData,
+    //   channels: partner.basicChannels,
+    //   provider: partner.provider
+    // };
+    // console.log("NEW partner payload:", addPayLoad)
+    // return;
     if (editClickedId) {
       var UpdatePayLoad = {
         accountId: accountID,
@@ -111,7 +126,9 @@ const EditPartner = (props) => {
         email: email,
         bearerToken: token,
         accountId: accountID,
-        channels: selectedChannels.map((item) => item).join(","),
+        bankDetails: formData,
+        channels: partner.basicChannels,
+        provider: partner.provider
       };
       console.log("NEW partner payload:", addPayLoad)
       
