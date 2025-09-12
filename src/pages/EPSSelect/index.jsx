@@ -278,7 +278,7 @@ const Listings = (props) => {
             skip: skip,
             sortBy: 'data.nickname:1',
             source: 'guesty_channel_api' //need only guesty properties for external partners now
-        }
+        } 
         const queryString = Object.keys(params).map(key => key + '=' + params[key]).join("&")
         console.log(queryString)
         const shubSearch=constants.SHUB_URL+'/local/listings?';
