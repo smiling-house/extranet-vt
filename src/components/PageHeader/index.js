@@ -81,7 +81,7 @@ const [accountId, setAccountId] = useState(partnerLogin);
                 <span>Search</span>
               </button>
             </div>
-            <span className=" agencies-search-separator"></span>
+            {/* <span className=" agencies-search-separator"></span> */}
           </div>
         </div>
 {showDestinationSearch && (

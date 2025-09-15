@@ -2,6 +2,99 @@
 	font-size: 15px;
 }
 
+.search-container {
+	padding: 25px;
+	background-color: rgba(19, 59, 113, 0.8);
+}
+.filterbystatus-container {
+	background-color: rgba(19, 59, 113, 0.8);
+	padding: 15px;
+}
+
+.filterbystatus-container .dropdown {
+  position: relative;
+}
+
+.filterbystatus-container .dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  display: none;
+  min-width: 100%;
+  padding: 0.5rem 0;
+  margin: 0;
+  font-size: 14px;
+  color: #212529;
+  text-align: left;
+  background-color: #fff;
+  background-clip: padding-box;
+  border: 1px solid rgba(0,0,0,.15);
+  border-radius: 0.375rem;
+  box-shadow: 0 0.5rem 1rem rgba(0,0,0,.175);
+}
+
+.filterbystatus-container .dropdown-menu.show {
+  display: block;
+}
+
+.filterbystatus-container .dropdown-item {
+  display: block;
+  width: 100%;
+  padding: 0.375rem 1rem;
+  clear: both;
+  font-weight: 400;
+  color: #212529;
+  text-align: inherit;
+  text-decoration: none;
+  white-space: nowrap;
+  background-color: transparent;
+  border: 0;
+  cursor: pointer;
+}
+
+.filterbystatus-container .dropdown-item:hover,
+.filterbystatus-container .dropdown-item:focus {
+  color: #1e2125;
+  background-color: #e9ecef;
+}
+
+.filterbystatus-container .dropdown-item.active {
+  color: #fff;
+  background-color: #007bff;
+}
+
+.filterbystatus-container .dropdown-toggle::after {
+  margin-left: auto;
+}
+
+/* Responsive adjustments */
+@media (max-width: 576px) {
+  .filterbystatus-container .dropdown-menu {
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+  
+  .filterbystatus-container .dropdown-item {
+    padding: 0.5rem 1rem;
+    min-height: 44px; /* Better touch target */
+    display: flex;
+    align-items: center;
+  }
+}
+
+/* Ensure dropdown stays within viewport */
+@media (max-width: 768px) {
+  .filterbystatus-container .dropdown-menu {
+    position: fixed;
+    top: auto !important;
+    left: 0px !important;
+    right: 0px !important;
+    width: auto !important;
+    transform: none !important;
+  }
+}
+
 .agencies-container {
 	background-repeat: repeat-x;
 

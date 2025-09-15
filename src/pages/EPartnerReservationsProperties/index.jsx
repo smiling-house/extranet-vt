@@ -25,7 +25,7 @@ import pageBg from '../../assets/bk_pool.png'
 import { data } from "./makeData.js"
 import axios from "axios"
 import PageHeader from "../../components/PageHeader"
-import { PATH_PROPERTY,APP_DISPLAY_NAME } from "../../Util/constants"
+// import { PATH_PROPERTY,APP_DISPLAY_NAME } from "../../Util/constants"
 import { useLocation, useHistory } from "react-router-dom";
 
 import "./EListings.scss"
@@ -60,7 +60,18 @@ const NEW_CLIENT = {
 
 import dayjs from 'dayjs'
 
+import menuIcon from '../../assets/icons8-menu-50.png'
+import * as userActions from "../../store/redux/User/actions";
+import { useDispatch, useSelector } from "react-redux";
+
+import {
+	
+	APP_DISPLAY_NAME,
+	PATH_LOGIN
+} from "../../Util/constants.js";
+
 const EPartnerReservationsProperties = (props) => {
+    const dispatch = useDispatch();	
     const { token, screenSize, activeMenu, handleToggleMenu, setActiveMenu } = props
     const [refresh, setRefresh] = useState(true)
     const [isLoading, setIsLoading] = useState(false)
@@ -590,32 +601,125 @@ shared_count = connected_count + disconnected_count + pending_count;
     const pendingButton=`${pending_count} pending`
     const allButton=`${shared_count} ALL`
 
-    return ( //comment
-        <div className="listings-search-container row">
-            <div className="col-sm-2">
-                <input type="text" className="listings-search-input form-control" placeholder="Property name / Nick name" onChange={(e) => handleSearchListings("q", e.target.value)} />
-            </div>
-            <div className="col-sm-2">
-                <input type="text" className="listings-search-input form-control" placeholder="Enter property id" onChange={(e) => handleSearchListings("id", e.target.value)} />
-            </div>
-            <div className="col-sm-1">
-                <Button style={{ height: '60px', width: '120px', fontSize: '15px', borderRadius: '5px' }} variant="green" text="Search" onClick={handleSearchButton} />
-            </div>
-            <span className="listings-search-separator" />
-            <div className="col-sm-2">
-                <Button style={{ height: '60px', width: '160px', fontSize: '15px', borderRadius: '5px' }} variant={onlyConnected?"blue":"green" } text={connectedButton} onClick={handleOnlyConnected} />
-            </div>
-            <div className="col-sm-2">
-                <Button style={{ height: '60px', width: '160px', fontSize: '15px', borderRadius: '5px' }} variant={onlyDisConnected?"blue":"green" } text={disconnectedButton} onClick={handleOnlyDisConnected} />
-            </div>
-            <div className="col-sm-2">
-                <Button style={{ height: '60px', width: '160px', fontSize: '15px', borderRadius: '5px' }} variant={onlyPending?"blue":"green" } text={pendingButton} onClick={handleOnlyPending} />
-            </div>            
-            <div className="col-sm-2">
-                <Button style={{ height: '60px', width: '160px', fontSize: '15px', borderRadius: '5px' }} variant={!onlyDisConnected&&!onlyConnected?"blue":"green" } text={allButton} onClick={handleAllStatuses} />
+    return (
+        <div className="container-fluid px-3 py-3">
+            <div className="row g-3">
+                {/* Search Inputs */}
+                <div className="col-12 col-md-6 col-lg-3">
+                    <input 
+                        type="text" 
+                        className="form-control" 
+                        placeholder="Property name / Nick name" 
+                        onChange={(e) => handleSearchListings("q", e.target.value)}
+                        style={{height: '45px'}}
+                    />
+                </div>
+                <div className="col-12 col-md-6 col-lg-3">
+                    <input 
+                        type="text" 
+                        className="form-control" 
+                        placeholder="Enter property id" 
+                        onChange={(e) => handleSearchListings("id", e.target.value)}
+                        style={{height: '45px'}}
+                    />
+                </div>
+                <div className="col-12 col-sm-6 col-lg-2">
+                    <Button 
+                        style={{ 
+                            height: '45px', 
+                            width: '100%', 
+                            fontSize: '14px', 
+                            borderRadius: '5px' 
+                        }} 
+                        variant="green" 
+                        text="Search" 
+                        onClick={handleSearchButton} 
+                    />
+                </div>
+                
+                {/* Status Buttons */}
+                <div className="col-6 col-sm-4 col-lg-2">
+                    <Button 
+                        style={{ 
+                            height: '45px', 
+                            width: '100%', 
+                            fontSize: '12px', 
+                            borderRadius: '5px' 
+                        }} 
+                        variant={onlyConnected ? "blue" : "green"} 
+                        text={`${connected_count} Connected`} 
+                        onClick={handleOnlyConnected} 
+                    />
+                </div>
+                <div className="col-6 col-sm-4 col-lg-2">
+                    <Button 
+                        style={{ 
+                            height: '45px', 
+                            width: '100%', 
+                            fontSize: '12px', 
+                            borderRadius: '5px' 
+                        }} 
+                        variant={onlyDisConnected ? "blue" : "green"} 
+                        text={`${disconnected_count} Disconnected`} 
+                        onClick={handleOnlyDisConnected} 
+                    />
+                </div>
+                <div className="col-6 col-sm-4 col-lg-3">
+                    <Button 
+                        style={{ 
+                            height: '45px', 
+                            width: '100%', 
+                            fontSize: '12px', 
+                            borderRadius: '5px' 
+                        }} 
+                        variant={onlyPending ? "blue" : "green"} 
+                        text={`${pending_count} Pending`} 
+                        onClick={handleOnlyPending} 
+                    />
+                </div>
+                <div className="col-6 col-lg-3">
+                    <Button 
+                        style={{ 
+                            height: '45px', 
+                            width: '100%', 
+                            fontSize: '12px', 
+                            borderRadius: '5px' 
+                        }} 
+                        variant={!onlyDisConnected && !onlyConnected ? "blue" : "green"} 
+                        text={`${shared_count} ALL`} 
+                        onClick={handleAllStatuses} 
+                    />
+                </div>
             </div>
         </div>
     )
+
+    // return ( 
+    //     <div className="listings-search-container row">
+    //         <div className="col-sm-2">
+    //             <input type="text" className="listings-search-input form-control" placeholder="Property name / Nick name" onChange={(e) => handleSearchListings("q", e.target.value)} />
+    //         </div>
+    //         <div className="col-sm-2">
+    //             <input type="text" className="listings-search-input form-control" placeholder="Enter property id" onChange={(e) => handleSearchListings("id", e.target.value)} />
+    //         </div>
+    //         <div className="col-sm-1">
+    //             <Button style={{ height: '60px', width: '120px', fontSize: '15px', borderRadius: '5px' }} variant="green" text="Search" onClick={handleSearchButton} />
+    //         </div>
+    //         <span className="listings-search-separator" />
+    //         <div className="col-sm-2">
+    //             <Button style={{ height: '60px', width: '160px', fontSize: '15px', borderRadius: '5px' }} variant={onlyConnected?"blue":"green" } text={connectedButton} onClick={handleOnlyConnected} />
+    //         </div>
+    //         <div className="col-sm-2">
+    //             <Button style={{ height: '60px', width: '160px', fontSize: '15px', borderRadius: '5px' }} variant={onlyDisConnected?"blue":"green" } text={disconnectedButton} onClick={handleOnlyDisConnected} />
+    //         </div>
+    //         <div className="col-sm-2">
+    //             <Button style={{ height: '60px', width: '160px', fontSize: '15px', borderRadius: '5px' }} variant={onlyPending?"blue":"green" } text={pendingButton} onClick={handleOnlyPending} />
+    //         </div>            
+    //         <div className="col-sm-2">
+    //             <Button style={{ height: '60px', width: '160px', fontSize: '15px', borderRadius: '5px' }} variant={!onlyDisConnected&&!onlyConnected?"blue":"green" } text={allButton} onClick={handleAllStatuses} />
+    //         </div>
+    //     </div>
+    // )
 }
 
 const columns = [
@@ -915,7 +1019,20 @@ const reservationUniqueID = `EPS-VT-TEST_${reservationData?.reservationID}`; //T
 
 
 
+const [showSideBarMenu, setShowSideBarMenu] = useState(false);
+const signOut = () => {
+    localStorage.clear();
+    dispatch(userActions.signOut());
+    history.push(PATH_LOGIN);
+  };
 
+const showOrHideSideBarMenu=()=> {
+	if(showSideBarMenu===true) {
+		setShowSideBarMenu(false);
+	} else if(showSideBarMenu===false) {
+		setShowSideBarMenu(true);
+	}
+} 
 
 const handleResCancellation = async (reservationData) => { 
     if(window.confirm('Are you sure you want to cancel this reservation? ' + reservationData.reservationUniqueID)) {
@@ -1025,17 +1142,141 @@ return (
     
     <div className="page-container">
         
-        <div className="page-header">{APP_DISPLAY_NAME} - EPartner Reservation Properties</div>
-        <Sidebar
-            agency={agency}
-            agent={agent}
-            token={token}
-            screenSize={screenSize}
-            activeMenu={activeMenu}
-            handleToggleMenu={handleToggleMenu}
-            setActiveMenu={setActiveMenu}
-        />
-        <div className={activeMenu ? `${"page-body"}` : "page-body"} >
+        {/* <div className="page-header">{APP_DISPLAY_NAME} - EPartner Reservation Properties</div> */}
+        <div className="page-header" style={{
+            marginLeft: showSideBarMenu ? '250px' : '0',
+            transition: 'margin-left 0.3s ease',
+            // background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            background: 'linear-gradient(135deg, #104109 0%, #2d5a2b 100%)',
+            boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
+            borderBottom: '1px solid rgba(255,255,255,0.1)'
+        }}>
+            <div className="container-fluid" style={{padding: '0px 50px'}}>
+                <div className="row align-items-center py-3">
+                    {/* Left Section - Menu & Title */}
+                    <div className="col-lg-8 col-md-7 col-sm-8 col-6">
+                        <div className="d-flex align-items-center">
+                            <button 
+                                className="btn btn-link p-0 me-3 text-white border-0"
+                                onClick={showOrHideSideBarMenu}
+                                style={{
+                                    background: 'none',
+                                    fontSize: '1.2rem',
+                                    transition: 'transform 0.2s ease'
+                                }}
+                                onMouseOver={e => e.currentTarget.style.transform = 'scale(1.1)'}
+                                onMouseOut={e => e.currentTarget.style.transform = 'scale(1)'}
+                            >
+                                <img 
+                                    src={menuIcon} 
+                                    alt="Menu" 
+                                    style={{
+                                        width: '28px',
+                                        height: '28px',
+                                        filter: 'brightness(0) invert(1)'
+                                    }} 
+                                />
+                            </button>
+                            
+                            <div className="header-title">
+                                <h1 className="mb-0 text-white d-none d-md-block" style={{
+                                    fontSize: 'clamp(1.2rem, 2.5vw, 1.8rem)',
+                                    fontWeight: '600',
+                                    letterSpacing: '-0.5px'
+                                }}>
+                                    <span className="d-none d-sm-inline">{APP_DISPLAY_NAME} : </span>
+                                    
+                                    <span className="d-none d-md-inline"> - {agentData.firstName}</span>
+                                </h1>
+                                
+                                {/* Mobile-only welcome message aligned with menu button */}
+                                <div className="d-md-none d-flex align-items-center">
+                                    <span className="text-white" style={{
+                                        fontSize: '1.1rem',
+                                        fontWeight: '500',
+                                        lineHeight: '28px' // Matches menu button height for alignment
+                                    }}>
+                                        Welcome, {agentData.firstName}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {/* Right Section - User Actions */}
+                    <div className="col-lg-4 col-md-5 col-sm-4 col-6">
+                        <div className="d-flex justify-content-end align-items-center">
+                            {/* User Info - Hidden on small screens */}
+                            <div className="d-none d-lg-flex align-items-center me-3">
+                                <div className="user-avatar me-2" style={{
+                                    width: '35px',
+                                    height: '35px',
+                                    borderRadius: '50%',
+                                    background: 'rgba(255,255,255,0.2)',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    color: 'white',
+                                    fontWeight: 'bold',
+                                    fontSize: '14px'
+                                }}>
+                                    {agentData.firstName.charAt(0).toUpperCase()}
+                                </div>
+                                <div className="text-white">
+                                    <div style={{fontSize: '14px', fontWeight: '500'}}>
+                                        {agentData.firstName}
+                                    </div>
+                                    <div style={{fontSize: '12px', opacity: '0.8'}}>
+                                        {extranet_vt_logged_in_role === 'admin' ? 'Administrator' : 'Partner'}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            {/* Sign Out Button */}
+                            <button
+                                className="btn btn-outline-light btn-sm"
+                                onClick={signOut}
+                                style={{
+                                    borderRadius: '25px',
+                                    padding: '8px 20px',
+                                    fontSize: '14px',
+                                    fontWeight: '500',
+                                    border: '2px solid rgba(255,255,255,0.3)',
+                                    transition: 'all 0.3s ease',
+                                    backdropFilter: 'blur(10px)'
+                                }}
+                                onMouseOver={e => {
+                                    e.currentTarget.style.background = 'rgba(255,255,255,0.2)';
+                                    e.currentTarget.style.borderColor = 'rgba(255,255,255,0.6)';
+                                }}
+                                onMouseOut={e => {
+                                    e.currentTarget.style.background = 'transparent';
+                                    e.currentTarget.style.borderColor = 'rgba(255,255,255,0.3)';
+                                }}
+                            >
+                                <span className=" d-sm-inline">Sign Out</span>
+                                <span className="d-sm-none">
+                                    <i className="fas fa-sign-out-alt"></i>
+                                </span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {showSideBarMenu===true && (
+            <Sidebar
+                agency={agency}
+                agent={agent}
+                token={token}
+                screenSize={screenSize}
+                activeMenu={activeMenu}
+                handleToggleMenu={handleToggleMenu}
+                setActiveMenu={setActiveMenu}
+                showOrHideSideBarMenu={showOrHideSideBarMenu}
+            />
+        )}
+        <div className={showSideBarMenu ? `${"page-body"}` : "page-body-nomargin"} >
 
             <div className="listings-container"
                 style={{ backgroundImage: `url(${pageBg})` }}
@@ -1053,9 +1294,46 @@ return (
                 </div>
 
                 <div className="listings-main">
-                    <div className="listings-title">{Epartner?.pmName ? Epartner?.pmName : ''} /{Epartner?.contactName ? Epartner?.contactName : ''} / {Epartner?.email ? Epartner?.email : ''} / AccountID {Epartner?.accountId ? Epartner?.accountId : ''}/ source: {Epartner?.source ? Epartner?.source : ''}</div>
-                    <div className="listings-paging">Displaying  {ListingsPagingFrom}-{ListingsPagingTo} of {totalListings ? totalListings : "?"} Reservations</div>
-                    {<Paging perPage={constants.PAGING_LISTING_SIZE} totalItems={totalListings} currentPage={pageNumber} onChangePage={onChangePage} />}
+                    <div className="container-fluid px-3">
+                        <div className="row mb-3">
+                            <div className="col-12">
+                                <div className="listings-title" style={{
+                                    fontSize: 'clamp(1rem, 2vw, 1.2rem)',
+                                    lineHeight: '1.4',
+                                    wordBreak: 'break-word'
+                                }}>
+                                    {Epartner?.pmName ? Epartner?.pmName : ''} / 
+                                    {Epartner?.contactName ? Epartner?.contactName : ''} / 
+                                    {Epartner?.email ? Epartner?.email : ''} / 
+                                    AccountID {Epartner?.accountId ? Epartner?.accountId : ''} / 
+                                    Source: {Epartner?.source ? Epartner?.source : ''}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {/* <div className="listings-title">
+                        {Epartner?.pmName ? Epartner?.pmName : ''} /{Epartner?.contactName ? Epartner?.contactName : ''} / {Epartner?.email ? Epartner?.email : ''} / AccountID {Epartner?.accountId ? Epartner?.accountId : ''}/ source: {Epartner?.source ? Epartner?.source : ''}
+                    </div> */}
+                    {/* <div className="listings-paging">Displaying  {ListingsPagingFrom}-{ListingsPagingTo} of {totalListings ? totalListings : "?"} Reservations</div> */}
+                    {/* Paging Info */}
+                    <div className="row mb-3">
+                        <div className="col-12">
+                            <div className="listings-paging" style={{fontSize: '14px'}}>
+                                Displaying {ListingsPagingFrom}-{ListingsPagingTo} of {totalListings || "?"} Reservations
+                            </div>
+                        </div>
+                    </div>
+                    {/* {<Paging perPage={constants.PAGING_LISTING_SIZE} totalItems={totalListings} currentPage={pageNumber} onChangePage={onChangePage} />} */}
+                    <div className="row mb-3">
+                        <div className="col-12">
+                            <Paging 
+                                perPage={constants.PAGING_LISTING_SIZE} 
+                                totalItems={totalListings} 
+                                currentPage={pageNumber} 
+                                onChangePage={onChangePage} 
+                            />
+                        </div>
+                    </div>
 
     {
         selectedReservations && (

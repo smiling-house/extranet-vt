@@ -303,7 +303,7 @@ localStorage.removeItem("partnerName");
 							*/}
 							{<div className="col-8 mt-2">
 								<div className="row d-flex justify-content-between align-items-center">
-									<div className="col-6 mb-2">
+									<div className="col-12 mb-2">
 										<Checkbox uid="chkRememberMe" label="Remember Me" checked={chkRememberMe} onChange={(value) => setChkRememberMe(value)} />
 									</div>
 									{/*<div className="col-6"><h4>

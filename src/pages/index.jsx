@@ -501,6 +501,7 @@ const showOrHideSideBarMenu=()=> {
             agent={agent}
             agency={agency}
             token={token}
+            handleToggleMenu={handleToggleMenu}
           />
           </Route>                               
         {/* <div className="page-container">
