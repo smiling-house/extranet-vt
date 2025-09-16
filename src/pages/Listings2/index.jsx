@@ -794,7 +794,7 @@ return (
     <Button style={{ margin:'10px', height: '30px', width: '100px', fontSize: '15px', borderRadius: '5px' }} variant="green" text="GO BACK" onClick={goToPartnersPage} />
 </div>
 
-{/*extranet_vt_logged_in_role==='admin' &&
+{extranet_vt_logged_in_role==='admin' &&
                     <div className="listings-search-container row">
                     <div className="col-sm-2">
                         <label style={{'color':'white'}}><strong>Filter by Status</strong></label>
@@ -828,9 +828,9 @@ return (
                     </div>
 
                     </div>
-*/}                    
+}                    
             
-{/*extranet_vt_logged_in_role==='admin' &&
+{extranet_vt_logged_in_role==='admin' &&
     <section>
 <div style={{'padding':'10px', 'display':'flex', 'align-items':'center', 'row-gap':'20px', 'position':'sticky'}}>
     <div class="col-3">
@@ -874,7 +874,7 @@ return (
 </div>
 
 </section>
-*/}            
+}            
 
                     {<Paging perPage={constants.PAGING_LISTING_SIZE} totalItems={totalListings} currentPage={pageNumber} onChangePage={onChangePage} />}
                     <div style={{ padding: '0 20px' }}>
@@ -882,11 +882,11 @@ return (
                                 <table class="table">
                                     <thead style={{ backgroundColor: "#f9f9f7" }} >
 
-{/*extranet_vt_logged_in_role==='admin' &&                                        
+{extranet_vt_logged_in_role==='admin' &&                                        
 <tr>
    <td><span onClick={checkUncheckAll}  className="cst-cursor">Check/Uncheck All</span></td> 
 </tr>
-*/}
+}
                                         <tr>
                                             {columns?.map((iteam, index) => {
                                                 return <>
