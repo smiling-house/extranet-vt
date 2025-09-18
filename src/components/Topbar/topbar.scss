@@ -1,0 +1,43 @@
+.page-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 999;
+  height: 70px;
+  
+  .container-fluid {
+    height: 100%;
+  }
+  
+  .row {
+    height: 100%;
+  }
+  
+  .header-title h1 {
+    text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+  
+  .user-avatar {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+  
+  @media (max-width: 768px) {
+    .container-fluid {
+      padding: 0 20px !important;
+    }
+    
+    margin-left: 0 !important;
+  }
+  
+  @media (max-width: 576px) {
+    .container-fluid {
+      padding: 0 15px !important;
+    }
+  }
+}
+
+// Ensure page content doesn't get hidden behind fixed header
+.page-container {
+  padding-top: 70px;
+}

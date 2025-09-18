@@ -1,0 +1,147 @@
+.verify-pms-container {
+  background-color: #f8fafc;
+  min-height: calc(100vh - 70px);
+  padding: 0;
+
+  .csv-comparison-section {
+    padding: 1.5rem 0;
+  }
+
+  .page-intro {
+    background: linear-gradient(135deg, #104109 0%, #2d5a2b 100%);
+    color: white;
+    padding: 2rem;
+    border-radius: 12px;
+    margin-bottom: 1.5rem;
+
+    .intro-header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+
+      .intro-icon {
+        flex-shrink: 0;
+        opacity: 0.9;
+      }
+
+      h2 {
+        font-size: 1.6rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+      }
+
+      p {
+        font-size: 0.95rem;
+        opacity: 0.9;
+        line-height: 1.5;
+      }
+    }
+  }
+
+  .comparison-history-section {
+    padding: 1rem 0 2rem;
+
+    .history-card {
+      background: white;
+      border-radius: 12px;
+      padding: 1.5rem;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+      h5 {
+        color: #374151;
+        font-weight: 600;
+        margin-bottom: 1rem;
+      }
+    }
+
+    .history-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .history-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+
+      .history-info {
+        strong {
+          color: #374151;
+          font-size: 0.9rem;
+        }
+
+        small {
+          display: block;
+          color: #6b7280;
+          font-size: 0.8rem;
+          margin-top: 0.25rem;
+        }
+      }
+
+      .history-stats {
+        display: flex;
+        gap: 0.75rem;
+
+        .stat {
+          background: #e0f2fe;
+          color: #0369a1;
+          padding: 0.25rem 0.5rem;
+          border-radius: 4px;
+          font-size: 0.75rem;
+          font-weight: 500;
+        }
+      }
+    }
+  }
+
+  .access-denied {
+    text-align: center;
+    padding: 3rem 1rem;
+    background: white;
+    border-radius: 12px;
+    margin: 2rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+
+    h3 {
+      color: #dc2626;
+      margin-bottom: 1rem;
+    }
+
+    p {
+      color: #6b7280;
+      margin-bottom: 0;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .page-intro {
+      padding: 1.5rem;
+
+      .intro-header {
+        flex-direction: column;
+        text-align: center;
+        gap: 0.75rem;
+
+        h2 {
+          font-size: 1.4rem;
+        }
+      }
+    }
+
+    .history-item {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.75rem;
+
+      .history-stats {
+        width: 100%;
+        justify-content: space-between;
+      }
+    }
+  }
+}

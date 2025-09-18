@@ -42,6 +42,7 @@ export const PATH_LISTINGS_RU = '/listings-ru';
 //External Partner API
 export const PATH_EPS_LISTINGS = '/eps-listings';
 export const PATH_SELECT = '/eps-select-listings';
+export const PATH_VERIFY_COMPARE_NEW_PMS = '/verify-compare-new-pms';
 
 
 export const PATH_EPS_EPARTNER_MANAGE = '/eps-epartner-manage';

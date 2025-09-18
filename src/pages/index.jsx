@@ -36,6 +36,7 @@ import Favorites from "./Favorites";
 import Property from "./Property";
 import PropertyEdit from "./PropertyEdit";
 import PropertyReservePage from "./PropertyReserve";
+import VerifyNewPMs from './VerifyNewPMs';
 import Admin from "./Admin";
 import {
   PATH_PARTNERS,
@@ -79,7 +80,8 @@ import {
   PATH_EPS_EPARTNERS_RESERVATIONS,
   PATH_EPS_EPARTNER_RESERVATIONS_PROPERTIES,
   APP_DISPLAY_NAME,
-  PATH_PARTNERS_BART
+  PATH_PARTNERS_BART,
+  PATH_VERIFY_COMPARE_NEW_PMS
 } from "../Util/constants";
 import AuthService from "../services/auth.service";
 import { baseURL } from "../core";
@@ -291,6 +293,18 @@ const showOrHideSideBarMenu=()=> {
           <Tasks
             agent={agent}
             agency={agency}
+          />
+        </Route>
+        <Route path={PATH_VERIFY_COMPARE_NEW_PMS}>
+          <VerifyNewPMs 
+            {...props} 
+            token={token}
+            agency={agency}
+            agent={agent}
+            screenSize={screenSize}
+            activeMenu={activeMenu}
+            handleToggleMenu={handleToggleMenu}
+            setActiveMenu={setActiveMenu}
           />
         </Route>
         <Route path={[PATH_PROPERTY]}>

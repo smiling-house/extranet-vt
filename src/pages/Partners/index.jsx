@@ -70,6 +70,7 @@ import BankDetails from "./BankDetails/index.js";
 import menuIcon from '../../assets/icons8-menu-50.png'
 import * as userActions from "../../store/redux/User/actions";
 import { useDispatch, useSelector } from "react-redux";
+import Layout from "../../components/Layout";
 
 
 const NEW_PARTNER = {
@@ -555,467 +556,477 @@ localStorage.setItem('partnerPropertiesUniqueZipcodes', JSON.stringify(partnerPr
 
 
 	return (
-		<div className="page-container">
-			<div className="page-header" style={{
-				marginLeft: showSideBarMenu ? '250px' : '0',
-				transition: 'margin-left 0.3s ease',
-				// background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-				background: 'linear-gradient(135deg, #104109 0%, #2d5a2b 100%)',
-				boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
-				borderBottom: '1px solid rgba(255,255,255,0.1)'
-			}}>
-				<div className="container-fluid" style={{padding: '0px 50px'}}>
-					<div className="row align-items-center py-3">
-						{/* Left Section - Menu & Title */}
-						<div className="col-lg-8 col-md-7 col-sm-8 col-6">
-							<div className="d-flex align-items-center">
-								<button 
-									className="btn btn-link p-0 me-3 text-white border-0"
-									onClick={showOrHideSideBarMenu}
-									style={{
-										background: 'none',
-										fontSize: '1.2rem',
-										transition: 'transform 0.2s ease'
-									}}
-									onMouseOver={e => e.currentTarget.style.transform = 'scale(1.1)'}
-									onMouseOut={e => e.currentTarget.style.transform = 'scale(1)'}
-								>
-									<img 
-										src={menuIcon} 
-										alt="Menu" 
-										style={{
-											width: '28px',
-											height: '28px',
-											filter: 'brightness(0) invert(1)'
-										}} 
-									/>
-								</button>
+// 		<div className="page-container">
+// 			<div className="page-header" style={{
+// 				marginLeft: showSideBarMenu ? '250px' : '0',
+// 				transition: 'margin-left 0.3s ease',
+// 				// background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+// 				background: 'linear-gradient(135deg, #104109 0%, #2d5a2b 100%)',
+// 				boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
+// 				borderBottom: '1px solid rgba(255,255,255,0.1)'
+// 			}}>
+// 				<div className="container-fluid" style={{padding: '0px 50px'}}>
+// 					<div className="row align-items-center py-3">
+// 						{/* Left Section - Menu & Title */}
+// 						<div className="col-lg-8 col-md-7 col-sm-8 col-6">
+// 							<div className="d-flex align-items-center">
+// 								<button 
+// 									className="btn btn-link p-0 me-3 text-white border-0"
+// 									onClick={showOrHideSideBarMenu}
+// 									style={{
+// 										background: 'none',
+// 										fontSize: '1.2rem',
+// 										transition: 'transform 0.2s ease'
+// 									}}
+// 									onMouseOver={e => e.currentTarget.style.transform = 'scale(1.1)'}
+// 									onMouseOut={e => e.currentTarget.style.transform = 'scale(1)'}
+// 								>
+// 									<img 
+// 										src={menuIcon} 
+// 										alt="Menu" 
+// 										style={{
+// 											width: '28px',
+// 											height: '28px',
+// 											filter: 'brightness(0) invert(1)'
+// 										}} 
+// 									/>
+// 								</button>
 								
-								<div className="header-title">
-									<h1 className="mb-0 text-white d-none d-md-block" style={{
-										fontSize: 'clamp(1.2rem, 2.5vw, 1.8rem)',
-										fontWeight: '600',
-										letterSpacing: '-0.5px'
-									}}>
-										<span className="d-none d-sm-inline">{APP_DISPLAY_NAME} : </span>
-										<span>PMs</span>
-										<span className="d-none d-md-inline"> - {agentData.firstName}</span>
-									</h1>
+// 								<div className="header-title">
+// 									<h1 className="mb-0 text-white d-none d-md-block" style={{
+// 										fontSize: 'clamp(1.2rem, 2.5vw, 1.8rem)',
+// 										fontWeight: '600',
+// 										letterSpacing: '-0.5px'
+// 									}}>
+// 										<span className="d-none d-sm-inline">{APP_DISPLAY_NAME} : </span>
+// 										<span>PMs</span>
+// 										<span className="d-none d-md-inline"> - {agentData.firstName}</span>
+// 									</h1>
 									
-									{/* Mobile-only welcome message aligned with menu button */}
-									<div className="d-md-none d-flex align-items-center">
-										<span className="text-white" style={{
-											fontSize: '1.1rem',
-											fontWeight: '500',
-											lineHeight: '28px' // Matches menu button height for alignment
+// 									{/* Mobile-only welcome message aligned with menu button */}
+// 									<div className="d-md-none d-flex align-items-center">
+// 										<span className="text-white" style={{
+// 											fontSize: '1.1rem',
+// 											fontWeight: '500',
+// 											lineHeight: '28px' // Matches menu button height for alignment
+// 										}}>
+// 											Welcome, {agentData.firstName}
+// 										</span>
+// 									</div>
+// 								</div>
+// 							</div>
+// 						</div>
+						
+// 						{/* Right Section - User Actions */}
+// 						<div className="col-lg-4 col-md-5 col-sm-4 col-6">
+// 							<div className="d-flex justify-content-end align-items-center">
+// 								{/* User Info - Hidden on small screens */}
+// 								<div className="d-none d-lg-flex align-items-center me-3">
+// 									<div className="user-avatar me-2" style={{
+// 										width: '35px',
+// 										height: '35px',
+// 										borderRadius: '50%',
+// 										background: 'rgba(255,255,255,0.2)',
+// 										display: 'flex',
+// 										alignItems: 'center',
+// 										justifyContent: 'center',
+// 										color: 'white',
+// 										fontWeight: 'bold',
+// 										fontSize: '14px'
+// 									}}>
+// 										{agentData.firstName.charAt(0).toUpperCase()}
+// 									</div>
+// 									<div className="text-white">
+// 										<div style={{fontSize: '14px', fontWeight: '500'}}>
+// 											{agentData.firstName}
+// 										</div>
+// 										<div style={{fontSize: '12px', opacity: '0.8'}}>
+// 											{extranet_vt_logged_in_role === 'admin' ? 'Administrator' : 'Partner'}
+// 										</div>
+// 									</div>
+// 								</div>
+								
+// 								{/* Sign Out Button */}
+// 								<button
+// 									className="btn btn-outline-light btn-sm"
+// 									onClick={signOut}
+// 									style={{
+// 										borderRadius: '25px',
+// 										padding: '8px 20px',
+// 										fontSize: '14px',
+// 										fontWeight: '500',
+// 										border: '2px solid rgba(255,255,255,0.3)',
+// 										transition: 'all 0.3s ease',
+// 										backdropFilter: 'blur(10px)'
+// 									}}
+// 									onMouseOver={e => {
+// 										e.currentTarget.style.background = 'rgba(255,255,255,0.2)';
+// 										e.currentTarget.style.borderColor = 'rgba(255,255,255,0.6)';
+// 									}}
+// 									onMouseOut={e => {
+// 										e.currentTarget.style.background = 'transparent';
+// 										e.currentTarget.style.borderColor = 'rgba(255,255,255,0.3)';
+// 									}}
+// 								>
+// 									<span className=" d-sm-inline">Sign Out</span>
+// 									<span className="d-sm-none">
+// 										<i className="fas fa-sign-out-alt"></i>
+// 									</span>
+// 								</button>
+// 							</div>
+// 						</div>
+// 					</div>
+// 				</div>
+// 			</div>			
+// 			{/* <div className="page-header" style={{marginLeft: showSideBarMenu ? '250px' : 'unset'}}>
+// 				<img src={menuIcon} style={{'width':'25px'}} className="cst-cursor" onClick={showOrHideSideBarMenu} />
+// 				&nbsp;{APP_DISPLAY_NAME} : PMs - {agentData.firstName} 
+// 				<span className="cst-cursor" onClick={signOut}>Sign Out</span>
+// 			</div> */}
+// {showSideBarMenu===true &&			
+// 			<Sidebar
+// 				agency={agency}
+// 				agent={agent}
+// 				token={token}
+// 				screenSize={screenSize}
+// 				activeMenu={activeMenu}
+// 				handleToggleMenu={handleToggleMenu}
+// 				showOrHideSideBarMenu={showOrHideSideBarMenu}
+// 			/>
+// }
+// 			<div className={showSideBarMenu ? `${"page-body"}` : "page-body-nomargin"} >
+				<Layout
+					pageTitle="PMs"
+					agency={agency}
+					agent={agent}
+					token={token}
+					screenSize={screenSize}
+					activeMenu={activeMenu}
+					handleToggleMenu={handleToggleMenu}
+					setActiveMenu={setActiveMenu}
+				>
+					<div className="agencies-container" >
+						<LoadingBox visible={isLoading} />
+						{selectedRowToEdit &&
+							<>
+								<div className="agencies-floating-edit-menu-floater" onClick={clearEditMenu} />
+								<div className="agencies-floating-edit-menu" style={menuStyle()}>
+									{/* <div className="agencies-floating-edit-menu-row" onClick={onEditPartner}><img src={editAdminIcon} alt="" />&nbsp;&nbsp;Edit Partner</div> */}
+									<div className="agencies-floating-edit-menu-row" onClick={onDeletePartner}><img src={deleteAdminIcon} alt="" />&nbsp;&nbsp;Delete Partner</div>
+									<div className="agencies-floating-edit-menu-row" onClick={onAddPartnerSH}><img src={addAdminIcon} alt="" />&nbsp;&nbsp;Add Partner</div>
+									<div className="agencies-floating-edit-menu-row" onClick={clearEditMenu}>&nbsp;&nbsp;close X</div>
+								</div>
+							</>
+						}
+
+						{partnerToApprove &&
+							<Popup width={820} onClose={onClose}>
+								<ApproveAgent partner={partnerToApprove} onClose={onClose} />
+							</Popup>
+						}
+						{partnerToDisApprove &&
+							<Popup width={820} onClose={onClose}>
+								<DisApproveAgent partner={partnerToDisApprove} onClose={onClose} />
+							</Popup>
+						}
+
+						{selectedPartnerToDelete &&
+							<Popup width={820} onClose={onClose}>
+								<DeletePartner partner={selectedPartnerToDelete} onClose={onClose} />
+							</Popup>
+						}
+						{selectedPartnerToEdit &&
+							/* Bootstrap Modal for EditPartner with fixed height, scroll, and dynamic right shift if sidebar is open */
+							<div
+								className="modal fade show"
+								tabIndex="-1"
+								role="dialog"
+								style={{
+									display: 'block',
+									backgroundColor: 'rgba(0,0,0,0.5)',
+									zIndex: 1050,
+									position: 'fixed',
+									top: 0,
+									left: showSideBarMenu ? '200px' : 0, // adjust 320px to your sidebar width
+									right: 0,
+									bottom: 0,
+									transition: 'left 0.3s',
+								}}
+							>
+								<div className="modal-dialog modal-lg" role="document">
+									<div className="modal-content">
+									<div className="modal-header">
+										<h4 className="modal-title" style={{
+											fontSize: '25px',
+											padding: '10px 0px 10px 15px'
 										}}>
-											Welcome, {agentData.firstName}
-										</span>
+											{editClickedId ? (
+												<>
+													<span>
+														<img src={editTitleIcon} alt="" style={{ width: 28, height: 28, marginRight: 16 }} />
+													</span>
+													<span>
+														Property Manager Details
+													</span>
+													<span style={{ fontWeight: 400, fontSize: 18, color: '#888' }}>
+														| {selectedPartnerToEdit?.source ? selectedPartnerToEdit?.source === 'SH' ? 'Smiling House' : 'Villa Tracker' : ''}
+													</span>
+												</>
+												
+											) : (
+												<>
+													<span>
+														<img src={addTitleIcon} alt="" style={{ width: 28, height: 28, marginRight: 16 }} />
+													</span>
+													<span>
+														Add Partner
+													</span>
+													<span style={{ fontWeight: 400, fontSize: 18, color: '#888' }}>
+														&nbsp;| {selectedPartnerToEdit?.source ? selectedPartnerToEdit?.source === 'SH' ? 'Smiling House' : 'Villa Tracker' : ''}
+													</span>
+												</>
+											)
+											}
+										</h4>
+										<button
+											type="button"
+											className="close"
+											aria-label="Close"
+											onClick={onClose}
+											style={{
+												fontSize: '2.2rem',
+												fontWeight: 700,
+												color:'#212121',
+												opacity: 1,
+												background: 'none',
+												marginLeft: 'auto',
+												marginRight: '20px',
+												marginTop: '-10px',
+												zIndex: 20,
+												cursor: 'pointer',
+												lineHeight: 1
+											}}
+											onMouseOver={e => (e.currentTarget.style.color ='#5f5f5f')}
+											onMouseOut={e => (e.currentTarget.style.color = '#212121')}
+											>
+											<span aria-hidden="true">&times;</span>
+										</button>
+									</div>
+									<div className="modal-body" style={{ padding: 0, maxHeight: '85vh', overflowY: 'auto' }}>
+										<EditPartner
+										agent={agent}
+										newPartnerID={parseInt(totalPartners) + 1}
+										editClickedId={editClickedId}
+										editPartnerId={editPartnerId}
+										partner={selectedPartnerToEdit}
+										partners={partners}
+										onClose={onClose}
+										/>
+									</div>
 									</div>
 								</div>
 							</div>
-						</div>
-						
-						{/* Right Section - User Actions */}
-						<div className="col-lg-4 col-md-5 col-sm-4 col-6">
-							<div className="d-flex justify-content-end align-items-center">
-								{/* User Info - Hidden on small screens */}
-								<div className="d-none d-lg-flex align-items-center me-3">
-									<div className="user-avatar me-2" style={{
-										width: '35px',
-										height: '35px',
-										borderRadius: '50%',
-										background: 'rgba(255,255,255,0.2)',
-										display: 'flex',
-										alignItems: 'center',
-										justifyContent: 'center',
-										color: 'white',
-										fontWeight: 'bold',
-										fontSize: '14px'
-									}}>
-										{agentData.firstName.charAt(0).toUpperCase()}
-									</div>
-									<div className="text-white">
-										<div style={{fontSize: '14px', fontWeight: '500'}}>
-											{agentData.firstName}
-										</div>
-										<div style={{fontSize: '12px', opacity: '0.8'}}>
-											{extranet_vt_logged_in_role === 'admin' ? 'Administrator' : 'Partner'}
-										</div>
-									</div>
-								</div>
+						}
+						{
+							SelectedPartner &&
+							<ClientOfferLog
+								token={token}
+								partner={SelectedPartner}
+								onClose={onClose}
+							/>
+						}
+
+						<div className="agencies-main">
+
+
+	{extranet_vt_logged_in_role==='admin' && (
+			<div className="search-container">
+			
+			<div className="row">
+				<div className="col-lg-5 col-md-8 col-12" style={{margin: 2}}>
+				<input type="text" className="form-control" placeholder="Search by PM Name"  onChange={(e) => handleSearchFuntionality("pmName",e.target.value)} />
+				</div>
+				<div className="col-lg-2 col-md-2 col-12" style={{margin: 2}}>
+				<button 
+					className="btn btn-primary w-100" 
+					style={{ 
+						height: "60px", 
+						fontSize: "18px", 
+						borderRadius: "6px", 
+						fontWeight: 400 
+					}}  
+					onClick={() => handlSearchButtonAdmin()}>
+					<span>Search</span>
+				</button>
+				</div>
+				{/* <span className=" agencies-search-separator"></span> */}
+			</div>
+			</div>
+	)}
+
+
+							<div className="agencies-title">
 								
-								{/* Sign Out Button */}
-								<button
-									className="btn btn-outline-light btn-sm"
-									onClick={signOut}
-									style={{
-										borderRadius: '25px',
-										padding: '8px 20px',
-										fontSize: '14px',
-										fontWeight: '500',
-										border: '2px solid rgba(255,255,255,0.3)',
-										transition: 'all 0.3s ease',
-										backdropFilter: 'blur(10px)'
-									}}
-									onMouseOver={e => {
-										e.currentTarget.style.background = 'rgba(255,255,255,0.2)';
-										e.currentTarget.style.borderColor = 'rgba(255,255,255,0.6)';
-									}}
-									onMouseOut={e => {
-										e.currentTarget.style.background = 'transparent';
-										e.currentTarget.style.borderColor = 'rgba(255,255,255,0.3)';
-									}}
-								>
-									<span className=" d-sm-inline">Sign Out</span>
-									<span className="d-sm-none">
-										<i className="fas fa-sign-out-alt"></i>
-									</span>
-								</button>
+	{extranet_vt_logged_in_role==='admin' && <span>Guesty PM List</span> }
+	{extranet_vt_logged_in_role==='partner' && <span>Guesty PM Home</span> }
+
+								{!partnerLogin && (<>
+									{/*<a class="dropdown-item" href="#" onClick={onAddPartnerSH}><img src={addAdminIcon} /> connect GUESTY PM partner SH = Smiling House </a>*/}
+									<a class="dropdown-item" style={{whiteSpace: 'unset'}} href="#" onClick={onAddPartnerVT}><img src={addAdminIcon} /> connect GUESTY PM partner VT = Villa Tracker </a>
+								</>)}
+
+								<div className="agencies-main-subtitle">Displaying PMs {partnersPagingFrom}-{partnersPagingTo} of {totalPartners ? totalPartners : "?"}
+								</div>
+							</div>
+
+
+
+	{extranet_vt_logged_in_role==='admin' && (
+		<div className="container-fluid px-0">
+			<div className="row mx-0">
+				<div className="col-12">
+					<div className="filterbystatus-container">
+						<div className="row align-items-end">
+							<div className="col-12 col-sm-6 col-md-4 col-lg-3 col-xl-2 mb-3">
+								<label className="form-label text-white mb-2">
+									<strong>Filter by Status</strong>
+								</label>
+								<div className="dropdown w-100">
+									<button 
+										className="btn btn-outline-secondary dropdown-toggle w-100 text-start"
+										type="button" 
+										id="statusFilterDropdown" 
+										data-bs-toggle="dropdown" 
+										aria-expanded="false"
+										style={{
+											minWidth: '120px',
+											fontSize: '14px',
+											padding: '8px 12px',
+											border: '1px solid #ced4da',
+											borderRadius: '4px',
+											backgroundColor: '#fff',
+											color: '#333',
+											display: 'flex',
+											justifyContent: 'space-between',
+											alignItems: 'center'
+										}}
+									>
+										<span>{filterPropertyStatus || '--All--'}</span>
+									</button>
+									<ul 
+										className="dropdown-menu w-100" 
+										aria-labelledby="statusFilterDropdown"
+										style={{
+											maxHeight: '200px',
+											overflowY: 'auto',
+											fontSize: '14px'
+										}}
+									>
+										<li>
+											<button 
+												className={`dropdown-item ${!filterPropertyStatus ? 'active' : ''}`}
+												type="button"
+												onClick={() => filterByPropertyStatus({target: {value: ''}})}
+											>
+												--All--
+											</button>
+										</li>
+										<li>
+											<button 
+												className={`dropdown-item ${filterPropertyStatus === 'Approved' ? 'active' : ''}`}
+												type="button"
+												onClick={() => filterByPropertyStatus({target: {value: 'Approved'}})}
+											>
+												Approved
+											</button>
+										</li>
+										<li>
+											<button 
+												className={`dropdown-item ${filterPropertyStatus === 'Pending' ? 'active' : ''}`}
+												type="button"
+												onClick={() => filterByPropertyStatus({target: {value: 'Pending'}})}
+											>
+												Pending
+											</button>
+										</li>
+										<li>
+											<button 
+												className={`dropdown-item ${filterPropertyStatus === 'Declined' ? 'active' : ''}`}
+												type="button"
+												onClick={() => filterByPropertyStatus({target: {value: 'Declined'}})}
+											>
+												Declined
+											</button>
+										</li>
+									</ul>
+								</div>                      
 							</div>
 						</div>
 					</div>
 				</div>
-			</div>			
-			{/* <div className="page-header" style={{marginLeft: showSideBarMenu ? '250px' : 'unset'}}>
-				<img src={menuIcon} style={{'width':'25px'}} className="cst-cursor" onClick={showOrHideSideBarMenu} />
-				&nbsp;{APP_DISPLAY_NAME} : PMs - {agentData.firstName} 
-				<span className="cst-cursor" onClick={signOut}>Sign Out</span>
-			</div> */}
-{showSideBarMenu===true &&			
-			<Sidebar
-				agency={agency}
-				agent={agent}
-				token={token}
-				screenSize={screenSize}
-				activeMenu={activeMenu}
-				handleToggleMenu={handleToggleMenu}
-				showOrHideSideBarMenu={showOrHideSideBarMenu}
-			/>
-}
-			<div className={showSideBarMenu ? `${"page-body"}` : "page-body-nomargin"} >
-
-				<div className="agencies-container" >
-					<LoadingBox visible={isLoading} />
-					{selectedRowToEdit &&
-						<>
-							<div className="agencies-floating-edit-menu-floater" onClick={clearEditMenu} />
-							<div className="agencies-floating-edit-menu" style={menuStyle()}>
-								{/* <div className="agencies-floating-edit-menu-row" onClick={onEditPartner}><img src={editAdminIcon} alt="" />&nbsp;&nbsp;Edit Partner</div> */}
-								<div className="agencies-floating-edit-menu-row" onClick={onDeletePartner}><img src={deleteAdminIcon} alt="" />&nbsp;&nbsp;Delete Partner</div>
-								<div className="agencies-floating-edit-menu-row" onClick={onAddPartnerSH}><img src={addAdminIcon} alt="" />&nbsp;&nbsp;Add Partner</div>
-								<div className="agencies-floating-edit-menu-row" onClick={clearEditMenu}>&nbsp;&nbsp;close X</div>
-							</div>
-						</>
-					}
-
-					{partnerToApprove &&
-						<Popup width={820} onClose={onClose}>
-							<ApproveAgent partner={partnerToApprove} onClose={onClose} />
-						</Popup>
-					}
-					{partnerToDisApprove &&
-						<Popup width={820} onClose={onClose}>
-							<DisApproveAgent partner={partnerToDisApprove} onClose={onClose} />
-						</Popup>
-					}
-
-					{selectedPartnerToDelete &&
-						<Popup width={820} onClose={onClose}>
-							<DeletePartner partner={selectedPartnerToDelete} onClose={onClose} />
-						</Popup>
-					}
-					{selectedPartnerToEdit &&
-						/* Bootstrap Modal for EditPartner with fixed height, scroll, and dynamic right shift if sidebar is open */
-						<div
-							className="modal fade show"
-							tabIndex="-1"
-							role="dialog"
-							style={{
-								display: 'block',
-								backgroundColor: 'rgba(0,0,0,0.5)',
-								zIndex: 1050,
-								position: 'fixed',
-								top: 0,
-								left: showSideBarMenu ? '200px' : 0, // adjust 320px to your sidebar width
-								right: 0,
-								bottom: 0,
-								transition: 'left 0.3s',
-							}}
-						>
-							<div className="modal-dialog modal-lg" role="document">
-								<div className="modal-content">
-								<div className="modal-header">
-									<h4 className="modal-title" style={{
-										fontSize: '25px',
-										padding: '10px 0px 10px 15px'
-									}}>
-										{editClickedId ? (
-											<>
-												<span>
-													<img src={editTitleIcon} alt="" style={{ width: 28, height: 28, marginRight: 16 }} />
-												</span>
-												<span>
-													Property Manager Details
-												</span>
-												<span style={{ fontWeight: 400, fontSize: 18, color: '#888' }}>
-													| {selectedPartnerToEdit?.source ? selectedPartnerToEdit?.source === 'SH' ? 'Smiling House' : 'Villa Tracker' : ''}
-												</span>
-											</>
-											
-										 ) : (
-											<>
-												<span>
-													<img src={addTitleIcon} alt="" style={{ width: 28, height: 28, marginRight: 16 }} />
-												</span>
-												<span>
-													Add Partner
-												</span>
-												<span style={{ fontWeight: 400, fontSize: 18, color: '#888' }}>
-													&nbsp;| {selectedPartnerToEdit?.source ? selectedPartnerToEdit?.source === 'SH' ? 'Smiling House' : 'Villa Tracker' : ''}
-												</span>
-											</>
-										 )
-										}
-									</h4>
-									<button
-										type="button"
-										className="close"
-										aria-label="Close"
-										onClick={onClose}
-										style={{
-											fontSize: '2.2rem',
-											fontWeight: 700,
-											color:'#212121',
-											opacity: 1,
-											background: 'none',
-											marginLeft: 'auto',
-											marginRight: '20px',
-											marginTop: '-10px',
-											zIndex: 20,
-											cursor: 'pointer',
-											lineHeight: 1
-										}}
-										onMouseOver={e => (e.currentTarget.style.color ='#5f5f5f')}
-										onMouseOut={e => (e.currentTarget.style.color = '#212121')}
-										>
-										<span aria-hidden="true">&times;</span>
-									</button>
-								</div>
-								<div className="modal-body" style={{ padding: 0, maxHeight: '85vh', overflowY: 'auto' }}>
-									<EditPartner
-									agent={agent}
-									newPartnerID={parseInt(totalPartners) + 1}
-									editClickedId={editClickedId}
-									editPartnerId={editPartnerId}
-									partner={selectedPartnerToEdit}
-									partners={partners}
-									onClose={onClose}
-									/>
-								</div>
-								</div>
-							</div>
-						</div>
-					}
-					{
-						SelectedPartner &&
-						<ClientOfferLog
-							token={token}
-							partner={SelectedPartner}
-							onClose={onClose}
-						/>
-					}
-
-					<div className="agencies-main">
-
-
-{extranet_vt_logged_in_role==='admin' && (
-		<div className="search-container">
-          
-          <div className="row">
-            <div className="col-lg-5 col-md-8 col-12" style={{margin: 2}}>
-              <input type="text" className="form-control" placeholder="Search by PM Name"  onChange={(e) => handleSearchFuntionality("pmName",e.target.value)} />
-            </div>
-            <div className="col-lg-2 col-md-2 col-12" style={{margin: 2}}>
-              <button 
-			 	className="btn btn-primary w-100" 
-				style={{ 
-					height: "60px", 
-					fontSize: "18px", 
-					borderRadius: "6px", 
-					fontWeight: 400 
-				}}  
-			  	onClick={() => handlSearchButtonAdmin()}>
-                <span>Search</span>
-              </button>
-            </div>
-            {/* <span className=" agencies-search-separator"></span> */}
-          </div>
-        </div>
-)}
-
-
-						<div className="agencies-title">
-							
-{extranet_vt_logged_in_role==='admin' && <span>Guesty PM List</span> }
-{extranet_vt_logged_in_role==='partner' && <span>Guesty PM Home</span> }
-
-							{!partnerLogin && (<>
-								{/*<a class="dropdown-item" href="#" onClick={onAddPartnerSH}><img src={addAdminIcon} /> connect GUESTY PM partner SH = Smiling House </a>*/}
-								<a class="dropdown-item" style={{whiteSpace: 'unset'}} href="#" onClick={onAddPartnerVT}><img src={addAdminIcon} /> connect GUESTY PM partner VT = Villa Tracker </a>
-							</>)}
-
-							<div className="agencies-main-subtitle">Displaying PMs {partnersPagingFrom}-{partnersPagingTo} of {totalPartners ? totalPartners : "?"}
-							</div>
-						</div>
-
-
-
-{extranet_vt_logged_in_role==='admin' && (
-	<div className="container-fluid px-0">
-        <div className="row mx-0">
-            <div className="col-12">
-                <div className="filterbystatus-container">
-                    <div className="row align-items-end">
-                        <div className="col-12 col-sm-6 col-md-4 col-lg-3 col-xl-2 mb-3">
-                            <label className="form-label text-white mb-2">
-                                <strong>Filter by Status</strong>
-                            </label>
-                            <div className="dropdown w-100">
-                                <button 
-                                    className="btn btn-outline-secondary dropdown-toggle w-100 text-start"
-                                    type="button" 
-                                    id="statusFilterDropdown" 
-                                    data-bs-toggle="dropdown" 
-                                    aria-expanded="false"
-                                    style={{
-                                        minWidth: '120px',
-                                        fontSize: '14px',
-                                        padding: '8px 12px',
-                                        border: '1px solid #ced4da',
-                                        borderRadius: '4px',
-                                        backgroundColor: '#fff',
-                                        color: '#333',
-                                        display: 'flex',
-                                        justifyContent: 'space-between',
-                                        alignItems: 'center'
-                                    }}
-                                >
-                                    <span>{filterPropertyStatus || '--All--'}</span>
-                                </button>
-                                <ul 
-                                    className="dropdown-menu w-100" 
-                                    aria-labelledby="statusFilterDropdown"
-                                    style={{
-                                        maxHeight: '200px',
-                                        overflowY: 'auto',
-                                        fontSize: '14px'
-                                    }}
-                                >
-                                    <li>
-                                        <button 
-                                            className={`dropdown-item ${!filterPropertyStatus ? 'active' : ''}`}
-                                            type="button"
-                                            onClick={() => filterByPropertyStatus({target: {value: ''}})}
-                                        >
-                                            --All--
-                                        </button>
-                                    </li>
-                                    <li>
-                                        <button 
-                                            className={`dropdown-item ${filterPropertyStatus === 'Approved' ? 'active' : ''}`}
-                                            type="button"
-                                            onClick={() => filterByPropertyStatus({target: {value: 'Approved'}})}
-                                        >
-                                            Approved
-                                        </button>
-                                    </li>
-                                    <li>
-                                        <button 
-                                            className={`dropdown-item ${filterPropertyStatus === 'Pending' ? 'active' : ''}`}
-                                            type="button"
-                                            onClick={() => filterByPropertyStatus({target: {value: 'Pending'}})}
-                                        >
-                                            Pending
-                                        </button>
-                                    </li>
-                                    <li>
-                                        <button 
-                                            className={`dropdown-item ${filterPropertyStatus === 'Declined' ? 'active' : ''}`}
-                                            type="button"
-                                            onClick={() => filterByPropertyStatus({target: {value: 'Declined'}})}
-                                        >
-                                            Declined
-                                        </button>
-                                    </li>
-                                </ul>
-                            </div>                      
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-)
-
-}
-
-
-						{<Paging perPage={constants.PAGING_PARTNERS_SIZE} totalItems={localStorage.getItem("partnerCount")} currentPage={pageNumber} onChangePage={onChangePage} />}
-						<div className="table-responsive px-3">
-							<table class="table">
-								<thead style={{ backgroundColor: "#f9f9f7" }} >
-									<tr>
-										{columns?.map((item, index) => {
-											return <>
-												{/*<th scope="col" style={{ cursor: "pointer", width: item.width }}><h3>{item.name} <BsChevronDown /></h3></th>*/}
-<th scope="col" style={{ cursor: "pointer", width: item.width }}>{item.name} <BsChevronDown /></th>
-											</>
-										})}
-									</tr>
-								</thead>
-								<tbody>
-									{partners?.map((item, index) => {
-										//console.log("item ", index, item)
-										return <>
-											<tr >
-												<td className="pmName px-4 p-3  text-primary  cst-cursor" ><h4>{/*totalPartners - partnersPagingFrom - index + 1*/}
-												{serialNumber+index+1}
-												</h4></td>
-												<td className="pmName px-4 p-3  text-primary  cst-cursor" ><h4>{item.pmName != null ? item.pmName : ""}</h4></td>
-												<td className="accountId px-4 p-3 text-primary text-decoration-underline cst-cursor"><h4 onClick={() => onEditPartner(item._id, item)}>{item.accountId !== null ? item.accountId : ""}</h4></td>
-
-<td className="accountId px-4 p-3 text-primary cst-cursor"><h4>{item.source}</h4></td>												
-
-{/*<td className="Listings px-4 p-3 text-primary text-decoration-underline cst-cursor"><h4 onClick={() => GoToPartnerListings(item, item.accountId)}>{item.offsetRead ? item.offsetRead : "No listings"}/({item.count ? item.count : ""})</h4></td>*/}
-
-<td className="Listings px-4 p-3 text-primary text-decoration-underline cst-cursor"><h4 onClick={() => GoToPartnerListings(item, item.accountId)}>{item.total_properties_count}</h4></td>
-
-{/*
-<td className="VT provider px-4 p-3 text-primary  cst-cursor"><h4>{(Object.prototype.hasOwnProperty.call(item, 'approved')) && item.approved?.length}</h4></td>
-*/}
-<td className="VT provider px-4 p-3 text-primary  cst-cursor"><h4 onClick={() => GoToPartnerListings(item, item.accountId, 'Approved')}>{item.approved_properties_count}</h4></td>
-{/*
-<td className="SH provider px-4 p-3 text-primary  cst-cursor"><h4>{(Object.prototype.hasOwnProperty.call(item, 'pending')) && item.pending?.length}</h4></td>
-*/}
-<td className="SH provider px-4 p-3 text-primary  cst-cursor"><h4 onClick={() => GoToPartnerListings(item, item.accountId, 'Pending')}>{item.pending_properties_count}</h4></td>
-
-{/*
-<td className="SH provider px-4 p-3 text-primary  cst-cursor"><h4>{(Object.prototype.hasOwnProperty.call(item, 'declined')) && item.declined?.length}</h4></td>
-*/}
-<td className="SH provider px-4 p-3 text-primary  cst-cursor"><h4 onClick={() => GoToPartnerListings(item, item.accountId, 'Declined')}>{item.declined_properties_count}</h4></td>
-
-<td className="Updated px-4 p-3"><h4>{item.updatedAt !== null && item.updatedAt !== "" ? item.updatedAt.slice(0, 10) : ""}</h4></td>
-											</tr >
-										</>
-									})}
-								</tbody>
-							</table>
-						</div>
-					</div>
-				</div >
 			</div>
 		</div>
+	)
+
+	}
+
+
+							{<Paging perPage={constants.PAGING_PARTNERS_SIZE} totalItems={localStorage.getItem("partnerCount")} currentPage={pageNumber} onChangePage={onChangePage} />}
+							<div className="table-responsive px-3">
+								<table class="table">
+									<thead style={{ backgroundColor: "#f9f9f7" }} >
+										<tr>
+											{columns?.map((item, index) => {
+												return <>
+													{/*<th scope="col" style={{ cursor: "pointer", width: item.width }}><h3>{item.name} <BsChevronDown /></h3></th>*/}
+	<th scope="col" style={{ cursor: "pointer", width: item.width }}>{item.name} <BsChevronDown /></th>
+												</>
+											})}
+										</tr>
+									</thead>
+									<tbody>
+										{partners?.map((item, index) => {
+											//console.log("item ", index, item)
+											return <>
+												<tr >
+													<td className="pmName px-4 p-3  text-primary  cst-cursor" ><h4>{/*totalPartners - partnersPagingFrom - index + 1*/}
+													{serialNumber+index+1}
+													</h4></td>
+													<td className="pmName px-4 p-3  text-primary  cst-cursor" ><h4>{item.pmName != null ? item.pmName : ""}</h4></td>
+													<td className="accountId px-4 p-3 text-primary text-decoration-underline cst-cursor"><h4 onClick={() => onEditPartner(item._id, item)}>{item.accountId !== null ? item.accountId : ""}</h4></td>
+
+	<td className="accountId px-4 p-3 text-primary cst-cursor"><h4>{item.source}</h4></td>												
+
+	{/*<td className="Listings px-4 p-3 text-primary text-decoration-underline cst-cursor"><h4 onClick={() => GoToPartnerListings(item, item.accountId)}>{item.offsetRead ? item.offsetRead : "No listings"}/({item.count ? item.count : ""})</h4></td>*/}
+
+	<td className="Listings px-4 p-3 text-primary text-decoration-underline cst-cursor"><h4 onClick={() => GoToPartnerListings(item, item.accountId)}>{item.total_properties_count}</h4></td>
+
+	{/*
+	<td className="VT provider px-4 p-3 text-primary  cst-cursor"><h4>{(Object.prototype.hasOwnProperty.call(item, 'approved')) && item.approved?.length}</h4></td>
+	*/}
+	<td className="VT provider px-4 p-3 text-primary  cst-cursor"><h4 onClick={() => GoToPartnerListings(item, item.accountId, 'Approved')}>{item.approved_properties_count}</h4></td>
+	{/*
+	<td className="SH provider px-4 p-3 text-primary  cst-cursor"><h4>{(Object.prototype.hasOwnProperty.call(item, 'pending')) && item.pending?.length}</h4></td>
+	*/}
+	<td className="SH provider px-4 p-3 text-primary  cst-cursor"><h4 onClick={() => GoToPartnerListings(item, item.accountId, 'Pending')}>{item.pending_properties_count}</h4></td>
+
+	{/*
+	<td className="SH provider px-4 p-3 text-primary  cst-cursor"><h4>{(Object.prototype.hasOwnProperty.call(item, 'declined')) && item.declined?.length}</h4></td>
+	*/}
+	<td className="SH provider px-4 p-3 text-primary  cst-cursor"><h4 onClick={() => GoToPartnerListings(item, item.accountId, 'Declined')}>{item.declined_properties_count}</h4></td>
+
+	<td className="Updated px-4 p-3"><h4>{item.updatedAt !== null && item.updatedAt !== "" ? item.updatedAt.slice(0, 10) : ""}</h4></td>
+												</tr >
+											</>
+										})}
+									</tbody>
+								</table>
+							</div>
+						</div>
+					</div >
+				</Layout>
+		// 	</div>
+		// </div>
 	);
 };
 
