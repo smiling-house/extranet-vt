@@ -81,6 +81,8 @@ const showOrHideSideBarMenu=()=> {
 	}
 }  
 
+
+
 const goToPartnersPage = () => {
     //alert(partnersPageLastPageNumber)
     history.push('/partners?page='+partnersPageLastPageNumber);
