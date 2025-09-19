@@ -910,6 +910,7 @@ const reservationUniqueID = `EPS-VT-TEST_${reservationData?.reservationID}`; //T
       url: constants.SHUB_URL+'/reserve/' + reservationData?.propertyId + '?reservation_request_from=eps',
       headers: {
         'Authorization': 'bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2NvdW50X29iamVjdF9pZCI6Mzk5MTU4NzUsInVzZXJfaWQiOiI0MDY2NTAyMSIsInVzZXJfbmFtZSI6InN5c3RlbStsdW5hLTh5NXljIiwic2NvcGUiOlsiYnJpdm8uYXBpIl0sImlzc3VlZCI6IjE2NzUxMTI3NDYxMzYiLCJleHAiOjE2NzUxMTI4MDYsInNlcnZpY2VfdG9rZW4iOm51bGwsImF1dGhvcml0aWVzIjpbIlJPTEVfU1VQRVJfQURNSU4iLCJST0xFX0FETUlOIl0sImp0aSI6ImVmNzY1MDIyLTZhNzctNGZkMy04Njg1LTFhZTFhZmEzOTJhZSIsImNsaWVudF9pZCI6IjkzOTFlYjVkLWUwNmUtNDY4MS1iNTdhLWQwZTU3NDhhM2RlZSIsIndoaXRlX2xpc3RlZCI6ZmFsc2V9.N9MIeiLyrT3hBUtMJsTvwbYW5Z_o7ZSBuZmir2ytrb8DiE4MoXcmh8C6KriWhmnRqUnSMBRtuLcauVbqjFTorOcWMOd2RQGmisPgXBm1tHT30Hl0i57rQuLZHAVW201ot-TdQwW9oEZ3n2HTGu_A6tRhTizVmG6NRAd5KhOB2_c',
+        //'Authorization': 'bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbklkIjoiNjY4YmMwNzA0NjBjMGU1NGYxOWU3NjVjIiwiYXBwbGljYXRpb25JZCI6IjY0NDkxMWJlMjEwN2Q3MDAyMWZmZGM4MSIsImFjY291bnRJZCI6IjY0MDYyNWVhMDYyMGU0MDAzMWI4NTk3ZCIsImlzcyI6InByb2R1Y3Rpb24uZ3Vlc3R5LmNvbSIsIm5hbWUiOiJhcHBsaWNhdGlvbiIsInJvbGUiOiJ1c2VyIiwidXNlclJvbGVzIjpbeyJyb2xlSWQiOnsicGVybWlzc2lvbnMiOlsibGlzdGluZy52aWV3ZXIiXX19XSwicmVxdWVzdGVyIjoiT1RBQGd1ZXN0eS5jb20iLCJpYXQiOjE3MjA0MzQ4MDB9.OyVIohRJRwoYGENJY0NtVV65ouxh5iHBSkDSSbs-VFI',
         'Account-Id': '640625ea0620e40031b8597d',
         'Content-Type': 'application/json'
       },
@@ -945,6 +946,8 @@ const reservationUniqueID = `EPS-VT-TEST_${reservationData?.reservationID}`; //T
                 
             } else {
                 //swal("error", response.data.message, "error");
+                console.log('ERROR 1:::', response.error)
+                console.log('response.data.message 1:::', response.data.message)
                 swal({
                     show: true,
                     title: 'Error',
@@ -957,6 +960,8 @@ const reservationUniqueID = `EPS-VT-TEST_${reservationData?.reservationID}`; //T
             
         } else {
            // swal("error", 'Guesty reservation failed!', "error");
+            console.log('ERROR 2:::', response.error)
+            console.log('response.data.message 2:::', response.data.message)           
             swal({
                 show: true,
                 title: 'Error',
@@ -1075,6 +1080,7 @@ const reservationUniqueID = reservationData?.reservationUniqueID
       url: constants.SHUB_URL+'/reserve-cancel/' + reservationData?.propertyId + '?reservation_request_from=eps',
       headers: {
         'Authorization': 'bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2NvdW50X29iamVjdF9pZCI6Mzk5MTU4NzUsInVzZXJfaWQiOiI0MDY2NTAyMSIsInVzZXJfbmFtZSI6InN5c3RlbStsdW5hLTh5NXljIiwic2NvcGUiOlsiYnJpdm8uYXBpIl0sImlzc3VlZCI6IjE2NzUxMTI3NDYxMzYiLCJleHAiOjE2NzUxMTI4MDYsInNlcnZpY2VfdG9rZW4iOm51bGwsImF1dGhvcml0aWVzIjpbIlJPTEVfU1VQRVJfQURNSU4iLCJST0xFX0FETUlOIl0sImp0aSI6ImVmNzY1MDIyLTZhNzctNGZkMy04Njg1LTFhZTFhZmEzOTJhZSIsImNsaWVudF9pZCI6IjkzOTFlYjVkLWUwNmUtNDY4MS1iNTdhLWQwZTU3NDhhM2RlZSIsIndoaXRlX2xpc3RlZCI6ZmFsc2V9.N9MIeiLyrT3hBUtMJsTvwbYW5Z_o7ZSBuZmir2ytrb8DiE4MoXcmh8C6KriWhmnRqUnSMBRtuLcauVbqjFTorOcWMOd2RQGmisPgXBm1tHT30Hl0i57rQuLZHAVW201ot-TdQwW9oEZ3n2HTGu_A6tRhTizVmG6NRAd5KhOB2_c',
+        //'Authorization':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbklkIjoiNjY4YmMwNzA0NjBjMGU1NGYxOWU3NjVjIiwiYXBwbGljYXRpb25JZCI6IjY0NDkxMWJlMjEwN2Q3MDAyMWZmZGM4MSIsImFjY291bnRJZCI6IjY0MDYyNWVhMDYyMGU0MDAzMWI4NTk3ZCIsImlzcyI6InByb2R1Y3Rpb24uZ3Vlc3R5LmNvbSIsIm5hbWUiOiJhcHBsaWNhdGlvbiIsInJvbGUiOiJ1c2VyIiwidXNlclJvbGVzIjpbeyJyb2xlSWQiOnsicGVybWlzc2lvbnMiOlsibGlzdGluZy52aWV3ZXIiXX19XSwicmVxdWVzdGVyIjoiT1RBQGd1ZXN0eS5jb20iLCJpYXQiOjE3MjA0MzQ4MDB9.OyVIohRJRwoYGENJY0NtVV65ouxh5iHBSkDSSbs-VFI',
         'Account-Id': '640625ea0620e40031b8597d',
         'Content-Type': 'application/json'
       },
