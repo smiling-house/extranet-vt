@@ -46,7 +46,8 @@ const CheckoutForm = ({
               },
               BookingChannel: {
                 CompanyName: {
-                  Text: "SmilingHouse",
+                  //Text: "SmilingHouse",
+                  Text: "VillaTracker",
                 },
               },
             },
