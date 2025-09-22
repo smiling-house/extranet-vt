@@ -676,6 +676,10 @@ console.log('NEW REGION:::', response)
     <td className="px-4 p-3 ">
       <h4>
         {xdata.status}
+        
+        { (xdata.status==='Declined' && xdata.autodecline===true) &&
+          <h4>Auto Declined</h4>
+        }
 
         { (extranet_vt_logged_in_role==='admin' && xdata.status==='Declined' &&  xdata.declineReason !== '') &&
           <p><i>({xdata.declineReason})</i></p>
