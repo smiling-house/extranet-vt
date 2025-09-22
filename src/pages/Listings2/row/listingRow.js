@@ -688,7 +688,6 @@ console.log('NEW REGION:::', response)
         {(extranet_vt_logged_in_role==='admin' && xdata?.statusUpdatedBy != null) &&
           <div><label><i>Status Updated By:</i></label><i>{xdata.statusUpdatedBy}</i></div>
         }
-
       </h4>
     </td>
     <td className="px-4 p-3">
