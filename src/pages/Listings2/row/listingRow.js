@@ -678,7 +678,7 @@ console.log('NEW REGION:::', response)
         {xdata.status}
         
         { (xdata.status==='Declined' && xdata.autodecline===true) &&
-          <h4>Auto Declined</h4>
+          <h4 style={{ backgroundColor: "red" }}>Auto Declined</h4>
         }
 
         { (extranet_vt_logged_in_role==='admin' && xdata.status==='Declined' &&  xdata.declineReason !== '') &&

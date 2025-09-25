@@ -867,24 +867,9 @@ if (totalListings < ListingsPagingTo) {
 //Copied from VT-Front\src\pages\Reservations\EditReservation\index.js
   const handleResConfirmation = async (reservationData) => {    
 
-const reservationUniqueID = `EPS-VT-TEST_${reservationData?.reservationID}`; //Testing
-//const reservationUniqueID = `EPS-VT_${reservationData?.reservationID}`; //LIVE
+//const reservationUniqueID = `EPS-VT-TEST_${reservationData?.reservationID}`; //Testing
+const reservationUniqueID = `EPS-VT_${reservationData?.reservationID}`; //LIVE
 
-    /*
-    console.log('selected Reservation:::', reservationData);
-    
-    console.log('status:::', reservationData.status);
-    console.log('partnerId:', reservationData.partnerId)
-    console.log('partnerName:', reservationData.partnerName)
-    console.log('partnerToken:', reservationData.partnerToken)
-    console.log('propertyName:', reservationData.propertyName)
-    console.log('bookingId:', reservationData.bookingId)
-    console.log('currency:', reservationData.currency)
-    console.log('guestBookingStatus:', reservationData.guestBookingStatus)
-    console.log('guestEmail:', reservationData.guestEmail)
-    console.log('reservationID:', reservationData.reservationID)
-    console.log('status:', reservationData.status)
-    */
 
     let data = JSON.stringify({
       "client": {
