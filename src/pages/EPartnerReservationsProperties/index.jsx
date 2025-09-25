@@ -863,7 +863,6 @@ if (totalListings < ListingsPagingTo) {
     setSelectedReservations(reservation)
   }  
 
-
 //Copied from VT-Front\src\pages\Reservations\EditReservation\index.js
   const handleResConfirmation = async (reservationData) => {    
 
