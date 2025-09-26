@@ -81,7 +81,8 @@ import {
   PATH_EPS_EPARTNER_RESERVATIONS_PROPERTIES,
   APP_DISPLAY_NAME,
   PATH_PARTNERS_BART,
-  PATH_VERIFY_COMPARE_NEW_PMS
+  PATH_VERIFY_COMPARE_NEW_PMS,
+  PATH_ZIPS_REGIONS_MAPPING
 } from "../Util/constants";
 import AuthService from "../services/auth.service";
 import { baseURL } from "../core";
@@ -102,6 +103,7 @@ import EPartnerManage from "./EPartnerManage";
 import EPartnersReservations from "./EPartnersReservations";
 
 import EPartnerReservationsProperties from "./EPartnerReservationsProperties";
+import ZipcodesRegionsMapping from "./ZipcodesRegionsMapping";
 
 
 import menuIcon from '../assets/icons8-menu-50.png'
@@ -517,7 +519,14 @@ const showOrHideSideBarMenu=()=> {
             token={token}
             handleToggleMenu={handleToggleMenu}
           />
-          </Route>                               
+          </Route>    
+        <Route path={[PATH_ZIPS_REGIONS_MAPPING]}>
+          <ZipcodesRegionsMapping
+            agent={agent}
+            agency={agency}
+            token={token}
+          />
+        </Route>                                     
         {/* <div className="page-container">
           <div className="page-header"><img src={menuIcon} style={{'width':'25px'}} className="cst-cursor" onClick={showOrHideSideBarMenu} />&nbsp;{APP_DISPLAY_NAME} - {agentData?.firstName} (<span className="cst-cursor" onClick={signOut}>Sign Out</span>)</div>
           <Sidebar

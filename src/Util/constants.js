@@ -52,6 +52,8 @@ export const PATH_EPS_EPARTNER_RESERVATIONS_PROPERTIES = '/eps-epartner-reservat
 
 export const APP_DISPLAY_NAME = 'Villa Tracker EXTRANET';
 
+export const PATH_ZIPS_REGIONS_MAPPING = '/zipcodes-regions-mapping';
+
 const constants = {
 	ENV: 'LOCAL',
 	BASE_URL: 'https://backend.villatracker.com',
