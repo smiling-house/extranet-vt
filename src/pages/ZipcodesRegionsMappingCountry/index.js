@@ -1,46 +1,49 @@
 import React, { useEffect, useState } from "react";
-import { useLocation, useHistory } from "react-router-dom";
+//import { useLocation, useHistory } from "react-router-dom";
+import { useParams } from "react-router-dom";
 
 import "../Partners/Admin.scss";
 import Layout from "../../components/Layout";
 import constants from "../../Util/constants";
-import { PATH_ZIPS_REGIONS_MAPPING_COUNTRY } from '../../Util/constants';
 import axios from "axios";
 import LoadingBox from "../../components/LoadingBox";
 import { BsChevronDown } from "react-icons/bs"
 
 
-const ZipcodesRegionsMapping = (props) => {
+const ZipcodesRegionsMappingCountry = (props) => {
 
     const { token, agency, agent, screenSize, activeMenu, handleToggleMenu, setActiveMenu } = props
 
-    const [zipcodesWithUnmappedRegionsCountries, setZipcodesWithUnmappedRegionsCountries] = useState([]);
+    const [unmappedProps, setUnmappedProps] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
 
-    const history = useHistory();
-    const location = useLocation();    
-
-	const userRequest = axios.create({
-		baseURL: constants.SHUB_URL,
-		headers: {
-			Authorization: constants.SHUB_TOKEN,
-		},
-	});
+    //const history = useHistory();
+    //const location = useLocation();   
 
 
-        const fetchZipcodesWithUnmappedRegionsCountries = async () => {
+    const { country } = useParams();
+ 
+
+    const userRequest = axios.create({
+        baseURL: constants.SHUB_URL,
+        headers: {
+            Authorization: constants.SHUB_TOKEN,
+        },
+    });
+
+        const fetchZipcodesWithUnmappedRegionsCountry = async () => {
             try {
-                
+
                 setIsLoading(true);
-                const response = await userRequest.post(`local/zipcodes-with-unmapped-regions-countries`,
+                const response = await userRequest.post(`local/zipcodes-with-unmapped-regions-details-country/${country}`,
                     { params: {} },
                 );
 
                 if(response.data.success === true) {
-                    setZipcodesWithUnmappedRegionsCountries(response.data.countsByCountry);
+                    setUnmappedProps(response.data.unmappedProps);
                     setIsLoading(false);
                 }
-                 
+
             } catch (error) {
                 console.error('Error fetching properties with unmapped regions:', error);
             }
@@ -48,17 +51,15 @@ const ZipcodesRegionsMapping = (props) => {
 
 
     useEffect(() => {                
-        fetchZipcodesWithUnmappedRegionsCountries();                
+        fetchZipcodesWithUnmappedRegionsCountry();                
     }, []); 
 
 
-const GoToCountryPage = async(country) => {
-    history.push( `${PATH_ZIPS_REGIONS_MAPPING_COUNTRY}/${country}`);
-}
+
 
 
 const columns = [
-   
+
     {
         id: 'Sl_No',
         name: 'Sl No:',
@@ -71,14 +72,30 @@ const columns = [
         headerStyle: { paddingLeft: '50px', backgroundColor: '#F5F5F2' },
         width: '1fr'
     },
-   {
-        id: 'unmapped_count',
-        name: 'Unmapped count',
+    {
+        id: 'property_id',
+        name: 'Property ID',
         headerStyle: { paddingLeft: '50px', backgroundColor: '#F5F5F2' },
         width: '1fr'
     },   
-                            
-
+    {
+        id: 'property_title',
+        name: 'Title',
+        headerStyle: { paddingLeft: '50px', backgroundColor: '#F5F5F2' },
+        width: '1fr'
+    },
+    {
+        id: 'zip',
+        name: 'Zipcode',
+        headerStyle: { paddingLeft: '50px', backgroundColor: '#F5F5F2' },
+        width: '1fr'
+    },
+    {
+        id: 'region',
+        name: 'Region',
+        headerStyle: { paddingLeft: '50px', backgroundColor: '#F5F5F2' },
+        width: '1fr'
+    },    
 ]
 
     return(
@@ -97,7 +114,7 @@ const columns = [
  
                         <div class="row">
                             <div class="col-12">
-                                <h2>Zipcodes & Regions Mapping</h2>
+                                <h1>Zipcodes & Regions Mapping - {country}</h1>
                                 <p>Mapping zipcodes to regions</p>
                             </div>
                         </div>
@@ -124,20 +141,35 @@ const columns = [
                                     <tbody>
                                                                                 
 
-                                        {Object.entries(zipcodesWithUnmappedRegionsCountries).map(([country, unmappedCount], index) => (
+                                        {Object.entries(unmappedProps).map(([key, item], index) => (
                                         <tr key={index}>
                                             <td>
                                                 <h5>{index+1}</h5>
                                             </td>
 
                                             <td>
-                                                <h5 className="cst-cursor" onClick={() => GoToCountryPage(country)}>{country}</h5>
+                                                <h5 className="cst-cursor" >{item.xdata.country}</h5>
                                             </td>
 
                                             <td>
-                                                <h5 className="cst-cursor" onClick={() => GoToCountryPage(country)}>{unmappedCount}</h5>
+                                                <h5 className="cst-cursor" ><a href={`https://login.villatracker.com/property/${item.id}`} target="_blank">{item.id}</a></h5>
                                             </td>
 
+                                            <td>
+                                                <h5 className="cst-cursor" >{item.data.title}</h5>
+                                            </td>
+
+
+                                            <td>
+                                                <h5 className="cst-cursor" >{item.data.address.zipcode}</h5>
+                                            </td>     
+                                            
+
+
+                                            <td>
+                                                <h5 className="cst-cursor" >{item.xdata.region}</h5>
+                                            </td>                                                                                        
+                                            
                                         </tr>
                                         ))}  
 
@@ -158,4 +190,4 @@ const columns = [
     )
 
 }
-export default ZipcodesRegionsMapping;
+export default ZipcodesRegionsMappingCountry;

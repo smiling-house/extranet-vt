@@ -1,62 +1,24 @@
 import React, { useCallback, useEffect, useState } from "react"
 import { Dialog, DialogActions, DialogContent, DialogTitle, Stack, } from "@mui/material"
-/*
-import Icon from 'react-web-vector-icons'
-import { useDispatch, useSelector } from "react-redux";
-import VTChannelIcon from "../../assets/channels/icons/VTChannel.svg"
-import VTChannelIconOn from "../../assets/channels/icons/VTChannel-on.svg"
-import VTChannelIconOnBlue from "../../assets/channels/icons/VTChannel-on-blue.svg"
-import VTChannelLabel from "../../assets/channels/icons/label-VTChannel.svg"
-
-import SHChannelIcon from "../../assets/channels/icons/SHChannel.svg"
-import SHChannelIconOn from "../../assets/channels/icons/SHChannel-on.svg"
-import SHChannelIconOnBlue from "../../assets/channels/icons/SHChannel-on-blue.svg"
-import SHChannelLabel from "../../assets/channels/icons/label-SHChannel.svg"
-
-import TLChannelIcon from "../../assets/channels/icons/TLChannel.svg"
-import TLChannelIconOn from "../../assets/channels/icons/TLChannel-on.svg"
-import TLChannelIconOnBlue from "../../assets/channels/icons/TLChannel-on-blue.svg"
-import TLChannelLabel from "../../assets/channels/icons/label-TLChannel.svg"
-import { baseURL } from "../../core/index.js"
-*/
 import Popup from "../../components/Popup/index.js";
 import Button from "../../components/Buttons/Button/Button"
 import pageBg from '../../assets/bk_pool.png'
 import { data } from "./makeData.js"
 import axios from "axios"
 import PageHeader from "../../components/PageHeader"
-// import { PATH_PROPERTY,APP_DISPLAY_NAME } from "../../Util/constants"
 import { useLocation, useHistory } from "react-router-dom";
 
 import "./EListings.scss"
 import Paging from "../../components/Paging"
 import constants from "../../Util/constants"
 import { BsChevronDown } from "react-icons/bs"
-/*
-import closeIcon from '../../assets/icons/closeIcon.png'
-import { IoIosSearch } from "react-icons/io"
-import { BiCalendarCheck } from "react-icons/bi"
-import CollectionIcon from "../../components/CollectionIcon"
-import * as propertyActions from "../../store/redux/Property/actions";
-import EPartners from "../EPartners/index.jsx";
-*/
+
 import AuthService from "../../services/auth.service"
 import swal from "sweetalert"
 import LoadingBox from "../../components/LoadingBox"
 
 import Sidebar from "../../components/Sidebar";
 import EPSListingrow from "./row/EPSlistingRow"
-
-/*
-const NEW_CLIENT = {
-    id: "-1",
-    firstName: "",
-    lastName: "",
-    email: "",
-    state: "",
-    phone: "",
-}
-*/
 
 import dayjs from 'dayjs'
 
@@ -278,21 +240,6 @@ if(propStatus==='Approved') {
 
 
 
-
-    //console.log('partnerId:' + partnerId)
-    
-    // const accountId = localStorage.getItem("accountId")
-    // const user_image = agency?.userImage
-    // const [allPage, setAllPage] = useState(false)
-    // const [all, setAll] = useState(false)
-    // const [events, setEvents] = useState()
-    // const [emailLog, setemailLog] = useState("")
-    // const [NickNameLog, setNickNameLog] = useState("")
-    // const [phoneLog, setePhoneLog] = useState("")
-    // const [singleClientData, setsingleClientData] = useState([])
-    // const [selectedClientToShowOffers, setSelectedClientToShowOffers] = useState(null)
-    // const [selectedClientToShowSavedSearch, setSelectedClientToShowSavedSearch] = useState(null)
-    // const [selectedClientToEdit, setSelectedClientToEdit] = useState(null)
     const [createModalOpen, setCreateModalOpen] = useState(false)
     const [tableData, setTableData] = useState(() => data)
     // state for Listings
@@ -309,9 +256,6 @@ if(propStatus==='Approved') {
     
 const [count, setCount] = useState(0); // useState((onlyDisConnected||onlyConnected)?filteredIds.length:Epartner.ids?.length) //Recheck this
 
-    // const dispatch = useDispatch();
-    // const properties = useSelector((state) => state.property.properties);
-    // const source = location.state && location.state.source;
 
 useEffect(() => {
     setEpartner_id_reservations(localStorage.getItem('epartner-id-reservations'));

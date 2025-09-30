@@ -91,7 +91,7 @@ const Sidebar = ({ activeMenu, setActiveMenu, handleToggleMenu, showOrHideSideBa
           { text: "Tasks", path: PATH_TASKS, icon: <FiSettings size={18} /> },
           { text: "VT Reservations", path: PATH_RESERVATIONS, icon: <FiCalendar size={18} /> },
           { text: "Verify New PMs", path: PATH_VERIFY_COMPARE_NEW_PMS, icon: <MdVerifiedUser size={18} /> },
-          { text: "Zipcode & Regions Mapping", path: PATH_ZIPS_REGIONS_MAPPING, icon: <MdVerifiedUser size={18} /> },
+          { text: "Mapping - Zipcodes & Regions ", path: PATH_ZIPS_REGIONS_MAPPING, icon: <MdVerifiedUser size={18} /> },
         ]
       },
       {
