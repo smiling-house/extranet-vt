@@ -71,9 +71,7 @@ const showPopUp = async(listingData) => {
                 );
 
     setSelectedZipsData(response.data.zipsData)
-
     setSelectedListing(listingData);
-    //console.log('listingData::', listingData)
 }    
 
 const handleRegionSelection = (region) => {
@@ -92,12 +90,14 @@ const handleRegionSelection = (region) => {
   }
 
 
-const updateSingleProperty = async(listingData) => {
+const updateSingleProperty = async(listingData, allFlag='') => {
     
-    console.log(listingData);
+    console.log(listingData.id);
     console.log(propertyRegion);
+    console.log(allFlag);
 
-    if(propertyRegion === '' || propertyRegion === 'unmapped') {
+    //if(propertyRegion === '' || propertyRegion === 'unmapped') {
+    if(propertyRegion === '' || /unmapp/i.test(propertyRegion)) {
         swal({
             show: true,
             icon: 'error',
@@ -107,23 +107,35 @@ const updateSingleProperty = async(listingData) => {
             
         return false;
     }
-}
-const updateMultipleProperties = async(listingData) => {
-    
-    console.log(listingData);
-    console.log(propertyRegion);
 
-    if(propertyRegion === '' || propertyRegion === 'unmapped') {
+    //Call update API here. If success execute the lines below
+
+    let response = await userRequest.post(`local/update-region-for-properties-country-zipcode`,
+                    { country, zip:listingData.data.address.zipcode, region:propertyRegion, id:listingData.id, allFlag },
+                );    
+    
+    if(response.data.success===true) {
+        setSelectedListing(null);
+
+        swal({
+            show: true,
+            icon: 'success',
+            title: 'Success!',
+            text: response.data.message
+        });        
+
+        fetchZipcodesWithUnmappedRegionsCountry();        
+    } else {
         swal({
             show: true,
             icon: 'error',
-            title: 'Enter a valid region!',
-            text: ''
-        });
-            
-        return false;
+            title: 'Error!',
+            text: response.data.message
+        });            
     }
+
 }
+
 
 const columns = [
 
@@ -181,15 +193,10 @@ const columns = [
  
                         <div class="row">
                             <div class="col-12">
-                                <h1>Zipcodes & Regions Mapping - {country}</h1>
+                                <h1>Zipcodes & Regions Mapping - {country} (Total: {unmappedProps.length})</h1>
                                 <p>Mapping zipcodes to regions</p>
                             </div>
                         </div>
-
-
-
-
-
 
 {/* Table starts */}
 
@@ -289,12 +296,17 @@ const columns = [
 
                         <div class="row">
                             <div class="col-6">
-                                <input type="button" class="btn btn-primary" value="Update this property" onClick={()=>updateSingleProperty(selectedListing)} />
-                            </div>
+                                <input type="button" class="btn btn-primary" value={`Update only the current property's region with "${propertyRegion}"`} onClick={()=>updateSingleProperty(selectedListing)} disabled={!propertyRegion || /unmapp/i.test(propertyRegion) } />
+                            </div>                           
+                        </div>   
+                
+                        <div class="row">&nbsp;</div>
+
+                        <div class="row">
                             <div class="col-6">
-                                <input type="button" class="btn btn-danger" value="Update all properties" onClick={()=>updateMultipleProperties(selectedListing)} />
-                            </div>                            
-                        </div>                        
+                                <input type="button" class="btn btn-danger" value={`Update all properties's region under ${country} & zipcode ${selectedListing.data.address.zipcode} with "${propertyRegion}"`} onClick={()=>updateSingleProperty(selectedListing, 'all')} disabled={!propertyRegion || /unmapp/i.test(propertyRegion)}  />
+                            </div>                             
+                        </div>                     
 
                     </div>
 
