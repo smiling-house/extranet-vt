@@ -49,6 +49,19 @@ const EditPartner = (props) => {
     holderPostalCode: partner.bankDetails?.holderPostalCode
   };
 
+   // Add sync progress state
+  const [syncProgress, setSyncProgress] = useState({
+    isVisible: false,
+    progress: 0,
+    message: '',
+    stage: '',
+    total: 0,
+    current: 0,
+    successCount: 0,
+    errorCount: 0,
+    logs: []
+  });
+
   const [formData, setformData] = useState(inputFileds);
   const handleInputField = (e) => {
     const { name, value, files } = e.target;
@@ -242,6 +255,102 @@ const EditPartner = (props) => {
   };
 
   const handleResyncButton = () => {
+    // Show progress modal
+    setSyncProgress({
+      isVisible: true,
+      progress: 0,
+      message: 'Starting sync...',
+      stage: 'initializing',
+      total: 0,
+      current: 0,
+      successCount: 0,
+      errorCount: 0,
+      logs: []
+    });
+
+    const closeConnection = AuthService.resyncBartPartnerWithProgress(
+      // Progress callback
+      (progressData) => {
+        console.log('Sync progress:', progressData);
+        
+        setSyncProgress(prev => ({
+          ...prev,
+          progress: progressData.progress || 0,
+          message: progressData.message || '',
+          stage: progressData.stage || '',
+          total: progressData.total || prev.total,
+          current: progressData.current || prev.current,
+          successCount: progressData.successCount || prev.successCount,
+          errorCount: progressData.errorCount || prev.errorCount,
+          logs: [
+            ...prev.logs.slice(-50), // Keep last 50 logs
+            {
+              timestamp: new Date().toLocaleTimeString(),
+              type: progressData.type,
+              message: progressData.message,
+              villaName: progressData.villaName
+            }
+          ]
+        }));
+      },
+      // Completion callback
+      (finalData) => {
+        console.log('Sync completed:', finalData);
+        
+        setSyncProgress(prev => ({
+          ...prev,
+          progress: 100,
+          message: 'Sync completed successfully!',
+          stage: 'completed'
+        }));
+
+        setTimeout(() => {
+          setSyncProgress(prev => ({ ...prev, isVisible: false }));
+          swal({
+            show: true,
+            icon: "success",
+            title: "Sync completed!",
+            text: `Successfully synced ${finalData.summary?.successfullySaved || 0} villas`,
+          });
+          onClose()();
+        }, 2000);
+      },
+      // Error callback
+      (errorData) => {
+        console.error('Sync error:', errorData);
+        
+        setSyncProgress(prev => ({
+          ...prev,
+          progress: 0,
+          message: errorData.message || 'Sync failed',
+          stage: 'error'
+        }));
+
+        setTimeout(() => {
+          setSyncProgress(prev => ({ ...prev, isVisible: false }));
+          swal({
+            show: true,
+            icon: "error",
+            title: "Sync failed",
+            text: errorData.message || "An error occurred during sync",
+          });
+        }, 3000);
+      }
+    );
+
+    // Store the close function in case we need to cancel
+    setSyncProgress(prev => ({ ...prev, closeConnection }));
+  };
+
+  // Add this function to handle manual cancellation
+  const handleCancelSync = () => {
+    if (syncProgress.closeConnection) {
+      syncProgress.closeConnection();
+    }
+    setSyncProgress(prev => ({ ...prev, isVisible: false }));
+  };
+
+  const handleResyncButtonold = () => {
     var resyncPayLoad = {
       pmName: partnerName,
       contactName: contactName,
@@ -252,7 +361,7 @@ const EditPartner = (props) => {
       source: partner.source
     };
     console.log("Resync partner", resyncPayLoad)
-    AuthService.resyncPartner(resyncPayLoad.accountId, resyncPayLoad.source)
+    AuthService.resyncBartPartner()
       .then((response) => {
         console.log(response);
         swal({
@@ -313,6 +422,78 @@ const EditPartner = (props) => {
     setBankDetailsToShow(false);
     console.log('bankDetails:',formData)
     document.body.style.overflow = "auto";
+  };
+
+  const renderSyncProgress = () => {
+  if (!syncProgress.isVisible) return null;
+
+    return (
+      <div className="sync-progress-container">
+        <div className="sync-progress-header">
+          <h5>Syncing VillasInStBarth Properties</h5>
+          <button 
+            className="btn btn-sm btn-outline-secondary"
+            onClick={handleCancelSync}
+            disabled={syncProgress.stage === 'completed'}
+          >
+            Cancel
+          </button>
+        </div>
+        
+        <div className="sync-progress-content">
+          {/* Progress Bar */}
+          <div className="progress-section">
+            <div className="progress-info">
+              <span className="progress-text">{syncProgress.message}</span>
+              <span className="progress-percentage">{syncProgress.progress}%</span>
+            </div>
+            <div className="progress-bar-container">
+              <div 
+                className="progress-bar"
+                style={{ 
+                  width: `${syncProgress.progress}%`,
+                  backgroundColor: syncProgress.stage === 'error' ? '#dc3545' : '#28a745'
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Statistics */}
+          {syncProgress.total > 0 && (
+            <div className="sync-stats">
+              <div className="stat-item">
+                <span className="stat-label">Progress:</span>
+                <span className="stat-value">{syncProgress.current} / {syncProgress.total}</span>
+              </div>
+              <div className="stat-item">
+                <span className="stat-label">Successful:</span>
+                <span className="stat-value text-success">{syncProgress.successCount}</span>
+              </div>
+              <div className="stat-item">
+                <span className="stat-label">Errors:</span>
+                <span className="stat-value text-danger">{syncProgress.errorCount}</span>
+              </div>
+            </div>
+          )}
+
+          {/* Live Log */}
+          <div className="sync-logs">
+            <h6>Live Log</h6>
+            <div className="logs-container">
+              {syncProgress.logs.slice(-8).map((log, index) => (
+                <div 
+                  key={index} 
+                  className={`log-entry ${log.type}`}
+                >
+                  <span className="log-time">{log.timestamp}</span>
+                  <span className="log-message">{log.message}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -475,27 +656,28 @@ const EditPartner = (props) => {
             </div>
           )}
         </div>
+        {renderSyncProgress()}
         <div className="edit-partner-footer" style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
           {partner.id !== "-1" && !partnerLogin && (
             <>
-              <Button
+              {/* <Button
                 style={{ fontSize: 14, marginRight: 0, minWidth: 100, height: '45px' }}
                 variant="Pink"
                 text="Activate All"
                 onClick={handleActivateButton}
-              />
+              /> */}
               <Button
                 style={{ fontSize: 14, marginRight: 0, minWidth: 140, height: '45px' }}
                 variant="green"
                 text="Resync PM listings"
                 onClick={handleResyncButton}
               />
-              <Button
+              {/* <Button
                 style={{ fontSize: 14, marginRight: 0, minWidth: 140, height: '45px' }}
                 variant="cyan"
                 text="Delete PM + listings"
                 onClick={handleDeleteButton}
-              />
+              /> */}
             </>
           )}
           {bankDetailsToShow && (
@@ -512,11 +694,11 @@ const EditPartner = (props) => {
             text="Cancel"
             onClick={onClose}
           />
-          <Button
+          {/* <Button
             style={{ fontSize: 14, minWidth: '100px', height: '45px' }}
             text={partner.id === "-1" ? "Add PM" : "Save"}
             onClick={handleSaveButton}
-          />
+          /> */}
         </div>
       </div>
     </>

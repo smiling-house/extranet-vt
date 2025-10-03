@@ -67,6 +67,111 @@ const resyncPartner = async (accountId, source) => {
     const ShubResponse = await userRequest.post(constants.SHUB_URL + `/resync/` + accountId + '/' + source);
     return ShubResponse
 };
+const resyncBartPartner = async () => {
+    const ShubResponse = await userRequest.post(constants.SHUB_URL + `/sync-villainstbarth`);
+    return ShubResponse
+};
+
+const resyncBartPartnerWithProgress = (onProgress, onComplete, onError) => {
+  const controller = new AbortController();
+  
+  fetch(`${constants.SHUB_URL}/sync-villainstbarth-progress`, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${token2}`,
+      'x-api-key': 'swwSK4tqWyYHP4GvRF7qHNOoSGVs7nwSekPKyLQD',
+      'Accept': 'text/event-stream',
+      'Cache-Control': 'no-cache'
+    },
+    signal: controller.signal
+  })
+  .then(response => {
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    
+    function processStream() {
+      return reader.read().then(({ done, value }) => {
+        if (done) {
+          console.log('Stream completed');
+          return;
+        }
+        
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+        
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            try {
+              const data = JSON.parse(line.slice(6));
+              onProgress(data);
+              
+              if (data.type === 'final_summary' || data.type === 'error') {
+                if (data.type === 'final_summary') {
+                  onComplete(data);
+                } else {
+                  onError(data);
+                }
+                return;
+              }
+            } catch (error) {
+              console.error('Error parsing SSE data:', error);
+              onError({ type: 'error', message: 'Failed to parse progress data' });
+            }
+          }
+        }
+        
+        return processStream();
+      });
+    }
+    
+    return processStream();
+  })
+  .catch(error => {
+    console.error('Fetch error:', error);
+    if (error.name !== 'AbortError') {
+      onError({ type: 'error', message: 'Connection to sync service lost' });
+    }
+  });
+
+  return () => controller.abort();
+};
+const resyncBartPartnerWithProgressold = (onProgress, onComplete, onError) => {
+  const eventSource = new EventSource(`${constants.SHUB_URL}/sync-villainstbarth-progress`);
+  
+  eventSource.onmessage = function(event) {
+    try {
+      const data = JSON.parse(event.data);
+      onProgress(data);
+      
+      if (data.type === 'final_summary' || data.type === 'error') {
+        eventSource.close();
+        if (data.type === 'final_summary') {
+          onComplete(data);
+        } else {
+          onError(data);
+        }
+      }
+    } catch (error) {
+      console.error('Error parsing SSE data:', error);
+      onError({ type: 'error', message: 'Failed to parse progress data' });
+    }
+  };
+
+  eventSource.onerror = function(event) {
+    console.error('SSE connection error:', event);
+    eventSource.close();
+    onError({ type: 'error', message: 'Connection to sync service lost' });
+  };
+
+  // Return a function to manually close the connection
+  return () => eventSource.close();
+};
 const activatePartner = async (accountId, source) => {
     const ShubResponse = await userRequest.put(constants.SHUB_URL + `/products/all` , {accountId , source});
     return ShubResponse
@@ -439,6 +544,8 @@ const AuthService = {
     deletePartner,
     deleteEPartner,
     resyncPartner,
+    resyncBartPartner,
+    resyncBartPartnerWithProgress,
     activatePartner,
     hotdestinationAddLikeApi,
     hotdestinationRemoveLikeApi,
