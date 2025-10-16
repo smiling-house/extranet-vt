@@ -55,12 +55,11 @@ export const APP_DISPLAY_NAME = 'Villa Tracker EXTRANET';
 export const PATH_ZIPS_REGIONS_MAPPING = '/zipcodes-regions-mapping';
 export const PATH_ZIPS_REGIONS_MAPPING_COUNTRY = '/zipcodes-regions-mapping-country';
 
-
 const constants = {
 	ENV: 'LOCAL',
 	BASE_URL: 'https://backend.villatracker.com',
-	SHUB_URL: 'http://localhost:3331',
-	//SHUB_URL: 'https://api.villatracker.com',
+	//SHUB_URL: 'http://localhost:3331',
+	SHUB_URL: 'https://api.villatracker.com',
 	//BASE_URL: 'http://localhost:8080',
 	BASE_URL2: 'https://vt-backend-8zwvrrlxf-smiling-house.vercel.app',
 	BASE_URL1: 'http://vtbackend-env.eba-b3vxhzrg.us-east-2.elasticbeanstalk.com',

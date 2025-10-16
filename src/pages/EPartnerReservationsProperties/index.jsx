@@ -829,10 +829,10 @@ const reservationUniqueID = `EPS-VT_${reservationData?.reservationID}`; //LIVE
       "children": reservationData?.children,
       "resChannel": "VT",
       "reservationId": reservationUniqueID,
-      "ResStatus": "Commit"
+      "ResStatus": "Commit",
       //"RequestorID": { "Type": 0, "ID": "VTR" }
       //"RequestorID": "VTR",
-      //"RequestorID": { "Type": 0, "ID": "VTR" }, "BookingChannel": { "CompanyName": { "Text": "VillaTracker" } }      
+      //"RequestorID": { "Type": 0, "ID": "VTR" }, "BookingChannel": { "CompanyName": { "Text": "VillaTracker" } }
     });
 
     let config = {
