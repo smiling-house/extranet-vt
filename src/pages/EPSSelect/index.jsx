@@ -791,6 +791,7 @@ if(currentEpartnerIdsLength === 0 && selectedlistings.length > 0) {
 if(currentEpartnerIdsLength > 0) {
     //runSyncExternalPropertiesUrl = true;
 
+    
     //Form listingIdsToBeSyncedByEpartner array
     /*
     console.log('Form listingIdsToBeSyncedByEpartner array')
