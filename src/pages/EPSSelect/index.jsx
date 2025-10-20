@@ -96,8 +96,13 @@ const Listings = (props) => {
 
     const Epartner = JSON.parse(localStorage.getItem("Epartner"))
     console.log('Epartner', Epartner)
+    console.log('Epartner ids:::', Epartner.ids)
     const partnerId = Epartner.partnerId
     //console.log('partnerId:' + partnerId)
+
+
+    const [currentEpartnerIds, setCurrentEpartnerIds] = useState( typeof Epartner.ids === 'undefined' || Epartner.ids === null ? {} : Epartner.ids )
+    
     
     // const accountId = localStorage.getItem("accountId")
     // const user_image = agency?.userImage
@@ -141,6 +146,7 @@ const Listings = (props) => {
     const [filteredDataList, setFilteredDataList] = useState([])
     const [searchFilteredListData, setSearchFilteredListData] = useState([])
     
+
     // const dispatch = useDispatch();
     // const properties = useSelector((state) => state.property.properties);
     // const source = location.state && location.state.source;
@@ -760,6 +766,7 @@ const deSelectAllListings = () => {
  * @returns {void}
  */
 const updateFilteredListings = () => {
+
     // console.log('ppv - updateFilteredListings', selectedfilteredlistings)
     const now = new Date().toISOString();
     const selectedlistings =  selectedfilteredlistings.map(item => ({
@@ -771,6 +778,54 @@ const updateFilteredListings = () => {
             calendarUpdated: now
         }
     }));
+
+//Added by Jaison - 2025 October 20 - START
+let runSyncExternalPropertiesUrl = false; //Default false - to avoid sync on each update
+let currentEpartnerIdsLength = Object.keys(currentEpartnerIds).length;
+let listingIdsToBeSyncedByEpartner = [] ;
+if(currentEpartnerIdsLength === 0 && selectedlistings.length > 0) {
+    runSyncExternalPropertiesUrl = true; //First time adding properties - run sync to create external properties url
+    listingIdsToBeSyncedByEpartner = [] ; //This line is redundant but added for clarity. When this array is empty need to sync all properties
+}
+
+if(currentEpartnerIdsLength > 0) {
+    //runSyncExternalPropertiesUrl = true;
+
+    //Form listingIdsToBeSyncedByEpartner array
+    /*
+    console.log('Form listingIdsToBeSyncedByEpartner array')
+    console.log('currentEpartnerIds::')
+    console.log(currentEpartnerIds)
+    console.log('selectedlistings::')
+    console.log(selectedlistings)
+    */
+
+    let currentEpartnerIdsKeys = Object.keys(currentEpartnerIds);
+    
+    console.log(currentEpartnerIdsKeys)
+
+    for (const obj of selectedlistings) {
+        const singleListingId = Object.keys(obj)[0];
+
+        if (!currentEpartnerIdsKeys.includes(singleListingId)) {
+            listingIdsToBeSyncedByEpartner.push(singleListingId)
+        }        
+    }    
+
+
+    if(listingIdsToBeSyncedByEpartner.length > 0) {
+        runSyncExternalPropertiesUrl = true;
+    }
+
+}
+
+console.log('listingIdsToBeSyncedByEpartner:::')
+console.log(listingIdsToBeSyncedByEpartner)
+
+console.log('runSyncExternalPropertiesUrl:::')
+console.log(runSyncExternalPropertiesUrl)
+//Added by Jaison - 2025 October 20 - END
+
     const uploadPayload = {
         content: { 'ids' : selectedlistings },
         partnerId: partnerId,
@@ -779,6 +834,16 @@ const updateFilteredListings = () => {
     AuthService.uploadSelectedListings(partnerId,uploadPayload).then((response) => {
         // console.log(response)
         if(response && response.data && response.data.success) {
+
+
+//Added by Jaison - 2025 October 20 - START            
+if(runSyncExternalPropertiesUrl===true) {
+    if(Epartner.syncExternalPropertiesUrl && Epartner.syncExternalPropertiesUrl !== '') {
+        axios.post(Epartner.syncExternalPropertiesUrl, {listingIds: listingIdsToBeSyncedByEpartner})
+    }
+}
+//Added by Jaison - 2025 October 20 - END            
+
             const ids = Object.keys(response?.data?.updatedPartner?.ids);
             swal({
                 show: true,
