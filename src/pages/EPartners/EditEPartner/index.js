@@ -375,10 +375,10 @@ const EditEPartner = (props) => {
 <div className="row">
   <div className="col-12">
     <InputField
-      label="Sync External Properties Url"
+      label="Properties Sync Url"
       value={syncExternalPropertiesUrl}
       onChange={setSyncExternalPropertiesUrl}
-      placeholder={"Enter Sync External Properties Url"}
+      placeholder={"Enter Properties Sync Url"}
       style={{ marginTop: "20px" }}
     />
   </div>
