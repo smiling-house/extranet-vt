@@ -840,7 +840,7 @@ console.log(runSyncExternalPropertiesUrl)
 //Added by Jaison - 2025 October 20 - START            
 if(runSyncExternalPropertiesUrl===true) {
     if(Epartner.syncExternalPropertiesUrl && Epartner.syncExternalPropertiesUrl !== '') {
-        axios.post(Epartner.syncExternalPropertiesUrl, {listingIds: listingIdsToBeSyncedByEpartner})
+        axios.post(Epartner.syncExternalPropertiesUrl, {"listingIds": listingIdsToBeSyncedByEpartner})
     }
 }
 //Added by Jaison - 2025 October 20 - END            

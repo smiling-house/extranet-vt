@@ -40,6 +40,17 @@ const EditEPartner = (props) => {
   
 
   const handleSaveButton = () => {
+
+    if(!partnerID || partnerID.trim() === '') {
+          swal({
+            show: true,
+            icon: "error",
+            title: "Oops!!",
+            text: 'partnerID is required. You get partnerID only when you approve the external partner!',
+          });
+      return;
+    }
+
     if (editClickedId) {
       var UpdatePayLoad = {
         partnerId: partnerID,
