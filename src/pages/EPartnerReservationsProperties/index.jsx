@@ -70,6 +70,7 @@ const [selectedReservations, setSelectedReservations] = useState(null);
 
         const [checkedAll, setCheckedAll] = useState(false);
     
+const [filterByEpartner, setFilterByEpartner] = useState(null);
 
     const [filterPropertyStatus, setFilterPropertyStatus] = useState('');
     const filterByPropertyStatus = (event) => {
@@ -281,13 +282,16 @@ useEffect(() => {
 
     }
 
+    let clientPagingFrom = 1 + pageNumber * constants.PAGING_LISTING_SIZE
+    let clientPagingTo = (pageNumber + 1) * constants.PAGING_LISTING_SIZE    
 
     const doSearch = pageNumber => {
+        clientPagingFrom = 1 + pageNumber * constants.PAGING_LISTING_SIZE
+        clientPagingTo = (pageNumber + 1) * constants.PAGING_LISTING_SIZE         
         getAllListings()
     }
 
-    let clientPagingFrom = 1 + pageNumber * constants.PAGING_LISTING_SIZE
-    let clientPagingTo = (pageNumber + 1) * constants.PAGING_LISTING_SIZE
+
 
     const onChangePage = pageNumber => {
         console.log("going to page=", pageNumber)
@@ -306,8 +310,8 @@ useEffect(() => {
     const token2 = 'eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2NvdW50X29iamVjdF9pZCI6Mzk5MTU4NzUsInVzZXJfaWQiOiI0MDY2NTAyMSIsInVzZXJfbmFtZSI6InN5c3RlbStsdW5hLTh5NXljIiwic2NvcGUiOlsiYnJpdm8uYXBpIl0sImF0aSI6ImI5MTliYmJiLTA1ZWItNDlmOC05MjlhLWM0MTJlYzY3NWI2YyIsImlzc3VlZCI6IjE2NzUzNzA2NDMzNzMiLCJleHAiOjIyOTczMzM3MjcsInNlcnZpY2VfdG9rZW4iOm51bGwsImF1dGhvcml0aWVzIjpbIlJPTEVfU1VQRVJfQURNSU4iLCJST0xFX0FETUlOIl0sImp0aSI6IjExODQzYjg2LWIyYzUtNGMwNS1hYWZlLTcxZTI4NGIyNjNlOCIsImNsaWVudF9pZCI6IjkzOTFlYjVkLWUwNmUtNDY4MS1iNTdhLWQwZTU3NDhhM2RlZSIsIndoaXRlX2xpc3RlZCI6ZmFsc2V9.Mqmx7onIVz_EVAunhwqBAhAmlsGXMQ18hh_EV_61KQIpaGXlrgXgx1hOOdNWLFriG3Un6jfS7H7vwMAYmBT6-8yl9L7VB7Cpxva49XozuSJazQ42UDDlTOsnWAmatzmFna-Uzjc8MDfVQbR8AwMiFq_Jb9ViaJ4XBkj2KhEKs1g'
 
     const userRequest = axios.create({
-        headers: {
-            'x-api-key': 'swwSK4tqWyYHP4GvRF7qHNOoSGVs7nwSekPKyLQD'
+        headers: { 
+            'x-api-key': constants.X_API_KEY,
             // Authorization: `Bearer ${token2}`
             // Authorization: `Bearer ${Epartner.bearerToken}`
         }
@@ -317,18 +321,20 @@ useEffect(() => {
 
 
         // Slicing the JSON
-const limit = constants.PAGING_LISTING_SIZE; // Number of items to take
+//const limit = constants.PAGING_LISTING_SIZE; // Number of items to take
 const skip = clientPagingFrom-1;  // Number of items to skip
+//alert(clientPagingFrom)
         // filter=pending&sortBy=startDate:desc
         const params= {
-            // limit: constants.PAGING_LISTING_SIZE, 
-            // skip: 0,
+            limit: constants.PAGING_LISTING_SIZE, 
+            skip: skip,
             // filter: 'pending',
             sortBy: 'startDate:desc'
         }
     
-    console.log('getting from /listings:',params)
+    console.log('getting from /eps/get-all-reservations',params);
     const queryString = Object.keys(params).map(key => key + '=' + params[key]).join("&")
+
 
     if (true) {
         const shubSearch=constants.SHUB_URL+'/eps/get-all-reservations'+'?';
@@ -343,16 +349,14 @@ const skip = clientPagingFrom-1;  // Number of items to skip
     if(response?.data?.totalReservation) {
         setTotalReservation(response?.data?.totalReservation);
     }
-    if(response?.data?.reservations) {
+    if(response?.data?.reservations) {        
         setReservations(response?.data?.reservations);
-
-    }
-                
+    }        
                 if (response?.data?.error) {
                     swal({
                         show: true,
                         icon: 'error',
-                        title: 'Opps!!',
+                        title: 'Oops!!',
                         text: response?.data?.error
                     })
                 } else {
@@ -364,9 +368,11 @@ const skip = clientPagingFrom-1;  // Number of items to skip
                 localStorage.setItem("count", response?.data?.count)
                 */
 
+                setCount(response?.data?.totalReservation || 0  )
+
 // console.log(':::::partnerId:::::', partnerId)
-console.log(':::::reservations:::::',reservations)
-return                
+//alert(':::::reservations:::::',reservations)
+//return
 
                    // console.log('props loaded on offset:',clientPagingFrom,response.data?.listings)
                     setRefresh(true)
@@ -829,7 +835,10 @@ const reservationUniqueID = `EPS-VT_${reservationData?.reservationID}`; //LIVE
       "children": reservationData?.children,
       "resChannel": "VT",
       "reservationId": reservationUniqueID,
-      "ResStatus": "Commit"
+      "ResStatus": "Commit",
+      //"RequestorID": { "Type": 0, "ID": "VTR" }
+      //"RequestorID": "VTR",
+      //"RequestorID": { "Type": 0, "ID": "VTR" }, "BookingChannel": { "CompanyName": { "Text": "VillaTracker" } }
     });
 
     let config = {
@@ -837,8 +846,8 @@ const reservationUniqueID = `EPS-VT_${reservationData?.reservationID}`; //LIVE
       maxBodyLength: Infinity,
       url: constants.SHUB_URL+'/reserve/' + reservationData?.propertyId + '?reservation_request_from=eps',
       headers: {
-        'Authorization': 'bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2NvdW50X29iamVjdF9pZCI6Mzk5MTU4NzUsInVzZXJfaWQiOiI0MDY2NTAyMSIsInVzZXJfbmFtZSI6InN5c3RlbStsdW5hLTh5NXljIiwic2NvcGUiOlsiYnJpdm8uYXBpIl0sImlzc3VlZCI6IjE2NzUxMTI3NDYxMzYiLCJleHAiOjE2NzUxMTI4MDYsInNlcnZpY2VfdG9rZW4iOm51bGwsImF1dGhvcml0aWVzIjpbIlJPTEVfU1VQRVJfQURNSU4iLCJST0xFX0FETUlOIl0sImp0aSI6ImVmNzY1MDIyLTZhNzctNGZkMy04Njg1LTFhZTFhZmEzOTJhZSIsImNsaWVudF9pZCI6IjkzOTFlYjVkLWUwNmUtNDY4MS1iNTdhLWQwZTU3NDhhM2RlZSIsIndoaXRlX2xpc3RlZCI6ZmFsc2V9.N9MIeiLyrT3hBUtMJsTvwbYW5Z_o7ZSBuZmir2ytrb8DiE4MoXcmh8C6KriWhmnRqUnSMBRtuLcauVbqjFTorOcWMOd2RQGmisPgXBm1tHT30Hl0i57rQuLZHAVW201ot-TdQwW9oEZ3n2HTGu_A6tRhTizVmG6NRAd5KhOB2_c',
-        //'Authorization': 'bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbklkIjoiNjY4YmMwNzA0NjBjMGU1NGYxOWU3NjVjIiwiYXBwbGljYXRpb25JZCI6IjY0NDkxMWJlMjEwN2Q3MDAyMWZmZGM4MSIsImFjY291bnRJZCI6IjY0MDYyNWVhMDYyMGU0MDAzMWI4NTk3ZCIsImlzcyI6InByb2R1Y3Rpb24uZ3Vlc3R5LmNvbSIsIm5hbWUiOiJhcHBsaWNhdGlvbiIsInJvbGUiOiJ1c2VyIiwidXNlclJvbGVzIjpbeyJyb2xlSWQiOnsicGVybWlzc2lvbnMiOlsibGlzdGluZy52aWV3ZXIiXX19XSwicmVxdWVzdGVyIjoiT1RBQGd1ZXN0eS5jb20iLCJpYXQiOjE3MjA0MzQ4MDB9.OyVIohRJRwoYGENJY0NtVV65ouxh5iHBSkDSSbs-VFI',
+        //'Authorization': 'bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2NvdW50X29iamVjdF9pZCI6Mzk5MTU4NzUsInVzZXJfaWQiOiI0MDY2NTAyMSIsInVzZXJfbmFtZSI6InN5c3RlbStsdW5hLTh5NXljIiwic2NvcGUiOlsiYnJpdm8uYXBpIl0sImlzc3VlZCI6IjE2NzUxMTI3NDYxMzYiLCJleHAiOjE2NzUxMTI4MDYsInNlcnZpY2VfdG9rZW4iOm51bGwsImF1dGhvcml0aWVzIjpbIlJPTEVfU1VQRVJfQURNSU4iLCJST0xFX0FETUlOIl0sImp0aSI6ImVmNzY1MDIyLTZhNzctNGZkMy04Njg1LTFhZTFhZmEzOTJhZSIsImNsaWVudF9pZCI6IjkzOTFlYjVkLWUwNmUtNDY4MS1iNTdhLWQwZTU3NDhhM2RlZSIsIndoaXRlX2xpc3RlZCI6ZmFsc2V9.N9MIeiLyrT3hBUtMJsTvwbYW5Z_o7ZSBuZmir2ytrb8DiE4MoXcmh8C6KriWhmnRqUnSMBRtuLcauVbqjFTorOcWMOd2RQGmisPgXBm1tHT30Hl0i57rQuLZHAVW201ot-TdQwW9oEZ3n2HTGu_A6tRhTizVmG6NRAd5KhOB2_c', //Smiling House
+        'Authorization': 'bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbklkIjoiNjY4YmMwNzA0NjBjMGU1NGYxOWU3NjVjIiwiYXBwbGljYXRpb25JZCI6IjY0NDkxMWJlMjEwN2Q3MDAyMWZmZGM4MSIsImFjY291bnRJZCI6IjY0MDYyNWVhMDYyMGU0MDAzMWI4NTk3ZCIsImlzcyI6InByb2R1Y3Rpb24uZ3Vlc3R5LmNvbSIsIm5hbWUiOiJhcHBsaWNhdGlvbiIsInJvbGUiOiJ1c2VyIiwidXNlclJvbGVzIjpbeyJyb2xlSWQiOnsicGVybWlzc2lvbnMiOlsibGlzdGluZy52aWV3ZXIiXX19XSwicmVxdWVzdGVyIjoiT1RBQGd1ZXN0eS5jb20iLCJpYXQiOjE3MjA0MzQ4MDB9.OyVIohRJRwoYGENJY0NtVV65ouxh5iHBSkDSSbs-VFI', //Villa Tracker
         'Account-Id': '640625ea0620e40031b8597d',
         'Content-Type': 'application/json'
       },
@@ -1007,8 +1016,8 @@ const reservationUniqueID = reservationData?.reservationUniqueID
       maxBodyLength: Infinity,
       url: constants.SHUB_URL+'/reserve-cancel/' + reservationData?.propertyId + '?reservation_request_from=eps',
       headers: {
-        'Authorization': 'bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2NvdW50X29iamVjdF9pZCI6Mzk5MTU4NzUsInVzZXJfaWQiOiI0MDY2NTAyMSIsInVzZXJfbmFtZSI6InN5c3RlbStsdW5hLTh5NXljIiwic2NvcGUiOlsiYnJpdm8uYXBpIl0sImlzc3VlZCI6IjE2NzUxMTI3NDYxMzYiLCJleHAiOjE2NzUxMTI4MDYsInNlcnZpY2VfdG9rZW4iOm51bGwsImF1dGhvcml0aWVzIjpbIlJPTEVfU1VQRVJfQURNSU4iLCJST0xFX0FETUlOIl0sImp0aSI6ImVmNzY1MDIyLTZhNzctNGZkMy04Njg1LTFhZTFhZmEzOTJhZSIsImNsaWVudF9pZCI6IjkzOTFlYjVkLWUwNmUtNDY4MS1iNTdhLWQwZTU3NDhhM2RlZSIsIndoaXRlX2xpc3RlZCI6ZmFsc2V9.N9MIeiLyrT3hBUtMJsTvwbYW5Z_o7ZSBuZmir2ytrb8DiE4MoXcmh8C6KriWhmnRqUnSMBRtuLcauVbqjFTorOcWMOd2RQGmisPgXBm1tHT30Hl0i57rQuLZHAVW201ot-TdQwW9oEZ3n2HTGu_A6tRhTizVmG6NRAd5KhOB2_c',
-        //'Authorization':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbklkIjoiNjY4YmMwNzA0NjBjMGU1NGYxOWU3NjVjIiwiYXBwbGljYXRpb25JZCI6IjY0NDkxMWJlMjEwN2Q3MDAyMWZmZGM4MSIsImFjY291bnRJZCI6IjY0MDYyNWVhMDYyMGU0MDAzMWI4NTk3ZCIsImlzcyI6InByb2R1Y3Rpb24uZ3Vlc3R5LmNvbSIsIm5hbWUiOiJhcHBsaWNhdGlvbiIsInJvbGUiOiJ1c2VyIiwidXNlclJvbGVzIjpbeyJyb2xlSWQiOnsicGVybWlzc2lvbnMiOlsibGlzdGluZy52aWV3ZXIiXX19XSwicmVxdWVzdGVyIjoiT1RBQGd1ZXN0eS5jb20iLCJpYXQiOjE3MjA0MzQ4MDB9.OyVIohRJRwoYGENJY0NtVV65ouxh5iHBSkDSSbs-VFI',
+        //'Authorization': 'bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2NvdW50X29iamVjdF9pZCI6Mzk5MTU4NzUsInVzZXJfaWQiOiI0MDY2NTAyMSIsInVzZXJfbmFtZSI6InN5c3RlbStsdW5hLTh5NXljIiwic2NvcGUiOlsiYnJpdm8uYXBpIl0sImlzc3VlZCI6IjE2NzUxMTI3NDYxMzYiLCJleHAiOjE2NzUxMTI4MDYsInNlcnZpY2VfdG9rZW4iOm51bGwsImF1dGhvcml0aWVzIjpbIlJPTEVfU1VQRVJfQURNSU4iLCJST0xFX0FETUlOIl0sImp0aSI6ImVmNzY1MDIyLTZhNzctNGZkMy04Njg1LTFhZTFhZmEzOTJhZSIsImNsaWVudF9pZCI6IjkzOTFlYjVkLWUwNmUtNDY4MS1iNTdhLWQwZTU3NDhhM2RlZSIsIndoaXRlX2xpc3RlZCI6ZmFsc2V9.N9MIeiLyrT3hBUtMJsTvwbYW5Z_o7ZSBuZmir2ytrb8DiE4MoXcmh8C6KriWhmnRqUnSMBRtuLcauVbqjFTorOcWMOd2RQGmisPgXBm1tHT30Hl0i57rQuLZHAVW201ot-TdQwW9oEZ3n2HTGu_A6tRhTizVmG6NRAd5KhOB2_c', //Smiling House
+        'Authorization':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbklkIjoiNjY4YmMwNzA0NjBjMGU1NGYxOWU3NjVjIiwiYXBwbGljYXRpb25JZCI6IjY0NDkxMWJlMjEwN2Q3MDAyMWZmZGM4MSIsImFjY291bnRJZCI6IjY0MDYyNWVhMDYyMGU0MDAzMWI4NTk3ZCIsImlzcyI6InByb2R1Y3Rpb24uZ3Vlc3R5LmNvbSIsIm5hbWUiOiJhcHBsaWNhdGlvbiIsInJvbGUiOiJ1c2VyIiwidXNlclJvbGVzIjpbeyJyb2xlSWQiOnsicGVybWlzc2lvbnMiOlsibGlzdGluZy52aWV3ZXIiXX19XSwicmVxdWVzdGVyIjoiT1RBQGd1ZXN0eS5jb20iLCJpYXQiOjE3MjA0MzQ4MDB9.OyVIohRJRwoYGENJY0NtVV65ouxh5iHBSkDSSbs-VFI', //Villa Tracker
         'Account-Id': '640625ea0620e40031b8597d',
         'Content-Type': 'application/json'
       },
@@ -1244,12 +1253,19 @@ return (
                                     fontSize: 'clamp(1rem, 2vw, 1.2rem)',
                                     lineHeight: '1.4',
                                     wordBreak: 'break-word'
-                                }}>
-                                    {Epartner?.pmName ? Epartner?.pmName : ''} / 
-                                    {Epartner?.contactName ? Epartner?.contactName : ''} / 
-                                    {Epartner?.email ? Epartner?.email : ''} / 
-                                    AccountID {Epartner?.accountId ? Epartner?.accountId : ''} / 
-                                    Source: {Epartner?.source ? Epartner?.source : ''}
+                                }}>                
+
+
+{filterByEpartner !== null && (
+  <>
+    {Epartner?.pmName || ''} / 
+    {Epartner?.contactName || ''} / 
+    {Epartner?.email || ''} / 
+    AccountID {Epartner?.accountId || ''} / 
+    Source: {Epartner?.source || ''}
+  </>
+)}
+
                                 </div>
                             </div>
                         </div>
@@ -1262,7 +1278,7 @@ return (
                     <div className="row mb-3">
                         <div className="col-12">
                             <div className="listings-paging" style={{fontSize: '14px'}}>
-                                Displaying {ListingsPagingFrom}-{ListingsPagingTo} of {totalListings || "?"} Reservations
+                                Displaying Reservations {ListingsPagingFrom}-{ListingsPagingTo} of {totalListings || "?"} 
                             </div>
                         </div>
                     </div>

@@ -36,13 +36,28 @@ const EditEPartner = (props) => {
   const [staticUrl, setStaticUrl] = useState(partner.staticUrl)
   const [token, setToken] = useState(partner.bearerToken)
 
+  const [syncExternalPropertiesUrl, setSyncExternalPropertiesUrl] = useState(partner.syncExternalPropertiesUrl || '')
+  
+
   const handleSaveButton = () => {
+
+    if(!partnerID || partnerID.trim() === '') {
+          swal({
+            show: true,
+            icon: "error",
+            title: "Oops!!",
+            text: 'partnerID is required. You get partnerID only when you approve the external partner!',
+          });
+      return;
+    }
+
     if (editClickedId) {
       var UpdatePayLoad = {
         partnerId: partnerID,
         partnerName: partnerName,
         contactName: contactName,
         partnerPhone: phone,
+        syncExternalPropertiesUrl,
         calendarUrl,
         staticUrl,
         agent: agent.firstName+' '+agent.lastName,
@@ -367,6 +382,19 @@ const EditEPartner = (props) => {
               />
             </div>
           </div>
+
+<div className="row">
+  <div className="col-12">
+    <InputField
+      label="Properties Sync Url"
+      value={syncExternalPropertiesUrl}
+      onChange={setSyncExternalPropertiesUrl}
+      placeholder={"Enter Properties Sync Url"}
+      style={{ marginTop: "20px" }}
+    />
+  </div>
+</div>
+
           <div className="row">
             <div className="col-6">
               <InputField

@@ -751,6 +751,7 @@ localStorage.setItem('partnerPropertiesUniqueZipcodes', JSON.stringify(partnerPr
 									right: 0,
 									bottom: 0,
 									transition: 'left 0.3s',
+									'margin-top': '50px'
 								}}
 							>
 								<div className="modal-dialog modal-lg" role="document">

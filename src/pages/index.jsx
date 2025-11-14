@@ -19,6 +19,7 @@ import Partners from "./Partners";
 import PartnersBP from "./PartnersBP";
 import PartnersRU from "./PartnersRU";
 import PartnersBART from "./PartnersBART";
+import PartnersINVENIO from "./PartnersINVENIO";
 import EPartners from "./EPartners";
 // material ui
 import Welcome from "./Welcome";
@@ -81,6 +82,7 @@ import {
   PATH_EPS_EPARTNER_RESERVATIONS_PROPERTIES,
   APP_DISPLAY_NAME,
   PATH_PARTNERS_BART,
+  PATH_PARTNERS_INVENIO,
   PATH_VERIFY_COMPARE_NEW_PMS,
   PATH_ZIPS_REGIONS_MAPPING,
   PATH_ZIPS_REGIONS_MAPPING_COUNTRY
@@ -471,7 +473,20 @@ const showOrHideSideBarMenu=()=> {
             handleToggleMenu={handleToggleMenu}
             setActiveMenu={setActiveMenu}
           />
-        </Route>        
+        </Route>    
+        <Route exact path={[PATH_PARTNERS_INVENIO]}>
+          <PartnersINVENIO
+            agency={agency}
+            agent={agent}
+            token={token}
+            setProfile={setProfile}
+            screenSize={screenSize}
+            setScreenSize={setScreenSize}
+            activeMenu={activeMenu}
+            handleToggleMenu={handleToggleMenu}
+            setActiveMenu={setActiveMenu}
+          />
+        </Route>
         <Route exact path={[PATH_EPARTNERS]}>
           <EPartners
             agency={agency}

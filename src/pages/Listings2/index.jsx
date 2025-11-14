@@ -61,7 +61,8 @@ const NEW_CLIENT = {
 const Listings = (props) => {
 
 const partnersPageLastPageNumber = localStorage.getItem('partnersPageLastPageNumber'); //added by jaison for Liron 2025 June 11
-    
+
+const [searchPropertyId, setSearchPropertyId] = useState('');
 
 const [showSideBarMenu, setShowSideBarMenu] = useState(false);
   const signOut = () => {
@@ -429,6 +430,21 @@ console.log('params::',params)
     }     
     //By Jaison 2025-04-22 END
 
+
+    //By Jaison 2025 October 06 - START
+    if(searchPropertyId !== '') {
+        if(searchPropertyId.length === 24) {
+            params.searchPropertyId = searchPropertyId;
+        } else {
+            //params.searchPropertyId = `sh${searchPropertyId}`;
+            params.searchPropertyId = `sh${searchPropertyId.replace(/^sh/, '')}`;
+        }
+    } else { 
+        delete params.searchPropertyId;
+    }
+    //By Jaison 2025 October 06 - END
+
+
     const queryString = Object.keys(params).map(key => key + '=' + params[key]).join('&');
     console.log('getting from /listings:',params)
     if (accountId.length > 0) {
@@ -526,7 +542,7 @@ const updateXdata = async (ID, xdataPayload) => {
      getAllListings()
 //     setRefresh(false)
 
- }, [refresh,isRefresh, filterPropertyStatus,updateStatusProcess, filterPropertyZipcode,filterRegionMappedUnmapped])
+ }, [refresh,isRefresh, filterPropertyStatus,updateStatusProcess, filterPropertyZipcode,filterRegionMappedUnmapped,searchPropertyId])
 
 const handleSearchListings = (name, value) => {
     setsearchInputes({ ...searchInputes, [name]: value })
@@ -565,7 +581,7 @@ const handleSearchButton = () => {
                 swal({
                     show: true,
                     icon: 'error',
-                    title: 'Opps!!',
+                    title: 'Oops!!',
                     text: "No Data Found"
                 })
             }
@@ -882,6 +898,13 @@ return (
     </div>       
 </div>
 
+<hr />
+<div class="row">
+    <div class="col-3">
+        <label><strong>Search by Property ID</strong></label>
+        <input required type="text" placeholder="Search by Property ID" class="form-control" onChange={ (e) => setSearchPropertyId(e.target.value) }  />
+    </div>
+</div>
 </section>
 }            
 
@@ -916,10 +939,11 @@ if(allZipcodes[countryZipKey] !== 'undefined') {
     var listingAddressZipExists = false
 }
 
-
                                             console.log("listing item:",index+1,iteam)
                                             const ApropertyId = iteam.listing?._id
                                             const fullCalendar = iteam.fullCalendar
+
+//Custom Title & Desc                                      
                                             return <>
                                                 <tr>
                                                     {<Listingrow
@@ -932,8 +956,10 @@ if(allZipcodes[countryZipKey] !== 'undefined') {
                                                         fullCalendar={fullCalendar}
                                                         updateXdata={updateXdata}
                                                         uid="row{iteam.listing._id}" 
-                                                        listingAddressZipExists={listingAddressZipExists} 
-
+                                                        listingAddressZipExists={listingAddressZipExists}
+                                                        QOD={iteam.QOD}
+                                                        customTitle={iteam.customTitle}
+                                                        customDesc={iteam.customDesc}
                                                     />}
                                                 </tr>
                                             </>

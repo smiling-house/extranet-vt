@@ -43,6 +43,10 @@ const EPartnerManage = (props) => {
     const [showRejectionReasons, setShowRejectionReasons] = useState(false)
     const [reasonForRejection, setReasonForRejection] = useState('')
 
+   const [syncExternalPropertiesUrl, setSyncExternalPropertiesUrl] = useState(Epartner.syncExternalPropertiesUrl || '')
+ 
+
+
     const setStatus = (status) => {
       setPartnerStatus(status);
 
@@ -192,6 +196,19 @@ const EPartnerManage = (props) => {
               />
             </div>            
           </div>
+
+
+<div className="row">
+  <div className="col-12">
+    <InputField
+      label="Properties Sync Url"
+      value={syncExternalPropertiesUrl}
+      onChange={setSyncExternalPropertiesUrl}
+      placeholder={"Enter Properties Sync Url"}
+      style={{ marginTop: "20px" }}
+    />
+  </div>
+</div>
 
 
           <div className="row">
