@@ -79,7 +79,7 @@ const resyncBartPartnerWithProgress = (onProgress, onComplete, onError) => {
     method: 'GET',
     headers: {
       'Authorization': `Bearer ${token2}`,
-      'x-api-key': 'swwSK4tqWyYHP4GvRF7qHNOoSGVs7nwSekPKyLQD',
+      'x-api-key': 'S994RQ5bl0yp6DGFqI79pwtnHmtYaMX2b5OmOUsl',
       'Accept': 'text/event-stream',
       'Cache-Control': 'no-cache'
     },
