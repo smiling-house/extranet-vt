@@ -947,6 +947,8 @@ if(allZipcodes[countryZipKey] !== 'undefined') {
                                             console.log("listing item:",index+1,iteam)
                                             const ApropertyId = iteam.listing?._id
                                             const fullCalendar = iteam.fullCalendar
+
+//Custom Title & Desc                                            
                                             return <>
                                                 <tr>
                                                     {<Listingrow
@@ -960,7 +962,9 @@ if(allZipcodes[countryZipKey] !== 'undefined') {
                                                         updateXdata={updateXdata}
                                                         uid="row{iteam.listing._id}" 
                                                         listingAddressZipExists={listingAddressZipExists} 
-
+                                                        QOD={iteam.QOD}
+                                                        customTitle={iteam.customTitle}
+                                                        customDesc={iteam.customDesc}
                                                     />}
                                                 </tr>
                                             </>

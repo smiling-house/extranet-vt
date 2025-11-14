@@ -581,7 +581,7 @@ const handleSearchButton = () => {
                 swal({
                     show: true,
                     icon: 'error',
-                    title: 'Opps!!',
+                    title: 'Oops!!',
                     text: "No Data Found"
                 })
             }
@@ -939,10 +939,11 @@ if(allZipcodes[countryZipKey] !== 'undefined') {
     var listingAddressZipExists = false
 }
 
-
                                             console.log("listing item:",index+1,iteam)
                                             const ApropertyId = iteam.listing?._id
                                             const fullCalendar = iteam.fullCalendar
+
+//Custom Title & Desc                                      
                                             return <>
                                                 <tr>
                                                     {<Listingrow
@@ -955,8 +956,10 @@ if(allZipcodes[countryZipKey] !== 'undefined') {
                                                         fullCalendar={fullCalendar}
                                                         updateXdata={updateXdata}
                                                         uid="row{iteam.listing._id}" 
-                                                        listingAddressZipExists={listingAddressZipExists} 
-
+                                                        listingAddressZipExists={listingAddressZipExists}
+                                                        QOD={iteam.QOD}
+                                                        customTitle={iteam.customTitle}
+                                                        customDesc={iteam.customDesc}
                                                     />}
                                                 </tr>
                                             </>

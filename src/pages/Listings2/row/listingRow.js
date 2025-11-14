@@ -62,11 +62,18 @@ import OpenAI from "openai";
 import { getStorageValue } from "../../../Util/general";
 
 import axios from "axios";
-import constants from "../../../Util/constants"
+import constants from "../../../Util/constants";
+
+//Custom Title & Desc
+import Popup from "../../../components/Popup/index.js";
+import InputField from "../../../components/InputField";
 
 const Listingrow = (props) => {
-  const { property, fullCalendar, id, agent, agency, partner, xdata, updateXdata, listingAddressFull, listingAddressZipExists } = props
 
+  //Custom Title & Desc
+  const { property, fullCalendar, id, agent, agency, partner, xdata, updateXdata, listingAddressFull, listingAddressZipExists, QOD, customTitle, customDesc } = props
+
+  console.log('property:::', property)
 
   const [chk, setChk] = useState([])
   const [tags, setTags] = useState(xdata?.tags)
@@ -75,6 +82,11 @@ const Listingrow = (props) => {
   const [picIndex, setPicIndex] = useState(0);
   const history = useHistory()
   const [title, setTitle] = useState(xdata.title || property.title)
+
+  
+
+
+
   const summary =
     property?.publicDescription?.summary ||
     property?.publicDescription?.space
@@ -97,6 +109,51 @@ const userRequest = axios.create({
     }
 });
   
+
+
+//Custom Title & Desc - START
+const [customTitleDescListingId, setCustomTitleDescListingId] = useState(null);
+const [customTitleText, setCustomTitleText] = useState(customTitle || '');
+const [customDescText, setCustomDescText] = useState(customDesc || '');
+const setCustomTitleDescToDefaults = () => {
+    setCustomTitleDescListingId(null);
+    setCustomTitleText('');
+    setCustomDescText('');
+    document.body.style.overflow = "auto";
+}
+const saveCustomTitleDescription = async() => {
+  let postData = {id:customTitleDescListingId, customTitle:customTitleText, customDesc:customDescText};
+
+  const res = await userRequest.post(constants.SHUB_URL+'/local/save-custom-title-description', postData );  
+  console.log('saveCustomTitleDescription response:', res.data)
+
+  const response = res.data
+
+  if(response.success===true) {
+          swal({
+          show: true,
+          icon: 'success',
+          title: response.message,
+          //text: `Text`
+          })    
+
+    setCustomTitleDescListingId(null);
+    document.body.style.overflow = "auto";
+  } else if(response.success===false) {
+          swal({
+          show: true,
+          icon: 'error',
+          title: response.message,
+          //text: `Text`
+          }) 
+          
+    setCustomTitleDescListingId(null);
+    document.body.style.overflow = "auto";
+  }
+}
+//Custom Title & Desc - END
+
+
 //By Jaison 2025-04-22 - START  
 /*
   const [listingIdsToUpdate, setListingIdsToUpdate] = useState([]);
@@ -620,11 +677,105 @@ console.log('NEW REGION:::', response)
             />
           </div>
         </div>
-        <div className="text-title"><h2>{title}</h2></div>
+
+        <div className="text-title">
+        <h4>{title}</h4>
+        </div>
+
+             
       </div>
-
-
     </h4>
+
+
+
+
+
+      {/*//Custom Title & Desc - START*/}
+        {customTitleDescListingId && 
+        <Popup width={500} onClose={setCustomTitleDescToDefaults}>   
+
+                <div class="row">
+                  <div class="col-12">
+                    &nbsp;
+                  </div>                
+                </div>
+                <div class="row">
+                  <div class="col-12">
+                    <h1>Listing - Custom Title & Description</h1>
+                    </div>
+                </div>
+
+                <div class="row">
+                  <div class="col-12">
+                    <label>Listing Id: {customTitleDescListingId}</label>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-12">
+                    <InputField
+                      label="Custom Title*"
+                      value={customTitleText}
+                      onChange={setCustomTitleText}
+                      placeholder={"Enter custom title"}
+                      style={{ marginTop: "20px" }}
+                    />
+                  </div>
+                </div> 
+
+                <div class="row">
+                  <div class="col-12">
+                    <InputField
+                      label="Custom Description*"
+                      value={customDescText}
+                      onChange={setCustomDescText}
+                      placeholder={"Enter custom description"}
+                      style={{ marginTop: "20px" }}
+                    />
+                  </div>
+                </div> 
+
+                <div class="row">
+                  <div class="col-12">
+                    &nbsp;
+                  </div>                
+                </div>
+
+                <div class="row">
+                  <div class="col-12">
+                      <Button
+                        style={{ fontSize: "18px" }}
+                        text="Save Custom Title & Description" 
+                        onClick={saveCustomTitleDescription}
+                      />                    
+                    </div>
+                  </div>
+                <div class="row">
+                  <div class="col-12">
+                    &nbsp;
+                  </div>                
+                </div>
+        </Popup>
+        }
+        <div className="text-title">
+          <hr />
+          <div onClick={ ()=> setCustomTitleDescListingId(property._id)}>
+          <svg xmlns="http://www.w3.org/2000/svg" 
+              width="18" height="18" 
+              viewBox="0 0 24 24" 
+              fill="none" stroke="currentColor" 
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 20h9"/>
+            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/>
+          </svg>
+          </div>
+
+          <h4>Custom Title: {customTitle}</h4>
+          <h4>Custom Desc: {customDesc}</h4>
+        </div>
+        {/*//Custom Title & Desc - END*/}
+
+
+
     </td>
      <td  className="px-4 p-6 ">
       {xdata.region==='unmapped' ? <span style={{color:'red','font-weight':'bold'}}>unmapped</span> : <span>Mapped</span> }
