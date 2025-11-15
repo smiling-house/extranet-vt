@@ -67,6 +67,7 @@ import constants from "../../../Util/constants"
 //Custom Title & Desc
 import Popup from "../../../components/Popup/index.js";
 import InputField from "../../../components/InputField";
+import TextAreaField from "../../../components/TextAreaField/index";
 
 const Listingrow = (props) => {
 
@@ -717,13 +718,13 @@ console.log('NEW REGION:::', response)
 
                 <div class="row">
                   <div class="col-12">
-                    <InputField
-                      label="Custom Description*"
+                    <TextAreaField
+                      label="Custom Description"
                       value={customDescText}
                       onChange={setCustomDescText}
                       placeholder={"Enter custom description"}
-                      style={{ marginTop: "20px" }}
-                    />
+                      style={{ height: "300px", marginTop: "20px" }}
+                    ></TextAreaField>                    
                   </div>
                 </div> 
 
