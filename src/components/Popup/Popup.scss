@@ -1,3 +1,4 @@
+/*
 .popup-wrapper {
 	position: absolute;
 	z-index: 1;
@@ -33,4 +34,45 @@
 			cursor: pointer;
 		}
 	}
+}
+*/
+
+//New CSS - The above content was commented by Jaison and added the below one.
+.popup-wrapper {
+  position: fixed;             /* stays centered even on scroll */
+  inset: 0;                    /* top:0, right:0, bottom:0, left:0 */
+  z-index: 1;
+  background-color: #0f2e4bf2;
+
+  display: flex;
+  justify-content: center;     /* center horizontally */
+  align-items: center;         /* center vertically */
+
+  padding: 20px;               /* equal padding on all sides */
+}
+
+.popup-container {
+  position: relative;
+  display: grid;
+
+  min-width: 300px;
+  max-width: 1200px;           /* allow dynamic width without breaking center */
+  width: 100%;                 /* makes it responsive */
+
+  background-color: #FDFDFD;
+  border-radius: 10px;
+  box-shadow: 0 5px 10px #00000029;
+  box-sizing: border-box;      /* better sizing */
+
+  /* REMOVE problematic properties */
+  /* left: 190px; */
+  /* width: 1200px !important; */
+  padding: 20px;;  
+}
+
+.popup-close-icon {
+  position: absolute;
+  right: 15px;
+  top: 15px;
+  cursor: pointer;
 }

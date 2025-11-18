@@ -683,12 +683,6 @@ console.log('NEW REGION:::', response)
       {/*//Custom Title & Desc - START*/}
         {customTitleDescListingId && 
         <Popup width={500} onClose={setCustomTitleDescToDefaults}>   
-
-                <div class="row">
-                  <div class="col-12">
-                    &nbsp;
-                  </div>                
-                </div>
                 <div class="row">
                   <div class="col-12">
                     <h1>Listing - Custom Title & Description</h1>
@@ -724,11 +718,15 @@ console.log('NEW REGION:::', response)
                   </div>
                 </div> 
 
-                <div class="row">
-                  <div class="col-12">
-                    &nbsp;
-                  </div>                
-                </div>
+<div class="row">
+      <div class="col-12">&nbsp;</div>
+</div>
+<div class="row">
+      <div class="col-12">&nbsp;</div>
+</div>
+<div class="row">
+      <div class="col-12">&nbsp;</div>
+</div>
 
                 <div class="row">
                   <div class="col-12">
@@ -739,11 +737,6 @@ console.log('NEW REGION:::', response)
                       />                    
                     </div>
                   </div>
-                <div class="row">
-                  <div class="col-12">
-                    &nbsp;
-                  </div>                
-                </div>
         </Popup>
         }
         <div className="text-title">
