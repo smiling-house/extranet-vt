@@ -747,6 +747,7 @@ console.log('NEW REGION:::', response)
         <div className="text-title">
           <hr />
           <div onClick={ ()=> setCustomTitleDescListingId(property._id)}>
+            Custom Title & Description:
           <svg xmlns="http://www.w3.org/2000/svg" 
               width="18" height="18" 
               viewBox="0 0 24 24" 
@@ -757,8 +758,6 @@ console.log('NEW REGION:::', response)
           </svg>
           </div>
 
-          <h4>Custom Title: {customTitle}</h4>
-          <h4>Custom Desc: {customDesc}</h4>
         </div>
         {/*//Custom Title & Desc - END*/}
 
