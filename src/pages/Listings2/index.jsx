@@ -942,7 +942,6 @@ if(allZipcodes[countryZipKey] !== 'undefined') {
                                             console.log("listing item:",index+1,iteam)
                                             const ApropertyId = iteam.listing?._id
                                             const fullCalendar = iteam.fullCalendar
-
 //Custom Title & Desc                                      
                                             return <>
                                                 <tr>
@@ -961,7 +960,7 @@ if(allZipcodes[countryZipKey] !== 'undefined') {
                                                         customTitle={iteam.customTitle}
                                                         customDesc={iteam.customDesc}
                                                     />}
-                                                </tr>
+                                                </tr> 
                                             </>
                                         })}
                                         

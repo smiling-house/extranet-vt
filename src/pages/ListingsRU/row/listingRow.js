@@ -114,6 +114,16 @@ const setCustomTitleDescToDefaults = () => {
     setCustomDescText('');
     document.body.style.overflow = "auto";
 }
+
+const showCustomTitleDescForListingId = async(listingId) => {
+  let postData = {id:listingId};
+  const res = await userRequest.post(constants.SHUB_URL+'/local/get-custom-title-description', postData);  
+  const response = res.data 
+  setCustomTitleText( response.data.customTitle || '' );
+  setCustomDescText( response.data.customDesc || '' );
+
+  setCustomTitleDescListingId(listingId);    
+}
 const saveCustomTitleDescription = async() => {
   let postData = {id:customTitleDescListingId, customTitle:customTitleText, customDesc:customDescText};
 
@@ -741,7 +751,7 @@ console.log('NEW REGION:::', response)
         }
         <div className="text-title">
           <hr />
-          <div onClick={ ()=> setCustomTitleDescListingId(property._id)}>
+          <div onClick={ ()=> showCustomTitleDescForListingId(property._id)}>
             Custom Title & Description:
           <svg xmlns="http://www.w3.org/2000/svg" 
               width="18" height="18" 
