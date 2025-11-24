@@ -255,7 +255,7 @@ const [serialNumber, setSerialNumber] = useState(0);
 			Authorization: constants.SHUB_TOKEN,
 		},
 	});
-
+ 
 	async function allZipcodes() {
 		const responseDataAllZips = await userRequest.post('local/all-zipcodes');
 		const allZipcodes = responseDataAllZips.data;	
@@ -267,8 +267,8 @@ const [serialNumber, setSerialNumber] = useState(0);
 	const getAllPartners = async () => {
 		setIsLoading(true)
 		const partnersResponse = await userRequest.get(`local/partners`,
-			{ params: { limit: constants.PAGING_PARTNERS_SIZE, skip: partnersPagingFrom - 1, source:'VT' } },
-		);
+			{ params: { limit: constants.PAGING_PARTNERS_SIZE, skip: partnersPagingFrom - 1, provider:'guesty_channel_api' } },
+		);  
 		setIsLoading(false)
 		//console.log("response:",partnersResponse.data)
 		if (partnersResponse.data) {
@@ -286,7 +286,7 @@ const [serialNumber, setSerialNumber] = useState(0);
 				skip: partnersPagingFrom - 1,
 				pmName: searchInputes.pmName,
 				provider:'guesty_channel_api',
-				source:'VT',
+				//source:'VT',
 				status:filterPropertyStatus 
 			} :
 				{
@@ -294,7 +294,7 @@ const [serialNumber, setSerialNumber] = useState(0);
 					skip: partnersPagingFrom - 1,
 					accountId: searchInputes.accountId,
 				provider:'guesty_channel_api',					
-				source:'VT',
+				//source:'VT',
 				status:filterPropertyStatus
 				} :
 
@@ -302,7 +302,7 @@ const [serialNumber, setSerialNumber] = useState(0);
 				limit: constants.PAGING_PARTNERS_SIZE,
 				skip: partnersPagingFrom - 1,
 				provider:'guesty_channel_api',
-				source:'VT',
+				//source:'VT',
 				status:filterPropertyStatus
 			}
 

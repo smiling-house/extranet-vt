@@ -812,7 +812,7 @@ return (
                 </div>
 
                 <div className="listings-main">
-                    <div className="listings-title">{partner?.pmName ? partner?.pmName : ''} /{partner?.contactName ? partner?.contactName : ''} / AccountID {partner?.accountId ? partner?.accountId : ''}</div>
+                    <div className="listings-title">{partner?.pmName ? partner?.pmName : ''} /{partner?.contactName ? partner?.contactName : ''} / AccountID {partner?.accountId ? partner?.accountId : ''} / channelSource {partner.source}</div>
                     <div className="listings-paging">Displaying  {ListingsPagingFrom}-{ListingsPagingTo} of {totalListings ? totalListings : "?"} Listings</div>
 
 <div className="col-sm-1">
