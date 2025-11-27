@@ -367,16 +367,16 @@ localStorage.setItem('partnerPropertiesUniqueZipcodes', JSON.stringify(partnerPr
 		console.log("see listings for account:", accountId, partner.source);
 		localStorage.setItem("partner", JSON.stringify(partner))
 		localStorage.setItem("property_status_to_filter", property_status_to_filter)
-		if (!partner.offsetRead) {
+		/*if (!partner.offsetRead) {
 			swal({
 				show: true,
 				icon: 'error',
 				title: 'Oops!!',
 				text: "No Data Found on Account ID :" + accountId + ' channel: ' + partner.source
 			})
-		} else {			
+		} else {*/
 			history.push(PATH_LISTINGS, { partner, accountId, source: partner.source });
-		}
+		//}
 
 	};
 
