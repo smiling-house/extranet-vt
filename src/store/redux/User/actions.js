@@ -221,7 +221,8 @@ export const signInEx_CheckPartner = (user, chkRememberMe, callback) => {
 			},
 		});
 		
-		const result = await userRequest.get(`local/partners?accountId=${user?.password}&source=VT`,
+		//&source=VT
+		const result = await userRequest.get(`local/partners?accountId=${user?.password}`,
 			{accountId:user.password, 
 				limit:200, 
 				skip:0,
