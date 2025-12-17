@@ -433,11 +433,11 @@ console.log('params::',params)
 
     //By Jaison 2025 October 06 - START
     if(searchPropertyId !== '') {
-        if(searchPropertyId.length === 24) {
-            params.searchPropertyId = searchPropertyId;
-        } else {
+        if (partner.provider === 'smilinghouse_channel_api') {
             //params.searchPropertyId = `sh${searchPropertyId}`;
             params.searchPropertyId = `sh${searchPropertyId.replace(/^sh/, '')}`;
+        } else {
+            params.searchPropertyId = searchPropertyId;
         }
     } else { 
         delete params.searchPropertyId;
