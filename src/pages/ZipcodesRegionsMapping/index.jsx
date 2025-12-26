@@ -16,6 +16,7 @@ const ZipcodesRegionsMapping = (props) => {
 
     const [zipcodesWithUnmappedRegionsCountries, setZipcodesWithUnmappedRegionsCountries] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
+    const [unmappedTotal, setUnmappedTotal] = useState(0);
 
     const history = useHistory();
     const location = useLocation();    
@@ -38,6 +39,11 @@ const ZipcodesRegionsMapping = (props) => {
 
                 if(response.data.success === true) {
                     setZipcodesWithUnmappedRegionsCountries(response.data.countsByCountry);
+
+const grandTotalUnmappedCount = Object.values(response.data.countsByCountry)
+  .reduce((total, count) => total + count, 0);   
+setUnmappedTotal(grandTotalUnmappedCount);                   
+
                     setIsLoading(false);
                 }
                  
@@ -97,7 +103,7 @@ const columns = [
  
                         <div class="row">
                             <div class="col-12">
-                                <h2>Zipcodes & Regions Mapping</h2>
+                                <h2>Zipcodes & Regions Mapping (Total: {unmappedTotal})</h2>
                                 <p>Mapping zipcodes to regions</p>
                             </div>
                         </div>
