@@ -25,6 +25,10 @@ const ZipcodesRegionsMappingCountry = (props) => {
     const [selectedRegion, setSelectedRegion] = useState(null);
     const [propertyRegion, setPropertyRegion] = useState('unmapped');
 
+   const [selectedPropertyAddress, setSelectedPropertyAddress] = useState(null); 
+   const [selectedPropertyId, setSelectedPropertyId] = useState(null); 
+   const [selectedPropertyTitle, setSelectedPropertyTitle] = useState(null); 
+
     const agentData = JSON.parse( localStorage.getItem('agent') );
     //const history = useHistory();
     //const location = useLocation();   
@@ -69,6 +73,13 @@ const showPopUp = async(listingData) => {
     let response = await userRequest.post(`local/get-zips-data-for-country-zipcode`,
                     { country, zip:listingData.data.address.zipcode },
                 );
+
+if(listingData?.data?.address?.full) {
+    setSelectedPropertyAddress(listingData.data.address.full);
+}   
+
+setSelectedPropertyId(listingData.id);
+setSelectedPropertyTitle(listingData?.data?.title);
 
     setSelectedZipsData(response.data.zipsData)
     setSelectedListing(listingData);
@@ -271,14 +282,29 @@ const columns = [
                     </div>
 
                     <div className="approve-agent-main">
-
                         <div class="row">
-                            <div class="col-6"><h1>Country: {country}</h1></div>
-                            <div class="col-6"><h1>Zipcode: {selectedListing.data.address.zipcode}</h1></div>
+                            <div class="col-6"><h3>Property Id: </h3></div>
+                            <div class="col-6"><h3>{selectedPropertyId}</h3></div>
+                        </div>
+                        <div class="row">
+                            <div class="col-6"><h3>Property Title: </h3></div>
+                            <div class="col-6"><h3>{selectedPropertyTitle}</h3></div>
+                        </div>                        
+                        <div class="row">
+                            <div class="col-6"><h3>Country: </h3></div>
+                            <div class="col-6"><h3>{country}</h3></div>
+                        </div>
+                        <div class="row">
+                            <div class="col-6"><h3>Zipcode: </h3></div>
+                            <div class="col-6"><h3>{selectedListing.data.address.zipcode}</h3></div>
+                        </div>
+                        <div class="row">
+                            <div class="col-6"><h3>Address: </h3></div>
+                            <div class="col-6"><h3>{selectedPropertyAddress}</h3></div>
                         </div>
 
                         <div class="row">
-                            <div class="col-6"><h5>Available Regions</h5></div>
+                            <div class="col-6"><h5>Choose from available regions</h5></div>
                             <div class="col-6">
                                 <select className="form-control" onChange={(e) => handleRegionSelection(e.target.value)}>
                                     <option value="">--Select--</option>
@@ -290,7 +316,7 @@ const columns = [
                         </div>                       
 
                         <div class="row">
-                            <div class="col-6"><label>Property Region:</label></div>
+                            <div class="col-6"><h5>Enter region (If new):</h5></div>
                             <div class="col-6"><input type="text" className="form-control" value={propertyRegion} onChange={(e) => setPropertyRegion(e.target.value)} /></div>
                         </div>
 
