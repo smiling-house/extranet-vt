@@ -86,7 +86,6 @@ const columns = [
                             
 
 ]
-
     return(
         <Layout 
         pageTitle="Mapping Zipcodes & Regions" 
