@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 
 import "../Partners/Admin.scss";
+
 import Layout from "../../components/Layout";
 import constants from "../../Util/constants";
 import axios from "axios";
@@ -30,6 +31,13 @@ const ZipcodesRegionsMappingCountry = (props) => {
    const [selectedPropertyTitle, setSelectedPropertyTitle] = useState(null); 
 
     const agentData = JSON.parse( localStorage.getItem('agent') );
+
+const extranet_vt_logged_in_role = localStorage.getItem('extranet-vt-logged-in-role');
+    const [filterPropertyStatus, setFilterPropertyStatus] = useState('');
+    const filterByPropertyStatus = (event) => {
+        console.log(event.target.value)
+        setFilterPropertyStatus(event.target.value);      
+    }
     //const history = useHistory();
     //const location = useLocation();   
 
@@ -49,7 +57,7 @@ const ZipcodesRegionsMappingCountry = (props) => {
 
                 setIsLoading(true);
                 const response = await userRequest.post(`local/zipcodes-with-unmapped-regions-details-country/${country}`,
-                    {  },
+                    { status: filterPropertyStatus  },
                 );
 
                 if(response.data.success === true) {
@@ -65,7 +73,7 @@ const ZipcodesRegionsMappingCountry = (props) => {
 
     useEffect(() => {                
         fetchZipcodesWithUnmappedRegionsCountry();                
-    }, []); 
+    }, [filterPropertyStatus]); 
 
 
 const showPopUp = async(listingData) => {
@@ -175,11 +183,17 @@ const columns = [
         width: '1fr'
     },
     {
+        id: 'status',
+        name: 'Status',
+        headerStyle: { paddingLeft: '50px', backgroundColor: '#F5F5F2' },
+        width: '1fr'
+    },    
+    {
         id: 'zip',
         name: 'Zipcode',
         headerStyle: { paddingLeft: '50px', backgroundColor: '#F5F5F2' },
         width: '1fr'
-    },
+    },    
     {
         id: 'region',
         name: 'Region',
@@ -208,6 +222,21 @@ const columns = [
                                 <p>Mapping zipcodes to regions</p>
                             </div>
                         </div>
+
+
+{extranet_vt_logged_in_role==='admin' &&
+                    <div className="listings-search-container row">
+                    <div className="col-sm-2">
+                        <label style={{'color':'black'}}><strong>Filter by Status</strong></label>
+                        <select class="form-control" onChange={(e)=>filterByPropertyStatus(e)}>
+                            <option value="">--All--</option>
+                            <option value="Approved">Approved</option>
+                            <option value="Pending">Pending</option>
+                            <option value="Declined">Declined</option>
+                        </select>                        
+                    </div>
+                    </div>
+}                                            
 
 {/* Table starts */}
 
@@ -244,6 +273,11 @@ const columns = [
                                                 <h5 className="cst-cursor" >{item.data.title}</h5>
                                             </td>
 
+
+
+                                            <td>
+                                                <h5 className="cst-cursor" >{item.xdata.status}</h5>
+                                            </td>
 
                                             <td>
                                                 <h5 className="cst-cursor" >{item.data.address.zipcode}</h5>
