@@ -45,7 +45,7 @@ import Popup from "../../components/Popup";
 //import EditPartner from "./EditPartner";  //COMMENTED OUT AS IT IS NOT USED
 import {
     PATH_PARTNERS,
-    PATH_LISTINGS_BP,
+    PATH_LISTINGS,
     PATH_SIGNOUT,
     PATH_LOGIN,   
     APP_DISPLAY_NAME 
@@ -376,7 +376,7 @@ localStorage.setItem('partnerPropertiesUniqueZipcodes', JSON.stringify(partnerPr
                 text: "No Data Found on Account ID :" + accountId + ' channel: ' + partner.source
             })
         } else { */ 
-            history.push(PATH_LISTINGS_BP, { partner, accountId, source: partner.source });
+            history.push(PATH_LISTINGS, { partner, accountId, source: partner.source });
         //}
 
     };

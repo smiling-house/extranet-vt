@@ -74,6 +74,8 @@ const Listingrow = (props) => {
   //Custom Title & Desc
   const { property, fullCalendar, id, agent, agency, partner, xdata, updateXdata, listingAddressFull, listingAddressZipExists, QOD, customTitle, customDesc } = props
 
+  const agentData = JSON.parse( localStorage.getItem('agent') );
+
   console.log('property:::', property)
 
   const [chk, setChk] = useState([])
@@ -85,6 +87,11 @@ const Listingrow = (props) => {
   const [title, setTitle] = useState(xdata.title || property.title)
 
   
+//NEW
+//On all listings pages of VT Extranet, need individual approve button for all properties for easy approving process - https://app.asana.com/1/1200178813358971/project/1208597468828454/task/1212628557835461
+const [currentListingStatus, setCurrentListingStatus] = useState(xdata.status)
+const [currentListingStatusUpdatedBy, setCurrentListingStatusUpdatedBy] = useState(xdata.statusUpdatedBy)
+const [currentListingRegion, setcurrentListingRegion] = useState(xdata.region)
 
 
 
@@ -207,7 +214,8 @@ console.log('NEW REGION:::', response)
           title: response.message,
           //text: `Text`
           })
-                  
+                
+          //currentListingRegion(response.destination)
 
       }
       else if(response.success===true && response.destination === '') {
@@ -278,6 +286,7 @@ console.log('NEW REGION:::', response)
           })
 
           //window.location.reload();
+          setcurrentListingRegion(newRegionFromOpenAI)
     }
     else if(ShubResponse.data.success===false) {
           swal({
@@ -611,6 +620,41 @@ console.log('NEW REGION:::', response)
       picPosition = picIndex % property.pictures?.length;
       picLength = property?.pictures?.length
     }
+
+
+const approveSingleProperty = async(listingId) => {
+
+        const updateListingsData = {'accountId':partner?.accountId,'ids':[listingId], 'status':'Approved', statusUpdatedBy:agentData.firstName}
+
+
+          const ShubResponse = await userRequest.post(constants.SHUB_URL+'/local/listings/update-multiple-listings-status', updateListingsData);  
+
+            if(ShubResponse.data.success === true) {
+
+                swal({
+                    show: true,
+                    icon: 'success',
+                    title: ShubResponse.data.message,
+                    text: ShubResponse.data.message
+                });
+
+setCurrentListingStatus('Approved');
+setCurrentListingStatusUpdatedBy(agentData.firstName);               
+                
+                //setUpdateStatusProcess( updateStatusProcess + 1 ); //No efefct inside useEffect. So added the below line to run the function to refresh page
+                //getAllListings();
+                
+            } else {
+                swal({
+                    show: true,
+                    icon: 'error',
+                    title: ShubResponse.data.message,
+                    text: ShubResponse.data.message
+                })                
+            }          
+
+}    
+    
   //main xdata return here:
   return <>
  
@@ -783,9 +827,9 @@ console.log('NEW REGION:::', response)
 
     </td>
      <td  className="px-4 p-6 ">
-      {xdata.region==='unmapped' ? <span style={{color:'red','font-weight':'bold'}}>unmapped</span> : <span>Mapped</span> }
+      {currentListingRegion==='unmapped' ? <span style={{color:'red','font-weight':'bold'}}>unmapped</span> : <span>Mapped</span> }
 
-      {xdata.region==='unmapped' && extranet_vt_logged_in_role==='admin' &&
+      {currentListingRegion==='unmapped' && extranet_vt_logged_in_role==='admin' &&
       <div>
       {/*<input type="text" value={newRegionFromOpenAI} onChange={ (e)=> setNewRegionFromOpenAI(e.target.value) } />*/}
       <button class="btn btn-primary" onClick={()=>regionLookUpOpenAI(property.address.country, property.address.zipcode)}>Region Lookup</button>
@@ -831,20 +875,29 @@ console.log('NEW REGION:::', response)
     </td>
     <td className="px-4 p-3 ">
       <h4>
-        {xdata.status}
+        {currentListingStatus}
         
-        { (xdata.status==='Declined' && xdata.autodecline===true) &&
+        { (currentListingStatus==='Declined' && xdata.autodecline===true) &&
           <h4 style={{ backgroundColor: "red" }}>Auto Declined</h4>
         }
 
-        { (extranet_vt_logged_in_role==='admin' && xdata.status==='Declined' &&  xdata.declineReason !== '') &&
+        { (extranet_vt_logged_in_role==='admin' && currentListingStatus==='Declined' &&  xdata.declineReason !== '') &&
           <p><i>({xdata.declineReason})</i></p>
         }
 
-        {(extranet_vt_logged_in_role==='admin' && xdata?.statusUpdatedBy != null) &&
-          <div><label><i>Status Updated By:</i></label><i>{xdata.statusUpdatedBy}</i></div>
+        {(extranet_vt_logged_in_role==='admin' && currentListingStatusUpdatedBy != null) &&
+          <div><label><i>Status Updated By:</i></label><i>{currentListingStatusUpdatedBy}</i></div>
         }
       </h4>
+
+{(currentListingStatus?.toLowerCase() !== 'approved' && currentListingRegion !== 'unmapped') && 
+  <Button
+    style={{ fontSize: "15px"}}
+    text="Approve" 
+    onClick={()=>approveSingleProperty(property._id)}
+  />
+}
+
     </td>
     <td className="px-4 p-3">
       <h4>

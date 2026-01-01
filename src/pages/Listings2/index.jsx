@@ -304,7 +304,6 @@ console.log('updateListingsData:::', updateListingsData);
 
             if(ShubResponse.data.success === true) {
 
-
                 swal({
                     show: true,
                     icon: 'success',
