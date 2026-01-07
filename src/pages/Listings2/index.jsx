@@ -156,7 +156,7 @@ const goToPartnersPage = () => {
 
 
 const extranet_vt_logged_in_role = localStorage.getItem('extranet-vt-logged-in-role');
-
+const exchangeRatesData = JSON.parse( localStorage.getItem("exchangeRatesData") );
     const [checkedAll, setCheckedAll] = useState(false);
 
     const [filterPropertyZipcode, setFilterPropertyZipcode] = useState('');
@@ -941,7 +941,30 @@ if(allZipcodes[countryZipKey] !== 'undefined') {
                                             console.log("listing item:",index+1,iteam)
                                             const ApropertyId = iteam.listing?._id
                                             const fullCalendar = iteam.fullCalendar
-//Custom Title & Desc                                      
+//Custom Title & Desc   
+
+let basePriceUSDConverted = '';
+let weekendBasePriceUSDConverted = '';
+let property = iteam.listing
+if(property?.prices?.currency && property.prices.currency !== 'USD') {
+    let pricePurrency = property.prices.currency;
+
+    if(exchangeRatesData?.[pricePurrency]?.conversion_rates) {
+        let conversion_rates = exchangeRatesData[pricePurrency].conversion_rates
+
+        if(property?.prices?.basePrice) {
+            basePriceUSDConverted = Math.round( property.prices.basePrice / conversion_rates)
+        }
+
+        
+        if(property?.prices?.weekendBasePrice) {
+            weekendBasePriceUSDConverted = Math.round( property.prices.weekendBasePrice / conversion_rates)
+        } else {
+            weekendBasePriceUSDConverted = basePriceUSDConverted
+        }      
+    }
+    
+}
                                             return <>
                                                 <tr>
                                                     {<Listingrow
@@ -958,6 +981,8 @@ if(allZipcodes[countryZipKey] !== 'undefined') {
                                                         QOD={iteam.QOD}
                                                         customTitle={iteam.customTitle}
                                                         customDesc={iteam.customDesc}
+                                                        basePriceUSDConverted={basePriceUSDConverted}
+                                                        weekendBasePriceUSDConverted={weekendBasePriceUSDConverted}
                                                     />}
                                                 </tr> 
                                             </>

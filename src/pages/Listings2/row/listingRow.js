@@ -72,9 +72,10 @@ import TextAreaField from "../../../components/TextAreaField/index";
 const Listingrow = (props) => {
 
   //Custom Title & Desc
-  const { property, fullCalendar, id, agent, agency, partner, xdata, updateXdata, listingAddressFull, listingAddressZipExists, QOD, customTitle, customDesc } = props
+  const { property, fullCalendar, id, agent, agency, partner, xdata, updateXdata, listingAddressFull, listingAddressZipExists, QOD, customTitle, customDesc, basePriceUSDConverted, weekendBasePriceUSDConverted } = props
 
   const agentData = JSON.parse( localStorage.getItem('agent') );
+const exchangeRatesData = JSON.parse( localStorage.getItem("exchangeRatesData") );
 
   console.log('property:::', property)
 
@@ -901,9 +902,10 @@ setCurrentListingStatusUpdatedBy(agentData.firstName);
     </td>
     <td className="px-4 p-3">
       <h4>
+
         {renderSpecialCollections()}<br></br><br></br>
-        weekdays: {property?.prices?.basePrice} {property?.prices?.currency}<br></br>
-        weekend:  {property?.prices?.weekendBasePrice || property?.prices?.basePrice} {property?.prices?.currency}<br></br>
+        weekdays: {property?.prices?.basePrice} {property?.prices?.currency} {basePriceUSDConverted && <span>({basePriceUSDConverted} USD)</span>}<br></br>
+        weekend:  {property?.prices?.weekendBasePrice || property?.prices?.basePrice} {property?.prices?.currency} {weekendBasePriceUSDConverted && <span>({weekendBasePriceUSDConverted} USD)</span>}<br></br>
         {property?.prices?.weeklyPriceFactor < 1 && (
           <>
             week discount: {parseInt(100 - property?.prices?.weeklyPriceFactor * 100)}% <br></br>

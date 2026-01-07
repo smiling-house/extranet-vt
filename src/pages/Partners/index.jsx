@@ -201,6 +201,7 @@ const filterByPropertyStatus = (event) => {
 const [serialNumber, setSerialNumber] = useState(0);
 //By Jaison on 2025-04-21 - END	
 
+
 	const inputFileds = {
 		agentName: "",
 		managerLastName: "",
@@ -256,13 +257,6 @@ const [serialNumber, setSerialNumber] = useState(0);
 		},
 	});
  
-	async function allZipcodes() {
-		const responseDataAllZips = await userRequest.post('local/all-zipcodes');
-		const allZipcodes = responseDataAllZips.data;	
-		localStorage.setItem('allZipcodes', JSON.stringify(allZipcodes));
-		console.log('allZipcodes:', allZipcodes)		
-	}
-	allZipcodes();
 
 	const getAllPartners = async () => {
 		setIsLoading(true)
@@ -343,12 +337,48 @@ if(agent_role) {
 	};
 
 
+
+async function allZipcodes() {
+	const responseDataAllZips = await userRequest.post('local/all-zipcodes');
+	const allZipcodes = responseDataAllZips.data;	
+	localStorage.setItem('allZipcodes', JSON.stringify(allZipcodes));
+	console.log('allZipcodes:', allZipcodes)		
+}
+//allZipcodes();
+
+const fetchCurrenciesExchangeRates = async () => {
+	try {
+		//axios.defaults.headers.common["Authorization"] = `Bearer ${jToken}`;
+		const response = await userRequest.get("https://api.villatracker.com/xchange");
+		const exchangeRates = response.data;
+
+		const exchangeRatesData = {}
+
+		if (exchangeRates.length > 0) {
+			exchangeRates.forEach((item, index) => {
+				exchangeRatesData[item.currency_code] = {conversion_rates:item.conversion_rates}
+			});
+		}
+
+		localStorage.setItem("exchangeRatesData", JSON.stringify(exchangeRatesData));
+	}
+	catch (error) {
+		console.error("Error fetching currencies:", error);
+	}
+}
+//fetchCurrenciesExchangeRates();	
+
+
 	useEffect(() => {
 
 		if (partnerLogin) {
 			console.log('partnerLogin: (should see only the PM listings)', partnerLogin, partnerName)
 		}
-		getSearchPartners()
+		getSearchPartners();
+
+	allZipcodes();
+	fetchCurrenciesExchangeRates();
+
 	}, [filterPropertyStatus]);
 
 	useEffect(() => {
