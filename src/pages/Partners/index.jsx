@@ -142,7 +142,7 @@ const showOrHideSideBarMenu=()=> {
 	})
 	const history = useHistory();
 	const location = useLocation();
-	const [editClickedId, seteditClickedId] = useState("")
+	const [editClickedId, setEditClickedId] = useState("")
 	const [editPartnerId, seteditPartnerId] = useState("")
 	const [SelectedPartner, setSelectedPartner] = useState(null);
 	const [selectedRowToEdit, setSelectedRowToEdit] = useState(null);
@@ -464,7 +464,7 @@ localStorage.setItem('partnerPropertiesUniqueZipcodes', JSON.stringify(partnerPr
 	};
 
 	const onEditPartner = (id, selectedPartner) => {
-		seteditClickedId(id)
+		setEditClickedId(id)
 		setSelectedPartnerToEdit(selectedPartner);
 		clearEditMenu();
 		document.body.style.overflow = "hidden";
@@ -475,13 +475,13 @@ localStorage.setItem('partnerPropertiesUniqueZipcodes', JSON.stringify(partnerPr
 	};
 
 	const onAddPartnerSH = () => {
-		seteditClickedId(0)
+		setEditClickedId(0)
 		setSelectedPartnerToEdit(NEW_PARTNER_SH);
 		document.body.style.overflow = "hidden";
 		clearEditMenu();
 	};
 	const onAddPartnerVT = () => {
-		seteditClickedId(0)
+		setEditClickedId(0)
 		setSelectedPartnerToEdit(NEW_PARTNER_VT);
 		document.body.style.overflow = "hidden";
 		clearEditMenu();
@@ -1024,7 +1024,7 @@ localStorage.setItem('partnerPropertiesUniqueZipcodes', JSON.stringify(partnerPr
 													{serialNumber+index+1}
 													</h4></td>
 													<td className="pmName px-4 p-3  text-primary  cst-cursor" ><h4>{item.pmName != null ? item.pmName : ""}</h4></td>
-													<td className="accountId px-4 p-3 text-primary text-decoration-underline cst-cursor"><h4 onClick={() => onEditPartner(item._id, item)}>{item.accountId !== null ? item.accountId : ""}</h4></td>
+													<td className="accountId px-4 p-3 text-primary text-decoration-underline cst-cursor"><h4 onClick={() => onEditPartner(item.accountId, item)}>{item.accountId !== null ? item.accountId : ""}</h4></td>
 
 	<td className="accountId px-4 p-3 text-primary cst-cursor"><h4>{item.source}</h4></td>												
 

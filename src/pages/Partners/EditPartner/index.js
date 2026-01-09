@@ -29,7 +29,9 @@ const EditPartner = (props) => {
   const [filterDataSingle, setfilterDataSingle] = useState(
     partners.filter((iteam) => iteam._id == partner)
   );
-  let selectedChannels = partner.basicChannels
+
+const [selectedChannels, setSelectedChannels] = useState(partner.basicChannels)   ; //let selectedChannels = partner.basicChannels
+
   const [partnerName, setPartnerName] = useState(partner.pmName)
   const [contactName, setContactName] = useState(partner.contactName)
   const [email, setEmail] = useState(partner.email)
@@ -60,7 +62,7 @@ const EditPartner = (props) => {
 
   };
 
-  const handleSaveButton = () => {
+  const handleSaveButton = () => {  
     if (editClickedId) {
       var UpdatePayLoad = {
         accountId: accountID,
@@ -80,19 +82,21 @@ const EditPartner = (props) => {
         "ta_company_markup": "10"
       };
       console.log("UPDATE partner payload:", UpdatePayLoad)
-     
+
       AuthService.updatePartner(UpdatePayLoad.accountId, UpdatePayLoad, partner.source)
         .then((response) => {
-          console.log(response);
-          swal({
-            show: true,
-            icon: "success",
-            title: "Success",
-            text: response.message,
-          });
-          setTimeout(() => {
-            onClose()();
-          }, 1000);
+console.log('response:::', response)
+          if(response?.data?.success && response.data.success===true) {
+            swal({
+              show: true,
+              icon: "success",
+              title: "Success",
+              text: response?.data?.message || '',
+            });
+            setTimeout(() => {
+              onClose()();
+            }, 1000);
+          }
         })
         .catch((e) => {
           swal({
@@ -111,26 +115,40 @@ const EditPartner = (props) => {
         email: email,
         bearerToken: token,
         accountId: accountID,
-        channels: selectedChannels.map((item) => item).join(","),
+        //channels: selectedChannels.map((item) => item).join(","),
+        channels: selectedChannels,
       };
       console.log("NEW partner payload:", addPayLoad)
-      
+
       AuthService.addNewPartner(addPayLoad)
         .then((response) => {
-          console.log(response.message);
-          swal({
-            show: true,
-            icon: "success",
-            title: "Success",
-            text: response.message,
-          });
-          setTimeout(() => {
-            onClose()();
-          }, 1000);
+          
+          if(response?.data?.success && response.data.success===true) {
+            
+              swal({
+                show: true,
+                icon: "success",
+                title: "Success",
+                text: response?.data?.message || '',
+              });
+
+              setTimeout(() => {
+                onClose()();
+              }, 1000);
+           } else {
+              swal({
+                show: true,
+                icon: "error",
+                title: "Error",
+                text: response?.data?.message || '',
+              });
+
+                setTimeout(() => {
+                  onClose()();
+                }, 1000);
+           }
         })
         .catch((e) => {
-          console.log(e, "jsdjsdjsjdk");
-
           swal({
             show: true,
             icon: "error",
@@ -182,8 +200,8 @@ const EditPartner = (props) => {
         email: email,
         token: token,
         accountId: accountID,
-        channels: selectedChannels.map((item) => item).join(","),
-
+        //channels: selectedChannels.map((item) => item).join(","),
+        channels: selectedChannels,
         /*
 {
   "email":"yavgar@gmail.com",
