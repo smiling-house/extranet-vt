@@ -14,7 +14,7 @@ import getInTouchIcon from "../../assets/icons/menu/get-in-touch.png";
 import faqIcon from "../../assets/icons/menu/faq.png";
 import adminIcon from "../../assets/icons/menu/admin.png";
 import { AiOutlineMenu, AiOutlineClose, AiOutlineHome, AiOutlineUser, AiOutlineLogout } from "react-icons/ai";
-import { FiUsers, FiUserCheck, FiCalendar, FiMap, FiSearch, FiSettings, FiExternalLink } from "react-icons/fi";
+import { FiUsers, FiUserCheck, FiCalendar, FiMap, FiSearch, FiSettings, FiExternalLink, FiCopy } from "react-icons/fi";
 import { MdDashboard, MdBusiness, MdLocationOn, MdVerifiedUser } from "react-icons/md";
 import { getStorageValue } from "../../Util/general";
 import "./sidebar.scss";
@@ -45,7 +45,8 @@ import {
   PATH_EPS_EPARTNER_RESERVATIONS_PROPERTIES,
   APP_DISPLAY_NAME,
   PATH_VERIFY_COMPARE_NEW_PMS,
-  PATH_ZIPS_REGIONS_MAPPING
+  PATH_ZIPS_REGIONS_MAPPING,
+  PATH_DUPLICATED_LISTINGS
 } from "../../Util/constants";
 
 const Sidebar = ({ activeMenu, setActiveMenu, handleToggleMenu, showOrHideSideBarMenu }) => {
@@ -90,6 +91,7 @@ const Sidebar = ({ activeMenu, setActiveMenu, handleToggleMenu, showOrHideSideBa
           { text: "External Partners", path: PATH_EPARTNERS, icon: <FiExternalLink size={18} /> },
           { text: "EPS Reservations", path: PATH_EPS_EPARTNER_RESERVATIONS_PROPERTIES, icon: <FiCalendar size={18} /> },
           { text: "Listings", path: PATH_LISTINGS, icon: <FiUsers size={18} /> },
+          { text: "Duplicated Listings", path: PATH_DUPLICATED_LISTINGS, icon: <FiCopy size={18} /> },
           { text: "Tasks", path: PATH_TASKS, icon: <FiSettings size={18} /> },
           { text: "VT Reservations", path: PATH_RESERVATIONS, icon: <FiCalendar size={18} /> },
           { text: "Verify New PMs", path: PATH_VERIFY_COMPARE_NEW_PMS, icon: <MdVerifiedUser size={18} /> },

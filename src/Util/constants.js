@@ -12,6 +12,7 @@ export const PATH_SHUB = '/shub';
 export const PATH_MAP = '/map';
 export const PATH_CLIENTS = '/clients';
 export const PATH_LISTINGS = '/listings';
+export const PATH_DUPLICATED_LISTINGS = '/duplicated-listings';
 export const PATH_TASKS = '/tasks';
 export const PATH_RESERVATIONS = '/reservations';
 export const PATH_FAVORITES = '/favorites';

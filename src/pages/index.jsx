@@ -13,6 +13,8 @@ import Profile from "./Profile/Profile";
 import AgencyProfile from "./AgencyProfile/AgencyProfile";
 import Listings from "./Listings2";
 
+import DuplicatedListings from "./DuplicatedListings";
+
 import Tasks from "./Tasks";
 import Reservations from "./Reservations";
 import Partners from "./Partners";
@@ -47,6 +49,7 @@ import {
   PATH_ADMIN,
   PATH_ADMIN_LOGIN,
   PATH_LISTINGS,
+  PATH_DUPLICATED_LISTINGS,
   PATH_TASKS,
   PATH_COLLECTIONS,
   PATH_FAQ,
@@ -280,6 +283,17 @@ const showOrHideSideBarMenu=()=> {
           <Listings
             agent={agent}
             agency={agency}
+          />
+        </Route>
+        <Route path={[PATH_DUPLICATED_LISTINGS]}>
+          <DuplicatedListings
+            token={token}
+            agency={agency}
+            agent={agent}
+            screenSize={screenSize}
+            activeMenu={activeMenu}
+            handleToggleMenu={handleToggleMenu}
+            setActiveMenu={setActiveMenu}
           />
         </Route>
         <Route path={[PATH_LISTINGS_BP]}>
