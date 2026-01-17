@@ -390,7 +390,7 @@ const agentLoggedIn = JSON.parse( localStorage.getItem('agent') );
             accountId,
             limit: constants.PAGING_LISTING_SIZE, 
             skip: clientPagingFrom - 1,
-            sortBy: 'data.nickname:1',
+            sortBy: 'data.prices.basePrice:-1', //'data.nickname:1'
     }
 
 console.log('params::',params) 
