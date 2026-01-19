@@ -13,6 +13,7 @@ import RebuildImageHashesPopup from "./RebuildImageHashesPopup";
 import "./DuplicatedListings.scss";
 
 const DISABLE_PROPERTY_ENDPOINT = "/disable_property";
+const BATCH_DISABLE_PROPERTY_ENDPOINT = "/listings_batchdisable";
 
 const DuplicatedListings = (props) => {
   const { token, agency, agent, screenSize, activeMenu, handleToggleMenu, setActiveMenu } = props;
@@ -25,8 +26,14 @@ const DuplicatedListings = (props) => {
   const [duplicatedListings, setDuplicatedListings] = useState(null);
   const [isRebuildPopupOpen, setIsRebuildPopupOpen] = useState(false);
 
-  const [skip, setSkip] = useState(0);
+  const [activeTab, setActiveTab] = useState("titleAddress");
+  const [skipTitleAddress, setSkipTitleAddress] = useState(0);
+  const [skipImages, setSkipImages] = useState(0);
   const [limit] = useState(20);
+
+  const [selectedIdsTitleAddress, setSelectedIdsTitleAddress] = useState(() => new Set());
+  const [selectedIdsImages, setSelectedIdsImages] = useState(() => new Set());
+  const [isBatchDisabling, setIsBatchDisabling] = useState(false);
 
   const [disablingIds, setDisablingIds] = useState(() => new Set());
   const [disabledIds, setDisabledIds] = useState(() => new Set());
@@ -51,13 +58,18 @@ const DuplicatedListings = (props) => {
     setToastTimerId(timerId);
   };
 
+  const effectiveSkip = activeTab === "images" ? skipImages : skipTitleAddress;
+
+  const selectedIds = activeTab === "images" ? selectedIdsImages : selectedIdsTitleAddress;
+  const selectedCount = selectedIds.size;
+
   const loadDuplicates = async () => {
     setIsLoading(true);
     setLoadError(null);
     try {
       const res = await api.get("/get_duplicated_listings", {
         params: {
-          skip,
+          skip: effectiveSkip,
           limit,
         },
         headers: {
@@ -92,17 +104,107 @@ const DuplicatedListings = (props) => {
     return () => {
       cancelled = true;
     };
-  }, [api, skip, limit]);
+  }, [api, effectiveSkip, limit]);
 
-  const totalCount = duplicatedListings?.totalCount || 0;
-  const groups = Array.isArray(duplicatedListings?.groups) ? duplicatedListings.groups : [];
-  const currentPage = Math.floor(skip / (limit || 1));
+  const titleAddressTotalCount = duplicatedListings?.totalCount || 0;
+  const titleAddressGroups = Array.isArray(duplicatedListings?.groups) ? duplicatedListings.groups : [];
 
-  const showingFrom = totalCount > 0 ? skip + 1 : 0;
-  const showingTo = Math.min(skip + limit, totalCount);
+  const imageTotalCount = duplicatedListings?.originalHashTotalCount || 0;
+  const imageGroups = Array.isArray(duplicatedListings?.originalHashGroups)
+    ? duplicatedListings.originalHashGroups
+    : [];
+
+  const totalCount = activeTab === "images" ? imageTotalCount : titleAddressTotalCount;
+  const groups = activeTab === "images" ? imageGroups : titleAddressGroups;
+  const currentPage = Math.floor(effectiveSkip / (limit || 1));
+
+  const showingFrom = totalCount > 0 ? effectiveSkip + 1 : 0;
+  const showingTo = Math.min(effectiveSkip + limit, totalCount);
 
   const onChangePage = (pageNumber) => {
-    setSkip((pageNumber || 0) * limit);
+    const nextSkip = (pageNumber || 0) * limit;
+    if (activeTab === "images") {
+      setSkipImages(nextSkip);
+    } else {
+      setSkipTitleAddress(nextSkip);
+    }
+  };
+
+  const onChangeTab = (nextTab) => {
+    setActiveTab(nextTab);
+  };
+
+  const toggleSelected = (listingId) => {
+    if (!listingId) return;
+
+    const setSelected = activeTab === "images" ? setSelectedIdsImages : setSelectedIdsTitleAddress;
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(listingId)) {
+        next.delete(listingId);
+      } else {
+        next.add(listingId);
+      }
+      return next;
+    });
+  };
+
+  const clearSelected = () => {
+    if (activeTab === "images") {
+      setSelectedIdsImages(new Set());
+    } else {
+      setSelectedIdsTitleAddress(new Set());
+    }
+  };
+
+  const disableSelected = async () => {
+    const ids = Array.from(selectedIds);
+    if (!ids.length || isBatchDisabling) return;
+
+    const confirmed = await swal({
+      title: "Disable selected properties?",
+      text: `This will disable ${ids.length} listing(s).`,
+      icon: "warning",
+      buttons: ["Cancel", "Disable"],
+      dangerMode: true,
+    });
+
+    if (!confirmed) return;
+
+    setIsBatchDisabling(true);
+    try {
+      await api.post(BATCH_DISABLE_PROPERTY_ENDPOINT, {
+        ids,
+        listingIds: ids,
+      });
+
+      setDisabledIds((prev) => {
+        const next = new Set(prev);
+        ids.forEach((id) => next.add(id));
+        return next;
+      });
+
+      clearSelected();
+
+      swal({
+        icon: "success",
+        title: "Disabled",
+        text: `Disabled ${ids.length} listing(s).`,
+      });
+
+      const data = await loadDuplicates();
+      if (data?.success) {
+        showToast("List refreshed");
+      }
+    } catch (err) {
+      swal({
+        icon: "error",
+        title: "Batch disable failed",
+        text: err?.message || "Failed to disable selected listings.",
+      });
+    } finally {
+      setIsBatchDisabling(false);
+    }
   };
 
   const onCopy = async (text) => {
@@ -223,7 +325,8 @@ const DuplicatedListings = (props) => {
             </div>
             <div className="intro-meta">
               <div className="meta-pill">
-                Showing {showingFrom}–{showingTo} of {totalCount}
+                {activeTab === "images" ? "Image duplicates" : "Title & address duplicates"}: Showing {showingFrom}–
+                {showingTo} of {totalCount}
               </div>
 
               <div className="intro-actions">
@@ -261,8 +364,45 @@ const DuplicatedListings = (props) => {
 
           <div className="groups-card">
             <div className="groups-header">
-              <h5>Duplicate Groups</h5>
+              <div className="groups-header-left">
+                <h5>Duplicate Groups</h5>
+                <div className="duplicates-tabs" role="tablist" aria-label="Duplicate type">
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={activeTab === "titleAddress"}
+                    className={`tab-btn ${activeTab === "titleAddress" ? "active" : ""}`}
+                    onClick={() => onChangeTab("titleAddress")}
+                    disabled={isLoading}
+                  >
+                    Title & Address ({titleAddressTotalCount})
+                  </button>
+
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={activeTab === "images"}
+                    className={`tab-btn ${activeTab === "images" ? "active" : ""}`}
+                    onClick={() => onChangeTab("images")}
+                    disabled={isLoading}
+                  >
+                    Image ({imageTotalCount})
+                  </button>
+                </div>
+              </div>
               <div className="paging-wrap">
+                <button
+                  type="button"
+                  className="batch-disable-btn"
+                  onClick={disableSelected}
+                  disabled={selectedCount === 0 || isLoading || isBatchDisabling}
+                  title={selectedCount === 0 ? "Select one or more listings" : "Disable selected listings"}
+                >
+                  <FiSlash style={{ marginRight: 8 }} />
+                  {isBatchDisabling ? "Disabling..." : "Disable selected"}
+                  {selectedCount ? <span className="batch-disable-count">{selectedCount}</span> : null}
+                </button>
+
                 {totalCount > limit && (
                   <Paging
                     perPage={limit}
@@ -276,7 +416,9 @@ const DuplicatedListings = (props) => {
 
             <div className="groups-body">
               {!isLoading && groups.length === 0 && (
-                <div className="empty-state">No duplicated listings found.</div>
+                <div className="empty-state">
+                  {activeTab === "images" ? "No image duplicates found." : "No title/address duplicates found."}
+                </div>
               )}
 
               {groups.map((group, groupIndex) => {
@@ -304,9 +446,42 @@ const DuplicatedListings = (props) => {
                       {group.map((listing) => {
                         const isDisabling = disablingIds.has(listing.id);
                         const isDisabled = disabledIds.has(listing.id);
+                        const pmName = listing?.pmName;
+                        const isSelected = selectedIds.has(listing.id);
 
                         return (
-                          <div className="property-card" key={listing.id}>
+                          <div
+                            className={`property-card ${isSelected ? "selected" : ""}`}
+                            key={listing.id}
+                            role="button"
+                            tabIndex={0}
+                            onClick={() => toggleSelected(listing.id)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter" || e.key === " ") {
+                                e.preventDefault();
+                                toggleSelected(listing.id);
+                              }
+                            }}
+                            aria-pressed={isSelected}
+                            title={isSelected ? "Click to unselect" : "Click to select"}
+                          >
+                            {isSelected && (
+                              <div className="selected-indicator" aria-hidden="true">
+                                <FiCheckCircle size={18} />
+                              </div>
+                            )}
+                            {activeTab === "images" && listing?.imageUrl && (
+                              <div className="prop-thumb" title="Listing image">
+                                <img
+                                  src={listing.imageUrl}
+                                  alt={listing.title ? `${listing.title} thumbnail` : "Listing thumbnail"}
+                                  loading="lazy"
+                                  onError={(e) => {
+                                    e.currentTarget.style.display = "none";
+                                  }}
+                                />
+                              </div>
+                            )}
                             <div className="property-header">
                               <div style={{ minWidth: 0 }}>
                                 <div className="prop-title">{listing.title || "Untitled"}</div>
@@ -355,6 +530,10 @@ const DuplicatedListings = (props) => {
                               </div>
                               <div className="line"><strong>Id:</strong> {listing.id}</div>
                               <div className="line"><strong>Source:</strong> {listing.source}</div>
+                              {listing?.channelSource && (
+                                <div className="line"><strong>Channel Source:</strong> {listing.channelSource}</div>
+                              )}
+                              {pmName && <div className="line"><strong>PM Name:</strong> {pmName}</div>}
                               <div className="line"><strong>Account:</strong> {listing.accountId}</div>
                               <div className="line"><strong>Region:</strong> {listing.region || "-"}</div>
                               <div className="line address">{listing.fullAddress}</div>
@@ -364,7 +543,10 @@ const DuplicatedListings = (props) => {
                               <button
                                 type="button"
                                 className={`btn ${isDisabled ? "btn-disabled" : "btn-disable"}`}
-                                onClick={() => disableProperty(listing)}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  disableProperty(listing);
+                                }}
                                 disabled={isDisabled || isDisabling}
                                 title={isDisabled ? "Already disabled" : "Disable this property"}
                               >
@@ -375,7 +557,10 @@ const DuplicatedListings = (props) => {
                               <button
                                 type="button"
                                 className="btn btn-copy"
-                                onClick={() => onCopy(listing.id)}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onCopy(listing.id);
+                                }}
                               >
                                 <FiCopy style={{ marginRight: 6 }} />
                                 Copy ID

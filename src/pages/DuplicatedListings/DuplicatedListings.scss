@@ -135,6 +135,49 @@
       padding: 1rem 1.25rem;
       border-bottom: 1px solid #e5e7eb;
 
+      .groups-header-left {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        min-width: 0;
+      }
+
+      .duplicates-tabs {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+      }
+
+      .tab-btn {
+        border: 1px solid #e5e7eb;
+        background: #ffffff;
+        color: #374151;
+        border-radius: 999px;
+        padding: 0.25rem 0.6rem;
+        font-size: 0.92rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: background 0.12s ease, border-color 0.12s ease, transform 0.12s ease;
+      }
+
+      .tab-btn:hover:not(:disabled) {
+        background: #f3f4f6;
+        transform: translateY(-1px);
+      }
+
+      .tab-btn:disabled {
+        opacity: 0.65;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .tab-btn.active {
+        background: rgba(16, 65, 9, 0.1);
+        border-color: rgba(16, 65, 9, 0.35);
+        color: #104109;
+      }
+
       h5 {
         margin: 0;
         color: #374151;
@@ -144,6 +187,57 @@
       .paging-wrap {
         display: flex;
         align-items: center;
+        gap: 0.9rem;
+        flex-wrap: wrap;
+      }
+
+      .batch-disable-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.35rem;
+        border-radius: 10px;
+        padding: 0.5rem 0.85rem;
+        font-weight: 700;
+        font-size: 0.95rem;
+        cursor: pointer;
+        border: 1px solid rgba(185, 28, 28, 0.35);
+        background: #fff;
+        color: #b91c1c;
+        transition: background 0.12s ease, transform 0.12s ease;
+      }
+
+      .batch-disable-btn:hover:not(:disabled) {
+        background: rgba(185, 28, 28, 0.06);
+        transform: translateY(-1px);
+      }
+
+      .batch-disable-btn:active:not(:disabled) {
+        transform: translateY(0);
+      }
+
+      .batch-disable-btn:disabled {
+        cursor: not-allowed;
+        opacity: 0.6;
+        background: #f3f4f6;
+        color: #6b7280;
+        border-color: #e5e7eb;
+      }
+
+      .batch-disable-count {
+        margin-left: 0.35rem;
+        min-width: 26px;
+        height: 22px;
+        padding: 0 8px;
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.85rem;
+        font-weight: 800;
+        background: rgba(185, 28, 28, 0.08);
+        border: 1px solid rgba(185, 28, 28, 0.18);
+        color: #b91c1c;
       }
     }
 
@@ -173,6 +267,7 @@
           font-weight: 600;
           color: #111827;
           margin-bottom: 0.25rem;
+          font-size: 1.08rem;
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -180,7 +275,7 @@
 
         .sub {
           color: #6b7280;
-          font-size: 0.85rem;
+          font-size: 0.98rem;
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -198,7 +293,7 @@
           color: #0369a1;
           padding: 0.25rem 0.55rem;
           border-radius: 999px;
-          font-size: 0.75rem;
+          font-size: 0.9rem;
           font-weight: 600;
           border: 1px solid #bae6fd;
         }
@@ -216,6 +311,8 @@
       grid-auto-flow: column;
       gap: 0.75rem;
       overflow-x: auto;
+      overflow-y: visible;
+      padding-top: 6px;
       padding-bottom: 0.25rem;
       /* 4 visible cards at a time (3 gaps * 0.75rem = 2.25rem) */
       grid-auto-columns: calc((100% - 2.25rem) / 4);
@@ -227,6 +324,59 @@
         border-radius: 12px;
         padding: 0.9rem;
         box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+        position: relative;
+        cursor: pointer;
+        transition: border-color 0.12s ease, box-shadow 0.12s ease, transform 0.12s ease;
+
+        &:hover {
+          border-color: rgba(16, 65, 9, 0.28);
+          box-shadow: 0 6px 14px rgba(0, 0, 0, 0.08);
+          transform: translateY(-1px);
+        }
+
+        &:focus {
+          outline: none;
+          box-shadow: 0 0 0 3px rgba(16, 65, 9, 0.16);
+          border-color: rgba(16, 65, 9, 0.35);
+        }
+
+        &.selected {
+          border-color: rgba(16, 65, 9, 0.55);
+          box-shadow: 0 0 0 3px rgba(16, 65, 9, 0.14);
+          background: rgba(16, 65, 9, 0.03);
+        }
+
+        .selected-indicator {
+          position: absolute;
+          top: 10px;
+          right: 10px;
+          width: 28px;
+          height: 28px;
+          border-radius: 999px;
+          background: rgba(16, 65, 9, 0.92);
+          color: #fff;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border: 1px solid rgba(255, 255, 255, 0.22);
+        }
+
+        .prop-thumb {
+          width: 100%;
+          height: 120px;
+          border-radius: 10px;
+          overflow: hidden;
+          background: #f3f4f6;
+          border: 1px solid #e5e7eb;
+          margin-bottom: 0.7rem;
+
+          img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+          }
+        }
 
         .property-header {
           display: flex;
@@ -237,7 +387,7 @@
           .prop-title {
             font-weight: 600;
             color: #111827;
-            font-size: 1.02rem;
+            font-size: 1.18rem;
             line-height: 1.2;
           }
 
@@ -252,7 +402,7 @@
 
         .prop-meta {
           color: #6b7280;
-          font-size: 0.9rem;
+          font-size: 1.02rem;
           line-height: 1.35;
           margin-bottom: 0.75rem;
 
@@ -277,7 +427,7 @@
             gap: 0.4rem;
             padding: 0.35rem 0.6rem;
             border-radius: 999px;
-            font-size: 0.82rem;
+            font-size: 0.92rem;
             font-weight: 700;
             border: 1px solid transparent;
             user-select: none;
@@ -316,6 +466,10 @@
           display: flex;
           gap: 0.5rem;
           align-items: center;
+
+          .btn {
+            cursor: pointer;
+          }
 
           .btn {
             border-radius: 8px;

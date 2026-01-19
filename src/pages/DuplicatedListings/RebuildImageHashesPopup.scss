@@ -52,6 +52,18 @@
   padding: 16px;
 }
 
+.reh-note {
+  border: 1px solid rgba(2, 132, 199, 0.28);
+  background: rgba(2, 132, 199, 0.08);
+  color: #0c4a6e;
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-weight: 700;
+  font-size: 0.92rem;
+  line-height: 1.35;
+  margin-bottom: 10px;
+}
+
 .reh-row {
   display: flex;
   flex-direction: column;
@@ -145,6 +157,65 @@
   color: #374151;
   font-weight: 700;
   font-size: 0.9rem;
+}
+
+.reh-log {
+  margin-top: 12px;
+}
+
+.reh-log-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.reh-log-title {
+  font-weight: 800;
+  color: #111827;
+}
+
+.reh-log-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.reh-log-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #374151;
+  font-weight: 700;
+}
+
+.reh-log-box {
+  border: 1px solid #e5e7eb;
+  background: #0b1020;
+  color: #e5e7eb;
+  border-radius: 10px;
+  padding: 10px;
+  height: 190px;
+  overflow: auto;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.reh-log-line {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.reh-log-empty {
+  color: #9ca3af;
+}
+
+.reh-btn-sm {
+  padding: 6px 10px;
+  font-size: 12px;
 }
 
 .reh-errors {
