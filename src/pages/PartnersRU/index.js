@@ -503,6 +503,9 @@ localStorage.setItem('partnerPropertiesUniqueZipcodes', JSON.stringify(partnerPr
         }, {
             name: 'DECLINED',
             width: '150px'
+        },{
+            name: 'UNMAPPED',
+            width: '150px'
         }, {
             name: 'Updated at',
             width: '300px'
@@ -1010,6 +1013,8 @@ localStorage.setItem('partnerPropertiesUniqueZipcodes', JSON.stringify(partnerPr
 <td className="SH provider px-4 p-3 text-primary  cst-cursor"><h4>{(Object.prototype.hasOwnProperty.call(item, 'declined')) && item.declined?.length}</h4></td>
 */}
 <td className="SH provider px-4 p-3 text-primary  cst-cursor"><h4 onClick={() => GoToPartnerListings(item, item.accountId, 'Declined')}>{item.declined_properties_count}</h4></td>
+
+<td className="SH provider px-4 p-3 text-primary  cst-cursor"><h4 onClick={() => GoToPartnerListings(item, item.accountId, 'unmapped')}>{item.declined_properties_count}</h4></td>
 
 <td className="Updated px-4 p-3"><h4>{item.updatedAt !== null && item.updatedAt !== "" ? item.updatedAt.slice(0, 10) : ""}</h4></td>
                                             </tr >
