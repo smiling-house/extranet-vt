@@ -31,7 +31,7 @@ const ZipcodesRegionsMapping = (props) => {
 
         const fetchZipcodesWithUnmappedRegionsCountries = async () => {
             try {
-                
+
                 setIsLoading(true);
                 const response = await userRequest.post(`local/zipcodes-with-unmapped-regions-countries`,
                     { params: {} },
@@ -39,14 +39,15 @@ const ZipcodesRegionsMapping = (props) => {
 
                 if(response.data.success === true) {
                     setZipcodesWithUnmappedRegionsCountries(response.data.countsByCountry);
-
+console.log('response.data.countsByCountry:::', response.data.countsByCountry);
+/*
 const grandTotalUnmappedCount = Object.values(response.data.countsByCountry)
   .reduce((total, count) => total + count, 0);   
 setUnmappedTotal(grandTotalUnmappedCount);                   
-
+*/
                     setIsLoading(false);
                 }
-                 
+
             } catch (error) {
                 console.error('Error fetching properties with unmapped regions:', error);
             }
@@ -54,7 +55,7 @@ setUnmappedTotal(grandTotalUnmappedCount);
 
 
     useEffect(() => {                
-        fetchZipcodesWithUnmappedRegionsCountries();                
+        fetchZipcodesWithUnmappedRegionsCountries();        
     }, []); 
 
 
@@ -64,7 +65,6 @@ const GoToCountryPage = async(country) => {
 
 
 const columns = [
-   
     {
         id: 'Sl_No',
         name: 'Sl No:',
@@ -82,9 +82,7 @@ const columns = [
         name: 'Unmapped count',
         headerStyle: { paddingLeft: '50px', backgroundColor: '#F5F5F2' },
         width: '1fr'
-    },   
-                            
-
+    },
 ]
     return(
         <Layout 
@@ -127,20 +125,19 @@ const columns = [
                                         </tr>
                                     </thead>
                                     <tbody>
-                                                                                
 
-                                        {Object.entries(zipcodesWithUnmappedRegionsCountries).map(([country, unmappedCount], index) => (
+                                        {zipcodesWithUnmappedRegionsCountries.map((item, index) => (
                                         <tr key={index}>
                                             <td>
                                                 <h5>{index+1}</h5>
                                             </td>
 
-                                            <td>
-                                                <h5 className="cst-cursor" onClick={() => GoToCountryPage(country)}>{country}</h5>
+                                            <td> 
+                                                <h5 className="cst-cursor" onClick={() => GoToCountryPage(item.country)}>{item.country}</h5>
                                             </td>
 
                                             <td>
-                                                <h5 className="cst-cursor" onClick={() => GoToCountryPage(country)}>{unmappedCount}</h5>
+                                                <h5 className="cst-cursor" onClick={() => GoToCountryPage(item.country)}>{item.count}</h5>
                                             </td>
 
                                         </tr>

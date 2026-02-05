@@ -70,7 +70,6 @@ const extranet_vt_logged_in_role = localStorage.getItem('extranet-vt-logged-in-r
             }
         };
 
-
     useEffect(() => {                
         fetchZipcodesWithUnmappedRegionsCountry();                
     }, [filterPropertyStatus]); 
