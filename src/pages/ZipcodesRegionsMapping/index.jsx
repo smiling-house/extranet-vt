@@ -32,19 +32,39 @@ const ZipcodesRegionsMapping = (props) => {
         const fetchZipcodesWithUnmappedRegionsCountries = async () => {
             try {
 
-                setIsLoading(true);
+                setIsLoading(true); 
                 const response = await userRequest.post(`local/zipcodes-with-unmapped-regions-countries`,
                     { params: {} },
                 );
 
                 if(response.data.success === true) {
-                    setZipcodesWithUnmappedRegionsCountries(response.data.countsByCountry);
-console.log('response.data.countsByCountry:::', response.data.countsByCountry);
-/*
-const grandTotalUnmappedCount = Object.values(response.data.countsByCountry)
-  .reduce((total, count) => total + count, 0);   
-setUnmappedTotal(grandTotalUnmappedCount);                   
-*/
+                    
+
+const data = response.data.countsByCountry;
+
+const dataWithTotals = data.map(item => {
+  const totalCount =
+    item.approvedCount +
+    item.declinedCount +
+    item.pendingCount;
+
+  return {
+    ...item,
+    totalCount
+  };
+});
+
+console.log('dataWithTotals:::', dataWithTotals)
+setZipcodesWithUnmappedRegionsCountries(dataWithTotals);
+
+      
+const grandTotal = dataWithTotals.reduce(
+  (sum, item) => sum + item.totalCount,
+  0
+);
+
+setUnmappedTotal(grandTotal)
+
                     setIsLoading(false);
                 }
 
@@ -137,7 +157,8 @@ const columns = [
                                             </td>
 
                                             <td>
-                                                <h5 className="cst-cursor" onClick={() => GoToCountryPage(item.country)}>{item.count}</h5>
+                                                <h5 className="cst-cursor" onClick={() => GoToCountryPage(item.country)}>{item.totalCount}</h5>
+                                                <h6>(Approved: {item.approvedCount}, Declined: {item.declinedCount}, Pending: {item.pendingCount})</h6>
                                             </td>
 
                                         </tr>
