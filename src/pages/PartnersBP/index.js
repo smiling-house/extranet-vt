@@ -192,7 +192,6 @@ const filterByPropertyStatus = (event) => {
 }
 */
 
-
     const [filterPropertyStatus, setFilterPropertyStatus] = useState('');
     const filterByPropertyStatus = (event) => {
         console.log(event.target.value)
@@ -279,7 +278,7 @@ const [serialNumber, setSerialNumber] = useState(0);
         } else { console.log("error on reading partners api from vthub/local/partners-ex") }
     };
     const getSearchPartners = async () => {
-
+ 
         setIsLoading(true)
         const params = (searchInputes.pmName !== '' || searchInputes.accountId !== '') ?
             (searchInputes.pmName !== '') ? {
