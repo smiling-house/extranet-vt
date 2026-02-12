@@ -191,6 +191,10 @@ const saveCustomTitleDescription = async() => {
   const extranet_vt_logged_in_role = localStorage.getItem('extranet-vt-logged-in-role');
 
   const [newRegionFromOpenAI, setNewRegionFromOpenAI] =useState('');
+const [totalUnmapped, setTotalUnmapped] = useState('');
+
+const [unmappedLabel, setUnmappedLabel] = useState('unmapped');
+
   async function regionLookUpOpenAI(country, zipcode) {
 
     setNewRegionFromOpenAI('')
@@ -208,7 +212,9 @@ console.log('NEW REGION:::', response)
         console.log('NEW REGION:::', response.destination);
         setNewRegionFromOpenAI(response.destination);
 
-          
+        setTotalUnmapped(response.totalUnmapped);
+        setUnmappedLabel(`unmapped (${response.totalUnmapped})`);
+
           swal({
           show: true,
           icon: 'success',
@@ -828,7 +834,7 @@ setCurrentListingStatusUpdatedBy(agentData.firstName);
 
     </td>
      <td  className="px-4 p-6 ">
-      {currentListingRegion==='unmapped' ? <span style={{color:'red','font-weight':'bold'}}>unmapped</span> : <span>Mapped</span> }
+      {currentListingRegion==='unmapped' ? <span style={{color:'red','font-weight':'bold'}}>{unmappedLabel}</span> : <span>Mapped</span> }
 
       {currentListingRegion==='unmapped' && extranet_vt_logged_in_role==='admin' &&
       <div>
@@ -837,9 +843,9 @@ setCurrentListingStatusUpdatedBy(agentData.firstName);
       
       {newRegionFromOpenAI &&
       <div>
-      <button class="btn btn-success" onClick={()=>saveNewRegionFromOpenAI(property.address.country, property.address.zipcode, property._id)}>Update Single</button> 
+      <button class="btn btn-success" onClick={()=>saveNewRegionFromOpenAI(property.address.country, property.address.zipcode, property._id)}>Update single</button> 
 
-      <button class="btn btn-primary" onClick={()=>saveNewRegionFromOpenAI(property.address.country, property.address.zipcode)}>Update All</button> 
+      <button class="btn btn-primary" onClick={()=>saveNewRegionFromOpenAI(property.address.country, property.address.zipcode)}>Update all with the same zipcode</button> 
       </div>
       }
         

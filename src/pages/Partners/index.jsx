@@ -111,7 +111,6 @@ const Partners = (props) => {
 
 
 const dispatch = useDispatch();	
-localStorage.removeItem('property_status_to_filter');
 
 
 const [showSideBarMenu, setShowSideBarMenu] = useState(false);
@@ -158,19 +157,27 @@ const showOrHideSideBarMenu=()=> {
 	// console.log("filterPartners >>>>", filterPartners);
 	const [searchPartners, setSearchPartners] = useState("");
 
-
+let property_status_to_filter = '';
 	//const [pageNumber, setPageNumber] = useState(page);
 		//added by jaison for Liron 2025-June 11
-		let defaultPageNumber =0;
+		let defaultPageNumber = 0;
 		let queryParams = new URLSearchParams(window.location.search);
 		let page = parseInt( queryParams.get('page') );	
+
 		if(!page) {
+			
 			defaultPageNumber = 0;
-		} else {
+		} else {			
 			defaultPageNumber = page;			
 		}
+		localStorage.setItem('partnersPageLastPageNumber', defaultPageNumber);
 		const [pageNumber, setPageNumber] = useState(defaultPageNumber);
 
+if( queryParams.get('page') ) {
+	property_status_to_filter = localStorage.getItem("property_status_to_filter");
+} else {
+	localStorage.setItem('property_status_to_filter', '');
+}
 
 
 //Task: EXTRANET VT - Check the possibilities of adding admin login
@@ -192,9 +199,9 @@ const filterByPropertyStatus = (event) => {
 */
 
 
-	const [filterPropertyStatus, setFilterPropertyStatus] = useState('');
+	const [filterPropertyStatus, setFilterPropertyStatus] = useState(property_status_to_filter);
 	const filterByPropertyStatus = (event) => {
-		console.log(event.target.value)
+		localStorage.setItem('property_status_to_filter', event.target.value);
 		setFilterPropertyStatus(event.target.value);      
 	}
 
@@ -385,7 +392,7 @@ const fetchCurrenciesExchangeRates = async () => {
 		console.log('search:', searchInputes)
 	}, [searchInputes]);
 
-	const GoToPartnerListings = async(partner, accountId, property_status_to_filter='') => {
+	const GoToPartnerListings = async(partner, accountId, propertyStatusToFilter='') => {
 
 const responseDataUniqueZips = await userRequest.post(`local/partners/properties-unique-zipcodes`,
 	{ accountId: accountId, channelSource: partner.source },
@@ -396,7 +403,7 @@ localStorage.setItem('partnerPropertiesUniqueZipcodes', JSON.stringify(partnerPr
 
 		console.log("see listings for account:", accountId, partner.source);
 		localStorage.setItem("partner", JSON.stringify(partner))
-		localStorage.setItem("property_status_to_filter", property_status_to_filter)
+		localStorage.setItem("property_status_to_filter", propertyStatusToFilter)
 		/*if (!partner.offsetRead) {
 			swal({
 				show: true,
@@ -902,7 +909,6 @@ localStorage.setItem('partnerPropertiesUniqueZipcodes', JSON.stringify(partnerPr
 
 
 							<div className="agencies-title">
-								
 	{extranet_vt_logged_in_role==='admin' && <span>Guesty PM List</span> }
 	{extranet_vt_logged_in_role==='partner' && <span>Guesty PM Home</span> }
 

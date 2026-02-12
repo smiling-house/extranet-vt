@@ -101,7 +101,7 @@ const PartnersBART = (props) => {
 
 
 const dispatch = useDispatch();	
-localStorage.removeItem('property_status_to_filter');
+//localStorage.removeItem('property_status_to_filter');
 
 
 const [showSideBarMenu, setShowSideBarMenu] = useState(false);

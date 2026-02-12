@@ -786,7 +786,7 @@ console.log('NEW REGION:::', response)
       <div>
       <button class="btn btn-success" onClick={()=>saveNewRegionFromOpenAI(property.address.country, property.address.zipcode, property._id)}>Update Single</button> 
 
-      <button class="btn btn-primary" onClick={()=>saveNewRegionFromOpenAI(property.address.country, property.address.zipcode)}>Update All</button> 
+      <button class="btn btn-primary" onClick={()=>saveNewRegionFromOpenAI(property.address.country, property.address.zipcode)}>Update all with the same zipcode</button> 
       </div>
       }
         
