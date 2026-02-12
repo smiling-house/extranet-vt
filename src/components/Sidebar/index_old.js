@@ -146,10 +146,10 @@ const Sidebar = ({ activeMenu, setActiveMenu, handleToggleMenu, showOrHideSideBa
         renderItem("Guesty PMs", PATH_PARTNERS, adminIcon) 
       }
       {extranet_vt_logged_in_role==='admin' &&
-        renderItem("BP PMs", PATH_PARTNERS_BP, adminIcon) 
+        renderItem("BP PMs (SH)", PATH_PARTNERS_BP, adminIcon) 
       }
       {extranet_vt_logged_in_role==='admin' &&
-        renderItem("RU PMs", PATH_PARTNERS_RU, adminIcon) 
+        renderItem("RU PMs (SH)", PATH_PARTNERS_RU, adminIcon) 
       }
       {extranet_vt_logged_in_role==='admin' &&
         renderItem("BART PMs", PATH_PARTNERS_BART, adminIcon) 

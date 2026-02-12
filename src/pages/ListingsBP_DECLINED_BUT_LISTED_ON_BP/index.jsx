@@ -1,0 +1,1270 @@
+import React, { useCallback, useEffect, useState } from "react"
+import { Dialog, DialogActions, DialogContent, DialogTitle, Stack, } from "@mui/material"
+import Icon from 'react-web-vector-icons'
+import { useDispatch, useSelector } from "react-redux";
+import VTChannelIcon from "../../assets/channels/icons/VTChannel.svg"
+import VTChannelIconOn from "../../assets/channels/icons/VTChannel-on.svg"
+import VTChannelIconOnBlue from "../../assets/channels/icons/VTChannel-on-blue.svg"
+import VTChannelLabel from "../../assets/channels/icons/label-VTChannel.svg"
+
+import SHChannelIcon from "../../assets/channels/icons/SHChannel.svg"
+import SHChannelIconOn from "../../assets/channels/icons/SHChannel-on.svg"
+import SHChannelIconOnBlue from "../../assets/channels/icons/SHChannel-on-blue.svg"
+import SHChannelLabel from "../../assets/channels/icons/label-SHChannel.svg"
+
+import TLChannelIcon from "../../assets/channels/icons/TLChannel.svg"
+import TLChannelIconOn from "../../assets/channels/icons/TLChannel-on.svg"
+import TLChannelIconOnBlue from "../../assets/channels/icons/TLChannel-on-blue.svg"
+import TLChannelLabel from "../../assets/channels/icons/label-TLChannel.svg"
+
+import Button from "../../components/Buttons/Button/Button"
+import pageBg from '../../assets/bk_pool.png'
+
+import { data } from "./makeData.js";
+
+import axios from "axios"
+import { baseURL } from "../../core/index.js"
+import PageHeader from "../../components/PageHeader"
+import { PATH_PROPERTY,PATH_SIGNOUT,PATH_LOGIN, APP_DISPLAY_NAME } from "../../Util/constants"
+import { useLocation, useHistory } from "react-router-dom";
+
+import { getStorageValue } from "../../Util/general.js";
+
+import "../Listings2/Listings.scss"
+
+import Paging from "../../components/Paging"
+import constants from "../../Util/constants"
+import closeIcon from '../../assets/icons/closeIcon.png'
+import { BsChevronDown } from "react-icons/bs"
+import { IoIosSearch } from "react-icons/io"
+import { BiCalendarCheck } from "react-icons/bi"
+import AuthService from "../../services/auth.service"
+import swal from "sweetalert"
+import LoadingBox from "../../components/LoadingBox"
+import CollectionIcon from "../../components/CollectionIcon"
+import * as propertyActions from "../../store/redux/Property/actions";
+import Sidebar from "../../components/Sidebar";
+
+import Listingrow from "./row/listingRow"
+
+
+import menuIcon from '../../assets/icons8-menu-50.png'
+import * as userActions from "../../store/redux/User/actions";
+import Layout from "../../components/Layout";
+
+const NEW_CLIENT = {
+    id: "-1",
+    firstName: "",
+    lastName: "",
+    email: "",
+    state: "",
+    phone: "",
+}
+
+
+const ListingsBP_DECLINED_BUT_LISTED_ON_BP = (props) => {
+const partnersPageLastPageNumber = localStorage.getItem('partnersPageLastPageNumber'); //added by jaison for Liron 2025 June 11
+    
+const [searchPropertyId, setSearchPropertyId] = useState('');
+
+const [showSideBarMenu, setShowSideBarMenu] = useState(false);
+  const signOut = () => {
+	localStorage.clear();
+	dispatch(userActions.signOut());
+	history.push(PATH_LOGIN);
+  };
+const showOrHideSideBarMenu=()=> {
+	if(showSideBarMenu===true) {
+		setShowSideBarMenu(false);
+	} else if(showSideBarMenu===false) {
+		setShowSideBarMenu(true);
+	}
+}  
+
+const goToPartnersPage = () => {
+    //alert(partnersPageLastPageNumber)
+    history.push('/partners?page='+partnersPageLastPageNumber);
+}
+
+    const { agency, agent, token, screenSize, activeMenu, handleToggleMenu, setActiveMenu } = props
+
+    	const agentData = JSON.parse( localStorage.getItem('agent') );
+
+
+    const [refresh, setRefresh] = useState(true)
+    const [isLoading, setIsLoading] = useState(false)
+    const [selectedCollections, setSelectedCollections] = useState([])
+    const [selectedChannels, setSelectedChannels] = useState([])
+    // const agent = JSON.parse(localStorage.getItem("agent"));
+    // const agency = JSON.parse(localStorage.getItem("travelAgency"));
+    let searchParms = {}
+    const [searchInputes, setsearchInputes] = useState({
+    })
+    const history = useHistory();
+    const location = useLocation();
+    const partner = JSON.parse(localStorage.getItem("partner"))
+    const accountId = localStorage.getItem("accountId")
+
+    const property_status_to_filter = localStorage.getItem("property_status_to_filter")
+
+    const user_image = agency?.userImage
+    const [allPage, setAllPage] = useState(false)
+    const [all, setAll] = useState(false)
+    const [events, setEvents] = useState()
+    const [emailLog, setemailLog] = useState("")
+    const [NickNameLog, setNickNameLog] = useState("")
+    const [phoneLog, setePhoneLog] = useState("")
+    const [singleClientData, setsingleClientData] = useState([])
+    const [selectedClientToShowOffers, setSelectedClientToShowOffers] = useState(null)
+    const [selectedClientToShowSavedSearch, setSelectedClientToShowSavedSearch] = useState(null)
+    const [selectedClientToEdit, setSelectedClientToEdit] = useState(null)
+    const [createModalOpen, setCreateModalOpen] = useState(false)
+    const [tableData, setTableData] = useState(() => data)
+    // state for Listings
+    const [listings, setListings] = useState([])
+    const [isRefresh, setIsRefresh] = useState(false)
+    const [filterChannel, setFilterChannel] = useState([])
+    //modal state
+    const [modalData, setModalData] = useState({
+        title: "Add new Client",
+    })
+    const [filterListings, setFilterListings] = useState()
+    const [searchListings, setSearchListings] = useState("")
+    const [pageNumber, setPageNumber] = useState(0)
+    const [count, setCount] = useState(0)
+    const dispatch = useDispatch();
+    const properties = useSelector((state) => state.property.properties);
+    const source = location.state && location.state.source;
+
+//By Jaison 2025-04-22 - START
+    const partnerPropertiesUniqueZipcodes = JSON.parse(getStorageValue('partnerPropertiesUniqueZipcodes') );
+    const allZipcodes = JSON.parse(getStorageValue('allZipcodes') );
+
+    const [updateStatusProcess, setUpdateStatusProcess] = useState(0);
+    const [propStatus, setPropStatus] = useState('');
+    
+    const [decliningReason, setDecliningReason] = useState('');
+    const [decliningReasonOther, setDecliningReasonOther] = useState('');
+    const [actualDecliningReason, setActualDecliningReason] = useState('');
+
+
+    const [filterPropertyStatus, setFilterPropertyStatus] = useState('');
+    const filterByPropertyStatus = (event) => {
+        console.log(event.target.value)
+        setFilterPropertyStatus(event.target.value);
+
+        unCheckAll();
+        setCheckedAll(false)        
+    }
+
+
+const extranet_vt_logged_in_role = localStorage.getItem('extranet-vt-logged-in-role');
+
+    const [checkedAll, setCheckedAll] = useState(false);
+
+    const [filterPropertyZipcode, setFilterPropertyZipcode] = useState('');
+    const filterByZipcode = (event) => {
+        console.log(event.target.value)
+        setFilterPropertyZipcode(event.target.value);
+
+        unCheckAll();
+        setCheckedAll(false)        
+    }    
+
+    const [filterRegionMappedUnmapped, setFilterRegionMappedUnmapped] = useState('');
+    const filterByMappedUnmappedRegion = (event) => {
+        console.log(event.target.value)
+        setFilterRegionMappedUnmapped(event.target.value);
+
+        unCheckAll();
+        setCheckedAll(false)        
+    }    
+
+    
+
+function updateDecliningReasonData() { //Didn't work all the time.
+    if(propStatus==='Declined') {
+    if(decliningReason==='Other') {
+        setActualDecliningReason( decliningReasonOther );
+    } else {
+        setActualDecliningReason(  decliningReason );
+    }
+} else {
+    setActualDecliningReason('')
+}
+}    
+
+const checkAll = () => {
+        document.querySelectorAll('input[name="listing_ids_to_update[]"]').forEach(checkbox => {
+            checkbox.checked = true;
+        });       
+}
+const unCheckAll = () => {
+        document.querySelectorAll('input[name="listing_ids_to_update[]"]').forEach(checkbox => {
+            checkbox.checked = false;
+        });  
+}
+
+const checkUncheckAll = () => {
+
+    if(checkedAll===false) {
+
+        checkAll();
+        setCheckedAll(true)
+
+    }
+
+    if(checkedAll===true) {
+
+        unCheckAll();
+        setCheckedAll(false)
+
+    }
+
+}
+
+    
+    async function updateSelectedListingsStatus() {
+       
+
+if(propStatus==='Declined' && decliningReason==='') {
+
+    swal({
+        show: true,
+        icon: 'error',
+        title: 'Choose the reason for declining!',
+        text: ''
+    });
+        
+    return false;
+}
+        
+
+if(propStatus==='Declined' && decliningReason==='Other' && decliningReasonOther.trim()==='') {
+
+    swal({
+        show: true,
+        icon: 'error',
+        title: 'Enter the other reason for declining!',
+        text: ''
+    });
+        
+    return false;
+}
+
+
+let reason_decline = '';
+if(propStatus==='Declined') {
+    if(decliningReason==='Other') {
+        reason_decline = decliningReasonOther
+    } else {
+        reason_decline =  decliningReason 
+    }
+} 
+
+
+
+
+
+        const checkboxes = document.querySelectorAll('input[name="listing_ids_to_update[]"]:checked');
+        const listingIdsToUpdate = Array.from(checkboxes).map(cb => cb.value);
+
+if(propStatus==='Approved') {
+
+    let unmapped_properties = 0;
+    listingIdsToUpdate.forEach((id) => {
+    if(id.includes('unmapped')) {
+        unmapped_properties++;
+    }
+    });
+
+    if(unmapped_properties > 0) {
+
+        swal({
+            show: true,
+            icon: 'error',
+            title: 'One or more selected properties have unmapped region!. Please map them first before approving',
+            text: ''
+        })   
+        
+        return false;
+        
+    }
+
+}        
+
+
+const listingIdsToUpdateCleaned = listingIdsToUpdate.map(id => id.replace('_unmapped', ''));
+
+
+        const updateListingsData = {'accountId':partner?.accountId,'ids':listingIdsToUpdateCleaned, 'status':propStatus, decliningReason:reason_decline, statusUpdatedBy:agentData.firstName}
+
+console.log('updateListingsData:::', updateListingsData);
+//return false;
+
+        if(listingIdsToUpdateCleaned.length > 0 && propStatus !== '') {
+            const ShubResponse = await userRequest.post(constants.SHUB_URL+'/local/listings/update-multiple-listings-status-just-for-ids', updateListingsData);
+
+            if(ShubResponse.data.success === true) {
+
+
+                swal({
+                    show: true,
+                    icon: 'success',
+                    title: ShubResponse.data.message,
+                    text: ShubResponse.data.message
+                });
+                
+                setUpdateStatusProcess( updateStatusProcess + 1 ); //No efefct inside useEffect. So added the below line to run the function to refresh page
+                getAllListings();
+            
+            } else {
+                swal({
+                    show: true,
+                    icon: 'error',
+                    title: ShubResponse.data.message,
+                    text: ShubResponse.data.message
+                })                
+            }
+        }
+
+      } 
+
+//Task URL : https://app.asana.com/1/1200178813358971/project/1209114491925523/task/1210009551590540
+/*
+const agent_role = getStorageValue('agent_role');
+const agent_status = getStorageValue('agent_status');
+*/
+const agentLoggedIn = JSON.parse( localStorage.getItem('agent') );
+//By Jaison 2025-04-22 - END
+
+    const toggleFilterChannel = (channel) => {
+        var newFilters = filterChannel// saving the currentXdata
+        console.log("before:", newFilters)
+        if (newFilters.findIndex((i) => i === channel) > -1) {
+            console.log('remove channel from filterChannel', channel)
+            newFilters.filter((f) => f !== channel) // remove from filter channel list
+        } else { //add to channel or channel to xdata tags
+            newFilters = [...newFilters, channel]
+        }
+        console.log("after:", newFilters)
+        setFilterChannel(newFilters)
+        handleSearchListings('channels', newFilters)
+
+    }
+
+
+
+    const doSearch = pageNumber => {
+        getAllListings()
+    }
+
+    let clientPagingFrom = 1 + pageNumber * constants.PAGING_LISTING_SIZE
+    let clientPagingTo = (pageNumber + 1) * constants.PAGING_LISTING_SIZE
+
+    const onChangePage = pageNumber => {
+        console.log("going to page=", pageNumber)
+        setPageNumber(pageNumber)
+        clientPagingFrom = 1 + pageNumber * constants.PAGING_LISTING_SIZE
+        clientPagingTo = (pageNumber + 1) * constants.PAGING_LISTING_SIZE
+        if (count<clientPagingTo) {clientPagingTo=count}
+        doSearch(pageNumber)
+    }
+
+    const handleCreateNewRow = (values) => {
+        tableData.push(values)
+        setTableData([...tableData])
+    }
+
+    const token2 = 'eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2NvdW50X29iamVjdF9pZCI6Mzk5MTU4NzUsInVzZXJfaWQiOiI0MDY2NTAyMSIsInVzZXJfbmFtZSI6InN5c3RlbStsdW5hLTh5NXljIiwic2NvcGUiOlsiYnJpdm8uYXBpIl0sImF0aSI6ImI5MTliYmJiLTA1ZWItNDlmOC05MjlhLWM0MTJlYzY3NWI2YyIsImlzc3VlZCI6IjE2NzUzNzA2NDMzNzMiLCJleHAiOjIyOTczMzM3MjcsInNlcnZpY2VfdG9rZW4iOm51bGwsImF1dGhvcml0aWVzIjpbIlJPTEVfU1VQRVJfQURNSU4iLCJST0xFX0FETUlOIl0sImp0aSI6IjExODQzYjg2LWIyYzUtNGMwNS1hYWZlLTcxZTI4NGIyNjNlOCIsImNsaWVudF9pZCI6IjkzOTFlYjVkLWUwNmUtNDY4MS1iNTdhLWQwZTU3NDhhM2RlZSIsIndoaXRlX2xpc3RlZCI6ZmFsc2V9.Mqmx7onIVz_EVAunhwqBAhAmlsGXMQ18hh_EV_61KQIpaGXlrgXgx1hOOdNWLFriG3Un6jfS7H7vwMAYmBT6-8yl9L7VB7Cpxva49XozuSJazQ42UDDlTOsnWAmatzmFna-Uzjc8MDfVQbR8AwMiFq_Jb9ViaJ4XBkj2KhEKs1g'
+
+    const userRequest = axios.create({
+        headers: {
+            Authorization: `Bearer ${token2}`
+        }
+    })
+ 
+    const getAllListings = async () => {
+
+        const accountId = partner?.accountId ? partner?.accountId : ''//585a39dbe43900100017e9e8 // 640625ea0620e40031b8597d
+        const params= { 
+            //source:(accountId!=='585a39dbe43900100017e9e8')?source:'SH',
+
+            /*
+            source:'smiling_house_api',
+            channelSource:partner.source,
+            accountId,
+            limit: constants.PAGING_LISTING_SIZE, 
+            skip: clientPagingFrom - 1,
+            sortBy: 'data.nickname:1',
+            */
+            limit: constants.PAGING_LISTING_SIZE, 
+            skip: clientPagingFrom - 1,
+            ids: [
+"sh1595",
+"sh1602",
+"sh1618",
+"sh1629",
+"sh2194",
+"sh2314",
+"sh2315",
+"sh2495",
+"sh2516",
+"sh2517",
+"sh2518",
+"sh2519",
+"sh2521",
+"sh2523",
+"sh2524",
+"sh2525",
+"sh2526",
+"sh2611",
+"sh2621",
+"sh2663",
+"sh2770",
+"sh2942",
+"sh4532",
+"sh4772",
+"sh5364",
+"sh7034",
+"sh7035",
+"sh7036",
+"sh8392",
+"sh8396",
+"sh8397",
+"sh8399",
+"sh8402",
+"sh8405",
+"sh8406",
+"sh8407",
+"sh8410",
+"sh8413",
+"sh9917",
+"sh12007",
+"sh13029",
+"sh14620",
+"sh14633",
+"sh14636",
+"sh14642",
+"sh14643",
+"sh18896",
+"sh19957",
+"sh19958",
+"sh19959",
+"sh19964",
+"sh20122",
+"sh20123",
+"sh20124",
+"sh20125",
+"sh20126",
+"sh20127",
+"sh20128",
+"sh20129",
+"sh20130",
+"sh20131",
+"sh20132",
+"sh20133",
+"sh20134",
+"sh23917",
+"sh23918",
+"sh23919",
+"sh23920",
+"sh24877",
+"sh24878",
+"sh24879",
+"sh24880",
+"sh25176",
+"sh25674",
+"sh26030",
+"sh27827",
+"sh27828",
+"sh27831",
+"sh27834",
+"sh27848",
+"sh27849",
+"sh29425",
+"sh29435",
+"sh29447",
+"sh29449",
+"sh29451",
+"sh29460",
+"sh29462",
+"sh29471",
+"sh29472",
+"sh29525",
+"sh29529",
+"sh29537",
+"sh29563",
+"sh29564",
+"sh29565",
+"sh29566",
+"sh29568",
+"sh29569",
+"sh29570",
+"sh29571",
+"sh29572",
+"sh29573",
+"sh29577",
+"sh29579",
+"sh29581",
+"sh29582",
+"sh29583",
+"sh29584",
+"sh29585",
+"sh29586",
+"sh29587",
+"sh29588",
+"sh29589",
+"sh29590",
+"sh29591",
+"sh29594",
+"sh29595",
+"sh29596",
+"sh29597",
+"sh29598",
+"sh29600",
+"sh29601",
+"sh29602",
+"sh29603",
+"sh29604",
+"sh29608",
+"sh29609",
+"sh29610",
+"sh29611",
+"sh29612",
+"sh29613",
+"sh29614",
+"sh29615",
+"sh29616",
+"sh29617"]
+    }
+
+console.log('params::',params) 
+
+    //task: EXTRANET VT - Check the possibilities of adding admin login - https://app.asana.com/1/1200178813358971/project/1209114491925523/task/1210009551590540
+    //By Jaison 2025-04-22 START 
+
+
+    let currentPropertyFilterStatus = '';
+    if(property_status_to_filter !== '' || filterPropertyStatus !== '') {
+
+        if(property_status_to_filter !== '') {
+            currentPropertyFilterStatus = property_status_to_filter
+        }
+        
+        if(filterPropertyStatus !== '') {
+            currentPropertyFilterStatus = filterPropertyStatus
+        }
+
+        params.status = currentPropertyFilterStatus;
+    } else if(property_status_to_filter === '' && filterPropertyStatus === '') {
+        delete params.status;
+    }
+  
+
+    if(filterPropertyZipcode !== '') {       
+        params.extranet_filter_zipcode = filterPropertyZipcode;
+    } else if(filterPropertyZipcode==='') {
+        delete params.extranet_filter_zipcode;
+    }    
+
+    if(filterRegionMappedUnmapped !== '') {       
+        params.extranet_filterRegionMappedUnmapped = filterRegionMappedUnmapped;
+    } else if(filterRegionMappedUnmapped==='') {
+        delete params.extranet_filterRegionMappedUnmapped;
+    }     
+    //By Jaison 2025-04-22 END
+
+
+    //By Jaison 2025 October 06 - START
+    if(searchPropertyId !== '') {
+        if(searchPropertyId.length === 24) {
+            params.searchPropertyId = searchPropertyId;
+        } else {
+            //params.searchPropertyId = `sh${searchPropertyId}`;
+            params.searchPropertyId = `sh${searchPropertyId.replace(/^sh/, '')}`;
+        }
+    } else { 
+        delete params.searchPropertyId;
+    }
+    //By Jaison 2025 October 06 - END
+
+
+    const queryString = Object.keys(params).map(key => key + '=' + params[key]).join('&');
+    console.log('getting from /listings:',params)
+    if (accountId.length > 0) {
+ 
+        const shubSearch=constants.SHUB_URL+'/local/listings-ids';
+        setIsLoading(true);
+        userRequest.post(`${shubSearch}`, {ids:params.ids, status:'Declined', sortBy: 'data.prices.basePrice:-1',}).then(async response => {
+            setIsLoading(false)
+            if (response) {
+                console.log("listings :",response)
+   
+                setListings(response.data?.listings)
+                setCount(response?.data?.count)
+                setFilterListings(response.data?.listings)
+                localStorage.setItem("count", response?.data?.count)
+                if (response?.listings?.length == 0) {
+                    swal({
+                        show: true,
+                        icon: 'error',
+                        title: 'Opps!!',
+                        text: "No Data Found"
+                    })
+                } else {
+                    console.log('props loaded on offset:',clientPagingFrom,response.data?.listings)
+                    setRefresh(true)
+                }
+            }
+        }).catch(response => {
+            swal({
+                show: true,
+                icon: 'error',
+                title: 'Opps!!',
+                text: "No Data Found on Account ID :" + accountId
+            })
+        })
+    }
+}
+
+const updatePartnerData = async (propertyId, oldXdata, newXdata) => {
+    console.log("move on partner->", newXdata)
+    console.log("update partner", partner, "moving " + propertyId + " to channels:" + newXdata.channel)
+    //updates the data on partner collection per change of channels (pending, approved, TL VT SH)
+    let updatedPartner = partner
+    // remove Id from TL SH VT arrays:
+    updatedPartner.TL.filter((f) => f !== propertyId)
+    updatedPartner.SH.filter((f) => f !== propertyId)
+    updatedPartner.VT.filter((f) => f !== propertyId)
+    updatedPartner.approved.filter((f) => f !== propertyId)
+    updatedPartner.pending.filter((f) => f !== propertyId)
+    updatedPartner.ids.filter((f) => f !== propertyId)
+    // add the propertyId to the right channels:
+    if (newXdata.channel.length > 0) // channel exist=approved
+    {
+        updatedPartner.approved = [...updatedPartner.TL, propertyId] // approved the id
+        if (newXdata.channel.findIndex((i) => i === 'TL') > -1) {
+            updatedPartner.TL = [...updatedPartner.TL, propertyId]
+            console.log('added to TL')
+        }
+        if (newXdata.channel.findIndex((i) => i === 'SH') > -1) {
+            updatedPartner.SH = [...updatedPartner.SH, propertyId]
+            console.log('added to SH')
+        }
+        if (newXdata.channel.findIndex((i) => i === 'VT') > -1) {
+            updatedPartner.VT = [...updatedPartner.VT, propertyId]
+            console.log('added to VT')
+        }
+    } else {  // move to pending list
+        updatedPartner.pending = [...updatedPartner.pending, propertyId] // approved the id
+    }
+    updatedPartner.ids = [...updatedPartner.ids, propertyId] // add to ids
+    console.log('Shub response to update partner data (account Id=' + partner.accountId + '):' + constants.SHUB_URL + `/update/${partner.accountId}`, updatedPartner)
+    const ShubResponse = await userRequest.post(constants.SHUB_URL + `/update/${partner.accountId}`, updatedPartner)
+    localStorage.setItem("partner", JSON.stringify(updatedPartner)) // update partner data
+    setRefresh(true)
+}
+
+const updateXdata = async (ID, xdataPayload) => {
+    //585a39dbe43900100017e9e8
+    console.log("saving xdata for ID>>>>", ID, ":", xdataPayload)
+    const ShubResponse = await userRequest.post(constants.SHUB_URL + `/local/xdata/${ID}`, xdataPayload)
+    console.log("Shub response to save xdata:", ShubResponse)
+    await swal({
+        show: true,
+        title: 'data update on SHUB',
+        text: 'GSID:'+ID,
+        icon: ShubResponse.data?.success ? "success" : "error",
+        timer: 1500
+    })
+    getAllListings()
+}
+
+
+ useEffect(() => {
+     console.log("refresh!:",refresh)
+     getAllListings()
+//     setRefresh(false)
+
+ }, [refresh,isRefresh, filterPropertyStatus,updateStatusProcess, filterPropertyZipcode,filterRegionMappedUnmapped,searchPropertyId])
+
+const handleSearchListings = (name, value) => {
+    setsearchInputes({ ...searchInputes, [name]: value })
+    console.log("search req:", searchInputes)
+}
+const handleSearchButton = () => {
+    handleSearchListings('accountId', partner.accountId)
+    searchInputes.accountId = partner.accountId
+    if (searchInputes.q) {
+        console.log('searching listings per q :', searchInputes.q, 'accountId:', partner.accountId)
+        delete searchInputes.id
+        delete searchInputes.filters
+        //delete searchInputes.accountId
+    } else
+        if (searchInputes.id) { // on id remove the accountId search
+            if (searchInputes.id) {
+
+                searchInputes.filters = '[{"field":"ids", "operator":"$in", "value": ["' + searchInputes.id + '"]}]'
+                delete searchInputes.id
+                //delete searchInputes.accountId
+                delete searchInputes.q
+                console.log('searching listings per id:', searchInputes)
+            } else {
+                delete searchInputes.filters
+                delete searchInputes.id
+            }
+        }
+        setIsLoading(true)
+    console.log("pressed search button:", searchInputes)
+    AuthService.trianglLuxuryApi(searchInputes).then((response) => {
+        setIsLoading(false)
+        if (response) {
+            setListings(response.listings)
+            console.log('search results:', response)
+            if (response.listings.length === 0) {
+                swal({
+                    show: true,
+                    icon: 'error',
+                    title: 'Opps!!',
+                    text: "No Data Found"
+                })
+            }
+        }
+    }).catch((e) => {
+        console.log(e)
+    })
+}
+
+
+const headerSearchRow = () => {
+    return (
+        <div className="listings-search-container row">
+            <div className="col-sm-2">
+                <input type="text" className="listings-search-input form-control" placeholder="Property name / Nick name" onChange={(e) => handleSearchListings("q", e.target.value)} />
+            </div>
+            <div className="col-sm-2">
+                <input type="text" className="listings-search-input form-control" placeholder="Enter property id" onChange={(e) => handleSearchListings("id", e.target.value)} />
+            </div>
+            <div className="col-sm-1">
+                <Button style={{ height: '60px', width: '120px', fontSize: '15px', borderRadius: '5px' }} variant="green" text="Search" onClick={handleSearchButton} />
+            </div>
+
+        </div>
+    )
+}
+
+const columns = [
+    {
+        name: 'property',
+    }, 
+    {
+        name: 'Mapped Status',
+        width: '140px'
+    },      
+    {
+      
+        name: 'Details',
+        width: '250px'
+    },      
+    {
+      
+        name: 'Status',
+    }, 
+     {
+    
+        name: 'Special Collections'
+     }, {
+       
+        name: 'Geo-Location',
+       
+    }
+]
+
+let totalListings = localStorage.getItem("count") ? localStorage.getItem("count") : 0
+const ListingsPagingFrom = 1 + pageNumber * constants.PAGING_LISTING_SIZE
+let ListingsPagingTo = (pageNumber + 1) * constants.PAGING_LISTING_SIZE
+if (totalListings < ListingsPagingTo) {
+    ListingsPagingTo = totalListings
+}
+
+return (
+    
+//     <div className="page-container">
+        
+//         {/*<div className="page-header">Villa Tracker Extranet ({agentData.firstName})</div>*/}
+// 		{/* <div className="page-header"><img src={menuIcon} style={{'width':'25px'}} className="cst-cursor" onClick={showOrHideSideBarMenu} />&nbsp;Villa Tracker Extranet : PMs - {agentData.firstName} (<span className="cst-cursor" onClick={signOut}>Sign Out</span>)</div> */}
+
+//         <div className="page-header" style={{
+//             marginLeft: showSideBarMenu ? '250px' : '0',
+//             transition: 'margin-left 0.3s ease',
+//             // background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+//             background: 'linear-gradient(135deg, #104109 0%, #2d5a2b 100%)',
+//             boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
+//             borderBottom: '1px solid rgba(255,255,255,0.1)'
+//         }}>
+//             <div className="container-fluid" style={{padding: '0px 50px'}}>
+//                 <div className="row align-items-center py-3">
+//                     {/* Left Section - Menu & Title */}
+//                     <div className="col-lg-8 col-md-7 col-sm-8 col-6">
+//                         <div className="d-flex align-items-center">
+//                             <button 
+//                                 className="btn btn-link p-0 me-3 text-white border-0"
+//                                 onClick={showOrHideSideBarMenu}
+//                                 style={{
+//                                     background: 'none',
+//                                     fontSize: '1.2rem',
+//                                     transition: 'transform 0.2s ease'
+//                                 }}
+//                                 onMouseOver={e => e.currentTarget.style.transform = 'scale(1.1)'}
+//                                 onMouseOut={e => e.currentTarget.style.transform = 'scale(1)'}
+//                             >
+//                                 <img 
+//                                     src={menuIcon} 
+//                                     alt="Menu" 
+//                                     style={{
+//                                         width: '28px',
+//                                         height: '28px',
+//                                         filter: 'brightness(0) invert(1)'
+//                                     }} 
+//                                 />
+//                             </button>
+                            
+//                             <div className="header-title">
+//                                 <h1 className="mb-0 text-white d-none d-md-block" style={{
+//                                     fontSize: 'clamp(1.2rem, 2.5vw, 1.8rem)',
+//                                     fontWeight: '600',
+//                                     letterSpacing: '-0.5px'
+//                                 }}>
+//                                     <span className="d-none d-sm-inline">{APP_DISPLAY_NAME} : </span>
+//                                     <span>PMs</span>
+//                                     <span className="d-none d-md-inline"> - {agentData.firstName}</span>
+//                                 </h1>
+                                
+//                                 {/* Mobile-only welcome message aligned with menu button */}
+//                                 <div className="d-md-none d-flex align-items-center">
+//                                     <span className="text-white" style={{
+//                                         fontSize: '1.1rem',
+//                                         fontWeight: '500',
+//                                         lineHeight: '28px' // Matches menu button height for alignment
+//                                     }}>
+//                                         Welcome, {agentData.firstName}
+//                                     </span>
+//                                 </div>
+//                             </div>
+//                         </div>
+//                     </div>
+                    
+//                     {/* Right Section - User Actions */}
+//                     <div className="col-lg-4 col-md-5 col-sm-4 col-6">
+//                         <div className="d-flex justify-content-end align-items-center">
+//                             {/* User Info - Hidden on small screens */}
+//                             <div className="d-none d-lg-flex align-items-center me-3">
+//                                 <div className="user-avatar me-2" style={{
+//                                     width: '35px',
+//                                     height: '35px',
+//                                     borderRadius: '50%',
+//                                     background: 'rgba(255,255,255,0.2)',
+//                                     display: 'flex',
+//                                     alignItems: 'center',
+//                                     justifyContent: 'center',
+//                                     color: 'white',
+//                                     fontWeight: 'bold',
+//                                     fontSize: '14px'
+//                                 }}>
+//                                     {agentData.firstName.charAt(0).toUpperCase()}
+//                                 </div>
+//                                 <div className="text-white">
+//                                     <div style={{fontSize: '14px', fontWeight: '500'}}>
+//                                         {agentData.firstName}
+//                                     </div>
+//                                     <div style={{fontSize: '12px', opacity: '0.8'}}>
+//                                         {extranet_vt_logged_in_role === 'admin' ? 'Administrator' : 'Partner'}
+//                                     </div>
+//                                 </div>
+//                             </div>
+                            
+//                             {/* Sign Out Button */}
+//                             <button
+//                                 className="btn btn-outline-light btn-sm"
+//                                 onClick={signOut}
+//                                 style={{
+//                                     borderRadius: '25px',
+//                                     padding: '8px 20px',
+//                                     fontSize: '14px',
+//                                     fontWeight: '500',
+//                                     border: '2px solid rgba(255,255,255,0.3)',
+//                                     transition: 'all 0.3s ease',
+//                                     backdropFilter: 'blur(10px)'
+//                                 }}
+//                                 onMouseOver={e => {
+//                                     e.currentTarget.style.background = 'rgba(255,255,255,0.2)';
+//                                     e.currentTarget.style.borderColor = 'rgba(255,255,255,0.6)';
+//                                 }}
+//                                 onMouseOut={e => {
+//                                     e.currentTarget.style.background = 'transparent';
+//                                     e.currentTarget.style.borderColor = 'rgba(255,255,255,0.3)';
+//                                 }}
+//                             >
+//                                 <span className=" d-sm-inline">Sign Out</span>
+//                                 <span className="d-sm-none">
+//                                     <i className="fas fa-sign-out-alt"></i>
+//                                 </span>
+//                             </button>
+//                         </div>
+//                     </div>
+//                 </div>
+//             </div>
+//         </div>
+//         {showSideBarMenu===true && <Sidebar
+//             agency={agency}
+//             agent={agent}
+//             token={token}
+//             screenSize={screenSize}
+//             activeMenu={activeMenu}
+//             handleToggleMenu={handleToggleMenu}
+//             setActiveMenu={setActiveMenu}
+//             showOrHideSideBarMenu={showOrHideSideBarMenu}
+//         />
+// }
+//         <div className={showSideBarMenu ? `${"page-body"}` : "page-body-nomargin"} >
+        <Layout
+            pageTitle="PMs"
+            agency={agency}
+            agent={agent}
+            token={token}
+            screenSize={screenSize}
+            activeMenu={activeMenu}
+            handleToggleMenu={handleToggleMenu}
+            setActiveMenu={setActiveMenu}
+        >
+            <div className="listings-container"
+                style={{ backgroundImage: `url(${pageBg})` }}
+            >
+                <LoadingBox visible={isLoading} />
+                <div>
+                    {/* <PageHeader 
+                    PageHeader={true} 
+                    doSearch={doSearch} 
+                    handleSearchListings={handleSearchListings} 
+                    searchOpen={true} 
+                    topBgColor="rgb(119 198 85)">
+                    </PageHeader> */}
+{extranet_vt_logged_in_role==='admin' &&                    
+                    headerSearchRow()
+}                    
+                </div>
+
+                <div className="listings-main">
+                    <div className="listings-paging">Displaying  {ListingsPagingFrom}-{ListingsPagingTo} of {totalListings ? totalListings : "?"} Listings</div>
+
+
+
+{/*extranet_vt_logged_in_role==='admin' &&
+                    <div className="listings-search-container row">
+                    <div className="col-sm-2">
+                        <label style={{'color':'white'}}><strong>Filter by Status</strong></label>
+                        <select class="form-control" onChange={(e)=>filterByPropertyStatus(e)}>
+                            <option value="">--All--</option>
+                            <option value="Approved">Approved</option>
+                            <option value="Pending">Pending</option>
+                            <option value="Declined">Declined</option>
+                        </select>                        
+                    </div>
+
+                    <div className="col-sm-2">
+                    <label style={{'color':'white'}}><strong>Filter by Zipcode</strong></label>
+                    <select class="form-control" onChange={(e)=>filterByZipcode(e)}>
+                        <option value="">--All--</option>
+                        {partnerPropertiesUniqueZipcodes && partnerPropertiesUniqueZipcodes.map((item, index) => {
+                            return <>
+                                <option value={item}>{item}</option>
+                            </>
+                        })}            
+                    </select>
+                    </div>
+
+                    <div className="col-sm-2">
+                    <label style={{'color':'white'}}><strong>Filter by Mapped/unmapped Region</strong></label>
+                    <select class="form-control" onChange={(e)=>filterByMappedUnmappedRegion(e)}>
+                        <option value="">--All--</option>
+                        <option value="Mapped">Mapped</option>
+                        <option value="Unmapped">Unmapped</option>
+                    </select>
+                    </div>
+
+                    </div>
+*/}                    
+            
+{extranet_vt_logged_in_role==='admin' &&
+    <section>
+<div style={{'padding':'10px', 'display':'flex', 'align-items':'center', 'row-gap':'20px', 'position':'sticky'}}>
+    <div class="col-3">
+        <label><strong>Change Selected Property Status:</strong></label>
+        <select class="form-control" onChange={ (e) => setPropStatus(e.target.value) }>
+            <option value="">-Select Status--</option>
+            <option value="Approved">Approved</option>
+            <option value="Pending">Pending</option>
+            <option value="Declined">Declined</option>
+        </select>
+
+            {propStatus==='Declined' &&
+            <section>
+            <label><strong>Select Declining Reason:</strong></label>
+            <select class="form-control" onChange={ (e) => setDecliningReason(e.target.value)  }>
+                <option value="">-Select Reason--</option>
+                <option value="Too cheap">Too cheap</option>
+                <option value="With watermark/Picture information">With watermark/Picture information</option>
+                <option value="Not feet quality">Not feet quality</option>
+                <option value="Existing as SH partner">Existing as SH partner</option>
+                <option value="Existing as SH partner">Existing as SH partner</option>
+                <option value="Other">Other</option>
+            </select>
+            </section>
+            }
+
+            {decliningReason==='Other' &&
+            <section>
+            <label><strong>Enter the other reason for declining:</strong></label>
+            <input required type="text" class="form-control" onChange={ (e) => setDecliningReasonOther(e.target.value) }  />
+            </section>
+            }
+
+    </div>
+</div>
+
+<div style={{'padding':'10px', 'display':'flex', 'align-items':'center', 'row-gap':'20px', 'position':'sticky'}}>
+    <div class="col-3">
+        <button class="btn btn-primary" onClick={updateSelectedListingsStatus}>Update Status</button>        
+    </div>       
+</div>
+
+<hr />
+<div class="row">
+    <div class="col-3">
+        <label><strong>Search by Property ID</strong></label>
+        <input required type="text" placeholder="Search by Property ID" class="form-control" onChange={ (e) => setSearchPropertyId(e.target.value) }  />
+    </div>
+</div>
+</section>
+}            
+
+                    {<Paging perPage={constants.PAGING_LISTING_SIZE} totalItems={totalListings} currentPage={pageNumber} onChangePage={onChangePage} />}
+                    <div style={{ padding: '0 20px' }}>
+                        <div class="table-responsive" style={{ overflow: "auto" }}>
+                                <table class="table">
+                                    <thead style={{ backgroundColor: "#f9f9f7" }} >
+
+{extranet_vt_logged_in_role==='admin' &&                                        
+<tr>
+   <td><span onClick={checkUncheckAll}  className="cst-cursor">Check/Uncheck All</span></td> 
+</tr>
+}
+                                        <tr>
+                                            {columns?.map((iteam, index) => {
+                                                return <>
+                                                    {/*<th key={index} scope="col" className="p-4 " style={{ cursor: "pointer", width: iteam.width }}><h3>{iteam.name} <BsChevronDown /></h3></th>*/}
+<th key={index} scope="col" className="p-4 " style={{ cursor: "pointer", width: iteam.width }}>{iteam.name} <BsChevronDown /></th>
+                                                </>
+                                            })}
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {listings.map((iteam, index) => {
+
+const countryZipKey = iteam.listing.address.country + '_' + iteam.listing.address.zipcode;
+
+if(allZipcodes[countryZipKey] !== 'undefined') {
+    var listingAddressZipExists = true
+} else {
+    var listingAddressZipExists = false
+}
+
+
+                                            console.log("listing item:",index+1,iteam)
+                                            const ApropertyId = iteam.listing?._id
+                                            const fullCalendar = iteam.fullCalendar
+
+//Custom Title & Desc
+                                            return <>
+                                                <tr>
+                                                    {<Listingrow
+                                                        key={ApropertyId}
+                                                        property={iteam.listing}
+                                                        xdata={iteam.xdata}
+                                                        agent={agent}
+                                                        partner={partner}
+                                                        id={ApropertyId}
+                                                        fullCalendar={fullCalendar}
+                                                        updateXdata={updateXdata}
+                                                        uid="row{iteam.listing._id}" 
+                                                        listingAddressZipExists={listingAddressZipExists} 
+                                                        QOD={iteam.QOD}
+                                                        customTitle={iteam.customTitle}
+                                                        customDesc={iteam.customDesc}
+                                                    />}
+                                                </tr>
+                                            </>
+                                        })}
+                                        
+                                    </tbody>
+                                </table>
+                        </div>
+                    </div>
+                </div>
+
+                <CreateNewAccountModal
+                    columns={columns}
+                    open={createModalOpen}
+                    onClose={() => setCreateModalOpen(false)}
+                    onSubmit={handleCreateNewRow}
+                    modalData={modalData}
+                />
+            </div>
+        </Layout>
+    //     </div>
+    // </div>
+)
+
+}
+
+//example of creating a mui dialog modal for creating new rows
+export const CreateNewAccountModal = ({
+    open,
+    columns,
+    onClose,
+    onSubmit,
+    modalData,
+}) => {
+    const [values, setValues] = useState(() =>
+        columns.reduce((acc, column) => {
+            acc[column.accessorKey ?? ""] = ""
+            return acc
+        }, {})
+    )
+
+    //console.log("data from modal >>>>", modalData)
+
+    const handleSubmit = () => {
+        //put your validation logic here
+        onSubmit(values)
+        onClose()
+    }
+
+    return (
+        <Dialog open={open}>
+            <DialogTitle
+                textAlign="center"
+                className="font-color"
+                style={{ background: "#F2F9FC" }}
+            >
+                {modalData.title}
+            </DialogTitle>
+            <DialogContent>
+                <form onSubmit={(e) => e.preventDefault()}>
+                    <Stack
+                        sx={{
+                            width: "100%",
+                            minWidth: { xs: "300px", sm: "360px", md: "500px" },
+                            gap: "1.5rem",
+                        }}
+                    >
+                        <div className="row g-3 pt-3">
+                            <div className="col-md-6 px-4">
+                                <div className="row mb-2">
+                                    <label htmlFor="inputText4" className="form-label mb-1 ps-0">
+                                        Listing Name*
+                                    </label>
+                                    <input
+                                        type="name"
+                                        className="form-control rounded-0 py-2"
+                                        id="inputText4"
+                                        placeholder="Enter name"
+                                    />
+                                </div>
+                                <div className="row mb-2">
+                                    <label htmlFor="inputText14" className="form-label mb-1 ps-0">
+                                        Property Nick*
+                                    </label>
+                                    <input
+                                        type="name"
+                                        className="form-control rounded-0 py-2"
+                                        id="inputText14"
+                                        placeholder="CAE000"
+                                    />
+                                </div>
+                                <div className="row mb-2">
+                                    <label
+                                        htmlFor="inputAddress"
+                                        className="form-label mb-1 ps-0"
+                                    >
+                                        Client Phone*
+                                    </label>
+                                    <input
+                                        type="phone"
+                                        className="form-control rounded-0 py-2"
+                                        id="inputAddress"
+                                        placeholder="+41-79-489-7021"
+                                        maxLength={11}
+                                    />
+                                </div>
+                            </div>
+                            <div className="col-md-6 px-4">
+                                <div className="row mb-2">
+                                    <label
+                                        htmlFor="inputAddress"
+                                        className="form-label mb-1 ps-0"
+                                    >
+                                        Nick Name
+                                    </label>
+                                    <input
+                                        type="text"
+                                        className="form-control rounded-0 py-2"
+                                        id="inputAddress"
+                                        placeholder="Smiling"
+                                    />
+                                </div>
+                                <div className="row mb-2">
+                                    <label
+                                        for="exampleFormControlTextarea1"
+                                        class="form-label mb-1 ps-0"
+                                    >
+                                        Notes
+                                    </label>
+                                    <textarea
+                                        class="form-control rounded-0 py-2"
+                                        id="exampleFormControlTextarea1"
+                                        rows="4"
+                                    ></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </Stack>
+                </form>
+            </DialogContent>
+            <DialogActions sx={{ p: "1.25rem" }}>
+                <Button onClick={onClose}>Cancel</Button>
+                <button
+                    type="submit"
+                    className="btn btn-success border-radius-0 w-25 py-2"
+                    style={{ backgroundColor: "#165093" }}
+                    onClick={handleSubmit}
+                >
+                    Save
+                </button>
+            </DialogActions>
+        </Dialog>
+    )
+}
+
+const validateRequired = (value) => !!value.length
+const validateEmail = (email) =>
+    !!email.length &&
+    email
+        .toLowerCase()
+        .match(
+            /^(([^<>()[\]\\.,:\s@"]+(\.[^<>()[\]\\.,:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+        )
+const validateAge = (age) => age >= 18 && age <= 50
+
+export default ListingsBP_DECLINED_BUT_LISTED_ON_BP

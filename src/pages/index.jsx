@@ -88,7 +88,9 @@ import {
   PATH_PARTNERS_INVENIO,
   PATH_VERIFY_COMPARE_NEW_PMS,
   PATH_ZIPS_REGIONS_MAPPING,
-  PATH_ZIPS_REGIONS_MAPPING_COUNTRY
+  PATH_ZIPS_REGIONS_MAPPING_COUNTRY,
+  PATH_LISTINGS_SH_RU_DECLINED_BUT_LISTED_ON_RU,
+  PATH_LISTINGS_SH_BP_DECLINED_BUT_LISTED_ON_BP
 } from "../Util/constants";
 import AuthService from "../services/auth.service";
 import { baseURL } from "../core";
@@ -112,7 +114,10 @@ import EPartnerReservationsProperties from "./EPartnerReservationsProperties";
 import ZipcodesRegionsMapping from "./ZipcodesRegionsMapping";
 import ZipcodesRegionsMappingCountry from "./ZipcodesRegionsMappingCountry";
 
-import menuIcon from '../assets/icons8-menu-50.png'
+import menuIcon from '../assets/icons8-menu-50.png';
+
+import ListingsRU_DECLINED_BUT_LISTED_ON_RU from "./ListingsRU_DECLINED_BUT_LISTED_ON_RU"
+import ListingsBP_DECLINED_BUT_LISTED_ON_BP from "./ListingsBP_DECLINED_BUT_LISTED_ON_BP"
 
 const logintoken = localStorage.getItem('jToken');
 
@@ -501,6 +506,32 @@ const showOrHideSideBarMenu=()=> {
             setActiveMenu={setActiveMenu}
           />
         </Route>
+        <Route exact path={[PATH_LISTINGS_SH_RU_DECLINED_BUT_LISTED_ON_RU]}>
+          <ListingsRU_DECLINED_BUT_LISTED_ON_RU
+            agency={agency}
+            agent={agent}
+            token={token}
+            setProfile={setProfile}
+            screenSize={screenSize}
+            setScreenSize={setScreenSize}
+            activeMenu={activeMenu}
+            handleToggleMenu={handleToggleMenu}
+            setActiveMenu={setActiveMenu}
+          />
+        </Route>  
+        <Route exact path={[PATH_LISTINGS_SH_BP_DECLINED_BUT_LISTED_ON_BP]}>
+          <ListingsBP_DECLINED_BUT_LISTED_ON_BP
+            agency={agency}
+            agent={agent}
+            token={token}
+            setProfile={setProfile}
+            screenSize={screenSize}
+            setScreenSize={setScreenSize}
+            activeMenu={activeMenu}
+            handleToggleMenu={handleToggleMenu}
+            setActiveMenu={setActiveMenu}
+          />
+        </Route>                
         <Route exact path={[PATH_EPARTNERS]}>
           <EPartners
             agency={agency}

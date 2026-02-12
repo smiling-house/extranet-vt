@@ -12,6 +12,10 @@ export const PATH_SHUB = '/shub';
 export const PATH_MAP = '/map';
 export const PATH_CLIENTS = '/clients';
 export const PATH_LISTINGS = '/listings';
+
+export const PATH_LISTINGS_SH_RU_DECLINED_BUT_LISTED_ON_RU = '/listings-sh-ru-declined-but-listed-on-ru';
+export const PATH_LISTINGS_SH_BP_DECLINED_BUT_LISTED_ON_BP = '/listings-sh-bp-declined-but-listed-on-bp';
+
 export const PATH_DUPLICATED_LISTINGS = '/duplicated-listings';
 export const PATH_TASKS = '/tasks';
 export const PATH_RESERVATIONS = '/reservations';
@@ -30,8 +34,8 @@ export const PATH_INTOUCH = '/intouch';
 export const PATH_FAQ = '/faq';
 export const PATH_ADMIN = '/admin';
 export const PATH_PARTNERS = '/partners';
-export const PATH_PARTNERS_BP = '/partners-bp';
 export const PATH_PARTNERS_RU = '/partners-ru';
+export const PATH_PARTNERS_BP = '/partners-bp';
 export const PATH_PARTNERS_BART = '/partners-bart';
 export const PATH_PARTNERS_INVENIO = '/partners-invenio';
 export const PATH_EPARTNERS = '/external-partners';

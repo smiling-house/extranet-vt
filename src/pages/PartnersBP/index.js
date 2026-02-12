@@ -48,7 +48,8 @@ import {
     PATH_LISTINGS,
     PATH_SIGNOUT,
     PATH_LOGIN,   
-    APP_DISPLAY_NAME 
+    APP_DISPLAY_NAME,
+    PATH_LISTINGS_SH_BP_DECLINED_BUT_LISTED_ON_BP
 } from "../../Util/constants";
 
 //import { data } from "./makeData.js"; //COMMENTED OUT AS IT IS NOT USED
@@ -354,6 +355,11 @@ if(agent_role) {
     useEffect(() => {
         console.log('search:', searchInputes)
     }, [searchInputes]);
+
+const GoToDeclinedButListedOnBP = async() => {
+    history.push(PATH_LISTINGS_SH_BP_DECLINED_BUT_LISTED_ON_BP);
+}  
+
 
     const GoToPartnerListings = async(partner, accountId, property_status_to_filter='') => {
 
@@ -867,8 +873,9 @@ localStorage.setItem('partnerPropertiesUniqueZipcodes', JSON.stringify(partnerPr
 
 
                         <div className="agencies-title">
-                            
-{extranet_vt_logged_in_role==='admin' && <span>BP PM List</span> }
+{extranet_vt_logged_in_role==='admin' && <h2 onClick={() => GoToDeclinedButListedOnBP()}><u>Approve declined SH BP properties which are listed on Booking Pal</u></h2> }
+
+{extranet_vt_logged_in_role==='admin' && <span>BP PM List (SH)</span> }
 {extranet_vt_logged_in_role==='partner' && <span>BP PM Home</span> }
 
                             {!partnerLogin && (<>

@@ -77,8 +77,8 @@ const Sidebar = ({ activeMenu, setActiveMenu, handleToggleMenu, showOrHideSideBa
         icon: <FiUsers size={20} />,
         items: [
           { text: "Guesty PMs", path: PATH_PARTNERS, icon: <MdBusiness size={18} /> },
-          { text: "BP PMs", path: PATH_PARTNERS_BP, icon: <MdBusiness size={18} /> },
-          { text: "RU PMs", path: PATH_PARTNERS_RU, icon: <MdBusiness size={18} /> },
+          { text: "BP PMs (SH)", path: PATH_PARTNERS_BP, icon: <MdBusiness size={18} /> },
+          { text: "RU PMs (SH)", path: PATH_PARTNERS_RU, icon: <MdBusiness size={18} /> },
           { text: "BART PMs", path: PATH_PARTNERS_BART, icon: <MdBusiness size={18} /> },
           { text: "INVENIO PMs", path: PATH_PARTNERS_INVENIO, icon: <MdBusiness size={18} /> },
         ]

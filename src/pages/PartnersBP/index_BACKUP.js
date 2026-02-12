@@ -166,7 +166,7 @@ const PartnersBP = (props) => {
                 )}
                 <div className="agencies-title">
                 
-                    {extranet_vt_logged_in_role==='admin' && <span>BP PM List</span> }
+                    {extranet_vt_logged_in_role==='admin' && <span>BP PM List (SH)</span> }
                     {extranet_vt_logged_in_role==='partner' && <span>BP PM Home</span> }
                     {!partnerLogin && (
                         <>
