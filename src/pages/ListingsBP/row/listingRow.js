@@ -263,7 +263,7 @@ console.log('NEW REGION:::', response)
 
    if( window.confirm(confirmMessage) ) {
     // unmapped_properties_mapping_region_data to new api on shub-vthub and update
-    const ShubResponse = await userRequest.post(constants.SHUB_URL+'/local/listings/update-unmapped-region-single-or-all-properties-under-country-zipcode', unmapped_properties_mapping_region_data);
+    const ShubResponse = await userRequest.post(constants.SHUB_URL+'/local/listings/update-unmapped-region-single-or-all-properties-under-country-zipcode-ai', unmapped_properties_mapping_region_data);
 
     console.log('ShubResponse:::', ShubResponse)
 
