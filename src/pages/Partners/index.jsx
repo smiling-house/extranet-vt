@@ -157,7 +157,8 @@ const showOrHideSideBarMenu=()=> {
 	// console.log("filterPartners >>>>", filterPartners);
 	const [searchPartners, setSearchPartners] = useState("");
 
-let property_status_to_filter = '';
+localStorage.setItem('partners_page','GUESTY');
+let property_status_to_filter_gs = '';
 	//const [pageNumber, setPageNumber] = useState(page);
 		//added by jaison for Liron 2025-June 11
 		let defaultPageNumber = 0;
@@ -173,12 +174,13 @@ let property_status_to_filter = '';
 		localStorage.setItem('partnersPageLastPageNumber', defaultPageNumber);
 		const [pageNumber, setPageNumber] = useState(defaultPageNumber);
 
+/*		
 if( queryParams.get('page') ) {
 	property_status_to_filter = localStorage.getItem("property_status_to_filter");
 } else {
 	localStorage.setItem('property_status_to_filter', '');
 }
-
+*/
 
 //Task: EXTRANET VT - Check the possibilities of adding admin login
 //Task URL : https://app.asana.com/1/1200178813358971/project/1209114491925523/task/1210009551590540
@@ -199,9 +201,13 @@ const filterByPropertyStatus = (event) => {
 */
 
 
-	const [filterPropertyStatus, setFilterPropertyStatus] = useState(property_status_to_filter);
+const property_status_to_filter_ls = localStorage.getItem('property_status_to_filter_gs'); //ls => local storage
+if(property_status_to_filter_ls) {
+	property_status_to_filter_gs = property_status_to_filter_ls;
+}
+	const [filterPropertyStatus, setFilterPropertyStatus] = useState(property_status_to_filter_gs);
 	const filterByPropertyStatus = (event) => {
-		localStorage.setItem('property_status_to_filter', event.target.value);
+		localStorage.setItem('property_status_to_filter_gs', event.target.value);
 		setFilterPropertyStatus(event.target.value);      
 	}
 
@@ -377,7 +383,6 @@ const fetchCurrenciesExchangeRates = async () => {
 
 
 	useEffect(() => {
-
 		if (partnerLogin) {
 			console.log('partnerLogin: (should see only the PM listings)', partnerLogin, partnerName)
 		}
@@ -393,6 +398,7 @@ const fetchCurrenciesExchangeRates = async () => {
 	}, [searchInputes]);
 
 	const GoToPartnerListings = async(partner, accountId, propertyStatusToFilter='') => {
+localStorage.setItem('property_status_to_filter_listings', propertyStatusToFilter);
 
 const responseDataUniqueZips = await userRequest.post(`local/partners/properties-unique-zipcodes`,
 	{ accountId: accountId, channelSource: partner.source },
@@ -403,7 +409,7 @@ localStorage.setItem('partnerPropertiesUniqueZipcodes', JSON.stringify(partnerPr
 
 		console.log("see listings for account:", accountId, partner.source);
 		localStorage.setItem("partner", JSON.stringify(partner))
-		localStorage.setItem("property_status_to_filter", propertyStatusToFilter)
+
 		/*if (!partner.offsetRead) {
 			swal({
 				show: true,
@@ -1000,6 +1006,17 @@ localStorage.setItem('partnerPropertiesUniqueZipcodes', JSON.stringify(partnerPr
 												Declined
 											</button>
 										</li>
+
+										<li>
+											<button 
+												className={`dropdown-item ${filterPropertyStatus === 'unmapped' ? 'active' : ''}`}
+												type="button"
+												onClick={() => filterByPropertyStatus({target: {value: 'unmapped'}})}
+											>
+												Unmapped
+											</button>
+										</li>
+
 									</ul>
 								</div>                      
 							</div>

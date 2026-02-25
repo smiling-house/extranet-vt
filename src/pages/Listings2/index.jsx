@@ -78,9 +78,21 @@ const showOrHideSideBarMenu=()=> {
 	}
 }  
 
-const goToPartnersPage = () => {
-    //alert(partnersPageLastPageNumber)
-    history.push('/partners?page='+partnersPageLastPageNumber);
+const goToPartnersPage = () => {    
+    const partners_page = localStorage.getItem('partners_page');    
+
+    if(partners_page) {
+        if(partners_page === 'GUESTY') {
+            history.push('/partners?page='+partnersPageLastPageNumber);
+        } else if(partners_page === 'BP') {
+            history.push('/partners-bp?page='+partnersPageLastPageNumber);
+        } else if(partners_page === 'RU') {
+            history.push('/partners-ru?page='+partnersPageLastPageNumber);
+        }
+    }
+    else { //Default - GUESTY partners page
+        history.push('/partners?page='+partnersPageLastPageNumber);
+    }
 }
 
     const { agent, agency, token, screenSize, activeMenu, handleToggleMenu, setActiveMenu } = props
@@ -102,7 +114,7 @@ const goToPartnersPage = () => {
     const partner = JSON.parse(localStorage.getItem("partner"))
     const accountId = localStorage.getItem("accountId")
 
-    const property_status_to_filter = localStorage.getItem("property_status_to_filter")
+    const property_status_to_filter = localStorage.getItem("property_status_to_filter_listings")
 
     const user_image = agency?.userImage
     const [allPage, setAllPage] = useState(false)

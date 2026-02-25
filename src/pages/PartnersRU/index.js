@@ -161,6 +161,8 @@ const showOrHideSideBarMenu=()=> {
     const [searchPartners, setSearchPartners] = useState("");
 
 
+localStorage.setItem('partners_page','RU');    
+let property_status_to_filter_ru = '';    
     //const [pageNumber, setPageNumber] = useState(page);
         //added by jaison for Liron 2025-June 11
         let defaultPageNumber =0;
@@ -193,10 +195,13 @@ const filterByPropertyStatus = (event) => {
 }
 */
 
-
-    const [filterPropertyStatus, setFilterPropertyStatus] = useState('');
+const property_status_to_filter_ls = localStorage.getItem('property_status_to_filter_ru'); //ls => local storage
+if(property_status_to_filter_ls) {
+	property_status_to_filter_ru = property_status_to_filter_ls;
+}
+    const [filterPropertyStatus, setFilterPropertyStatus] = useState(property_status_to_filter_ru);
     const filterByPropertyStatus = (event) => {
-        console.log(event.target.value)
+        localStorage.setItem('property_status_to_filter_ru', event.target.value);
         setFilterPropertyStatus(event.target.value);      
     }
 
@@ -362,6 +367,7 @@ const GoToDeclinedButListedOnRU = async() => {
 }
 
     const GoToPartnerListings = async(partner, accountId, property_status_to_filter='') => {
+localStorage.setItem('property_status_to_filter_listings', property_status_to_filter);
 
 const responseDataUniqueZips = await userRequest.post(`local/partners/properties-unique-zipcodes`,
     { accountId: accountId },
@@ -371,7 +377,7 @@ localStorage.setItem('partnerPropertiesUniqueZipcodes', JSON.stringify(partnerPr
 
         console.log("see listings for account:", accountId, partner.source);
         localStorage.setItem("partner", JSON.stringify(partner))
-        localStorage.setItem("property_status_to_filter", property_status_to_filter)
+
         /*if (!partner.offsetRead) {
             swal({
                 show: true,

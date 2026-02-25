@@ -201,6 +201,11 @@ const showOrHideSideBarMenu=()=> {
       setAgency(TAres.data.agencies[0])
       console.log("read agency: ", agency)
       localStorage.setItem("travelAgency", JSON.stringify(agency));
+
+
+
+
+
       history.push(PATH_PARTNERS);
     } else {
       history.push(PATH_LOGIN);

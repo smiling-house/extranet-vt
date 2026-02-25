@@ -191,6 +191,7 @@ const saveCustomTitleDescription = async() => {
   const extranet_vt_logged_in_role = localStorage.getItem('extranet-vt-logged-in-role');
 
   const [newRegionFromOpenAI, setNewRegionFromOpenAI] =useState('');
+  const [newRegionFromOpenAIUpdated, setNewRegionFromOpenAIUpdated] =useState(false);
 const [totalUnmapped, setTotalUnmapped] = useState('');
 
 const [unmappedLabel, setUnmappedLabel] = useState('unmapped');
@@ -201,7 +202,6 @@ const [unmappedLabel, setUnmappedLabel] = useState('unmapped');
 
     const country_belongs_to = country;
     const zipcode_to_search = zipcode;
- 
   
     const res = await userRequest.post(constants.SHUB_URL+'/local/get-touristic-destination-open-ai', {country:country_belongs_to, zipcode:zipcode_to_search} );
 
@@ -294,6 +294,7 @@ console.log('NEW REGION:::', response)
 
           //window.location.reload();
           setcurrentListingRegion(newRegionFromOpenAI)
+          setNewRegionFromOpenAIUpdated(true)
     }
     else if(ShubResponse.data.success===false) {
           swal({
@@ -853,7 +854,7 @@ setCurrentListingStatusUpdatedBy(agentData.firstName);
       }
      </td>
     <td  className="px-4 p-6 ">
-      
+
       <div className="col-sm-6">
         <label><strong>Country:</strong></label>
          &nbsp;{property.address.country || '-Nil'}
@@ -864,9 +865,10 @@ setCurrentListingStatusUpdatedBy(agentData.firstName);
         <br /><br />
 
         <label><strong>Region: </strong></label>
-         &nbsp;{xdata.region || '-Nil'}
+         &nbsp; {/*xdata.region || '-Nil'*/}
+         {newRegionFromOpenAIUpdated ? newRegionFromOpenAI : xdata?.region || '-Nil'}
         <br /><br />
-
+  
         <label><strong>City: </strong></label>
          &nbsp;{property.address.city || '-Nil'}
         <br /><br />
