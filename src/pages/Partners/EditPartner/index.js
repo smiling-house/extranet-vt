@@ -81,7 +81,7 @@ const [selectedChannels, setSelectedChannels] = useState(partner.basicChannels) 
         // "userImage": "string",
         "ta_company_markup": "10"
       };
-      console.log("UPDATE partner payload:", UpdatePayLoad)
+      console.log("UPDATE partner payload: Editing partner", UpdatePayLoad)
 
       AuthService.updatePartner(UpdatePayLoad.accountId, UpdatePayLoad, partner.source)
         .then((response) => {
@@ -118,13 +118,13 @@ console.log('response:::', response)
         //channels: selectedChannels.map((item) => item).join(","),
         channels: selectedChannels,
       };
-      console.log("NEW partner payload:", addPayLoad)
+      console.log("NEW partner payload: Adding new partner", addPayLoad)
 
       AuthService.addNewPartner(addPayLoad)
         .then((response) => {
           
-          if(response?.data?.success && response.data.success===true) {
-            
+          if(response?.data?.success && response.data.success===true) {            
+
               swal({
                 show: true,
                 icon: "success",
@@ -215,7 +215,7 @@ console.log('response:::', response)
 }
         */
       };
-      console.log("NEW partner payload:", addPayLoad)
+      console.log("NEW partner payload: Adding new partner ????", addPayLoad)
       AuthService.addNewPartner(addPayLoad)
         .then((response) => {
           console.log(response.message);

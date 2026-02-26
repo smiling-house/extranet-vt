@@ -95,6 +95,13 @@ const [currentListingStatusUpdatedBy, setCurrentListingStatusUpdatedBy] = useSta
 const [currentListingRegion, setcurrentListingRegion] = useState(xdata.region)
 
 
+let idValue = '';
+if(xdata.region === 'unmapped' || xdata.region==='') {
+  idValue = `${id}_unmapped`
+} else {
+  idValue = id
+}
+const [checkBoxIdValue, setCheckBoxIdValue] = useState(idValue);
 
   const summary =
     property?.publicDescription?.summary ||
@@ -294,7 +301,9 @@ console.log('NEW REGION:::', response)
 
           //window.location.reload();
           setcurrentListingRegion(newRegionFromOpenAI)
-          setNewRegionFromOpenAIUpdated(true)
+          setNewRegionFromOpenAIUpdated(true);
+
+          setCheckBoxIdValue(id);
     }
     else if(ShubResponse.data.success===false) {
           swal({
@@ -667,13 +676,17 @@ setCurrentListingStatusUpdatedBy(agentData.firstName);
   return <>
  
     <td className="px-3 p-3 text-primary cst-cursor">
-    {(extranet_vt_logged_in_role==='admin' && (xdata.region === 'unmapped' || xdata.region === '') ) && 
-      <input type="checkbox" value={`${id}_unmapped`} name="listing_ids_to_update[]"  />
-    }
+    {/*(extranet_vt_logged_in_role==='admin' && (xdata.region === 'unmapped' || xdata.region === '') ) && 
+      <input type="checkbox" key={id} value={`${id}_unmapped`} name="listing_ids_to_update[]"  />
+    */}
 
-    {(extranet_vt_logged_in_role==='admin' && xdata.region !== 'unmapped' && xdata.region !== '') && 
-      <input type="checkbox" value={id} name="listing_ids_to_update[]"  />
-    }
+    {/*(extranet_vt_logged_in_role==='admin' && xdata.region !== 'unmapped' && xdata.region !== '') && 
+      <input type="checkbox" key={id} value={id} name="listing_ids_to_update[]"  />
+    */}
+
+    <input type="checkbox" key={id} value={checkBoxIdValue} name="listing_ids_to_update[]"  />
+
+  
 
 
 {extranet_vt_logged_in_role==='partner' && partner.accountId==='585a39dbe43900100017e9e8' &&      
@@ -841,7 +854,7 @@ setCurrentListingStatusUpdatedBy(agentData.firstName);
       <div>
       {/*<input type="text" value={newRegionFromOpenAI} onChange={ (e)=> setNewRegionFromOpenAI(e.target.value) } />*/}
       <button class="btn btn-primary" onClick={()=>regionLookUpOpenAI(property.address.country, property.address.zipcode)}>Region Lookup</button>
-      
+
       {newRegionFromOpenAI &&
       <div>
       <button class="btn btn-success" onClick={()=>saveNewRegionFromOpenAI(property.address.country, property.address.zipcode, property._id)}>Update single</button> 
