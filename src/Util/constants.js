@@ -61,6 +61,9 @@ export const APP_DISPLAY_NAME = 'Villa Tracker EXTRANET';
 export const PATH_ZIPS_REGIONS_MAPPING = '/zipcodes-regions-mapping';
 export const PATH_ZIPS_REGIONS_MAPPING_COUNTRY = '/zipcodes-regions-mapping-country';
 
+export const PATH_ZIPS_REGIONS_MAPPING_AI = '/ai-regions-for-zipcodes';
+
+
 const constants = {
 	ENV: 'LOCAL',
 	BASE_URL: 'https://backend.villatracker.com',

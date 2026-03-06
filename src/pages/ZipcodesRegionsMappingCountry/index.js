@@ -14,6 +14,9 @@ import Popup from "../../components/Popup/index.js";
 import Button from "../../components/Buttons/Button/Button"
 import swal from "sweetalert"
 
+import PopupAI from "../../components/PopupAI/index.js";
+
+
 const ZipcodesRegionsMappingCountry = (props) => {
 
     const { token, agency, agent, screenSize, activeMenu, handleToggleMenu, setActiveMenu } = props
@@ -41,6 +44,9 @@ const extranet_vt_logged_in_role = localStorage.getItem('extranet-vt-logged-in-r
     //const history = useHistory();
     //const location = useLocation();   
 
+const [selectedListingAI, setSelectedListingAI] = useState(null); 
+const [aiRegionSuggestions, setAiRegionSuggestions] = useState([]); 
+const[selectedAIRegion, setSelectedAIRegion] = useState(''); 
 
     const { country } = useParams();
  
@@ -90,7 +96,51 @@ setSelectedPropertyTitle(listingData?.data?.title);
 
     setSelectedZipsData(response.data.zipsData)
     setSelectedListing(listingData);
+}   
+
+
+const showPopUpAI = async(listingData) => {
+    setAiRegionSuggestions( [] ); //Re-initializing
+    setSelectedAIRegion( '' ); //Re-initializing
+    
+
+    const zipcode_to_search = listingData.data.address.zipcode;
+
+    const res = await userRequest.post(constants.SHUB_URL+'/local/get-touristic-destination-suggestions-open-ai', {country, zipcode:zipcode_to_search} );
+
+    const resData = res?.data;
+console.log('resData:::', resData) 
+    if(resData?.success && resData.success===true) {
+        if(resData?.destinations) {
+
+            //resData.destinations
+           if( resData.destinations !== '' &&  /Sorry/i.test(resData.destinations) === false ) {
+                const regionsArray = resData.destinations.split(",").map(p => p.trim());
+
+                setAiRegionSuggestions( regionsArray )
+           }
+
+        }
+    }
+  
+/*
+    let response = await userRequest.post(`local/get-zips-data-for-country-zipcode`,
+                    { country, zip:listingData.data.address.zipcode },
+                );
+*/                
+
+if(listingData?.data?.address?.full) {
+    setSelectedPropertyAddress(listingData.data.address.full);
+}   
+
+setSelectedPropertyId(listingData.id);
+setSelectedPropertyTitle(listingData?.data?.title);
+
+    //setSelectedZipsData(response.data.zipsData) 
+    
+    setSelectedListingAI(listingData);
 }    
+
 
 const handleRegionSelection = (region) => {
 
@@ -103,10 +153,23 @@ const handleRegionSelection = (region) => {
     }
 }
 
+
+const handleRegionSelectionAI = (region) => {
+
+    if(region !== '') {
+        setSelectedAIRegion(region)
+    } else {
+        setSelectedAIRegion(null)
+    }
+}
+
+
   const onCloseResStatus = () => {
     setSelectedListing(null)
   }
-
+  const onCloseResStatusAI = () => {
+    setSelectedListingAI(null)
+  }
 
 const updateSingleProperty = async(listingData, allFlag='') => {
     
@@ -155,6 +218,42 @@ const updateSingleProperty = async(listingData, allFlag='') => {
 }
 
 
+
+const addRegionDatatoZips = async(listingData) => {
+    /*
+    console.log('listingData.data.address.country:::', listingData.data.address.country)
+    console.log('listingData.xdata.country:::', listingData.xdata.country)
+    console.log('listingData.data.address.zipcode:::', listingData.data.address.zipcode)
+    console.log('selectedAIRegion:::', selectedAIRegion)
+    */
+
+    let response = await userRequest.post(`local/add-ai-suggested-region-to-zips-for-country-and-zipcode`,
+                    { country:listingData.data.address.country, zip:listingData.data.address.zipcode, region:selectedAIRegion },
+                );    
+    
+    if(response.data.success===true) {
+        setSelectedListing(null);
+
+        swal({
+            show: true,
+            icon: 'success',
+            title: 'Success!',
+            text: response.data.message
+        });        
+
+        //fetchZipcodesWithUnmappedRegionsCountry();        
+    } else {
+        swal({
+            show: true,
+            icon: 'error',
+            title: 'Error!',
+            text: response.data.message
+        });            
+    }    
+    
+}
+
+
 const columns = [
 
     {
@@ -194,11 +293,17 @@ const columns = [
         width: '1fr'
     },    
     {
-        id: 'region',
-        name: 'Region',
+        id: 'region_manual',
+        name: 'Region Mapping (Manual)',
         headerStyle: { paddingLeft: '50px', backgroundColor: '#F5F5F2' },
         width: '1fr'
-    },    
+    },   
+    {
+        id: 'region_ai',
+        name: ' ',
+        headerStyle: { paddingLeft: '50px', backgroundColor: '#F5F5F2' },
+        width: '1fr'
+    },      
 ]
 
     return(
@@ -287,7 +392,10 @@ const columns = [
                                             <td>
                                                 <h5 className="cst-cursor" onClick={()=>showPopUp(item)} >{item.xdata.region}</h5>
                                             </td>                                                                                        
-                                            
+                                            <td>
+                                                <h5 className="cst-cursor" onClick={()=>showPopUpAI(item)} style={{color:'blue'}}>Add AI Suggested Regions</h5>
+                                            </td>
+
                                         </tr>
                                         ))}  
 
@@ -322,18 +430,20 @@ const columns = [
                         <div class="row">
                             <div class="col-6"><h3>Property Title: </h3></div>
                             <div class="col-6"><h3>{selectedPropertyTitle}</h3></div>
-                        </div>                        
+                        </div>     
+<div class="row">&nbsp;</div>
+                        <div class="row">
+                            <div class="col-6"><h3>Address: </h3></div>
+                            <div class="col-6"><h3>{selectedPropertyAddress}</h3></div>
+                        </div>   
+<div class="row">&nbsp;</div>
                         <div class="row">
                             <div class="col-6"><h3>Country: </h3></div>
-                            <div class="col-6"><h3>{country}</h3></div>
+                            <div class="col-6"><h3>{selectedListing.data.address.country}</h3></div>
                         </div>
                         <div class="row">
                             <div class="col-6"><h3>Zipcode: </h3></div>
                             <div class="col-6"><h3>{selectedListing.data.address.zipcode}</h3></div>
-                        </div>
-                        <div class="row">
-                            <div class="col-6"><h3>Address: </h3></div>
-                            <div class="col-6"><h3>{selectedPropertyAddress}</h3></div>
                         </div>
 
                         <div class="row">
@@ -371,7 +481,7 @@ const columns = [
 
                     <div className="approve-agent-footer">
                         <Button
-                            style={{ fontSize: '18px', marginRight: '30px' }}
+                            style={{ fontSize: '18px', marginRight: '30px',color:'black', 'background-color': 'grey', padding:'10px' }}
                             variant="link"
                             text="Cancel"
                             onClick={onCloseResStatus}
@@ -388,6 +498,91 @@ const columns = [
     }
 
 
+
+
+    {
+        selectedListingAI && (
+            <PopupAI>
+                <div className="approve-agent-container">
+                    <div className="approve-agent-header">
+                        <div className="approve-agent-title"><h1>AI - Zipcode & Region Mapping:</h1></div>
+                        <div className="approve-agent-sub-header">
+                            <div>Main Agent : <b>{agentData.firstName}</b></div>
+                            <div className="approve-agent-sub-header-separator" />
+                            <div>Agency: <b>{agentData.agencyName}</b></div>
+                        </div>
+                    </div>
+
+                    <div className="approve-agent-main">
+                        <div class="row">
+                            <div class="col-6"><h5>Property Id: </h5></div>
+                            <div class="col-6"><h5>{selectedPropertyId}</h5></div>
+                        </div>
+                        <div class="row">
+                            <div class="col-6"><h5>Property Title: </h5></div>
+                            <div class="col-6"><h5>{selectedPropertyTitle}</h5></div>
+                        </div>     
+<div class="row">&nbsp;</div>
+                        <div class="row">
+                            <div class="col-6"><h3>Address: </h3></div>
+                            <div class="col-6"><h3>{selectedPropertyAddress}</h3></div>
+                        </div>   
+<div class="row">&nbsp;</div>
+                        <div class="row">
+                            <div class="col-6"><h3>Country: </h3></div>
+                            <div class="col-6"><h3 style={{'background-color':'grey'}}>{selectedListingAI.data.address.country}</h3></div>
+                        </div>
+                        <div class="row">
+                            <div class="col-6"><h3>Zipcode: </h3></div>
+                            <div class="col-6"><h3 style={{'background-color':'grey'}}>{selectedListingAI.data.address.zipcode}</h3></div>
+                        </div>                        
+
+                        <div class="row">
+                            <div class="col-6"><h3 style={{color:'blue'}}>Choose from AI suggested regions</h3></div>
+                            <div class="col-6">
+                                <select className="form-control" onChange={(e) => handleRegionSelectionAI(e.target.value)}>
+                                    <option value="">--Select--</option>
+                                    {aiRegionSuggestions.map((item, index) => (
+                                        <option key={index} value={item}>{item}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>                       
+
+<div class="row">&nbsp;</div>
+
+                        <div class="row">
+                            <div class="col-6"><h3 style={{color:'blue'}}>Enter region manually (If any):</h3></div>
+                            <div class="col-6"><input type="text" className="form-control" value={selectedAIRegion} onChange={(e) => setSelectedAIRegion(e.target.value)} /></div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-6">
+                                <input type="button" class="btn btn-success" value={`Accept and save the selected region to ZIPS collection`} onClick={()=>addRegionDatatoZips(selectedListingAI)} disabled={!selectedAIRegion || /unmapp/i.test(selectedAIRegion || selectedAIRegion==='') } />
+                            </div> 
+
+                                <div class="col-6">&nbsp;</div>
+                        </div>                                            
+
+                    </div>
+
+                    <div className="approve-agent-footer">
+                        <Button
+                            style={{ fontSize: '18px', marginRight: '30px', color:'black', 'background-color': 'grey', padding:'10px' }}
+                            variant="link"
+                            text="CLOSE"
+                            onClick={onCloseResStatusAI}
+                        />
+                        {/* <Button
+                            style={{ fontSize: '18px' }}
+                            text="Confirm"
+                            onClick={() => onSubmitResStatus(selectedReservations)}
+                        /> */}
+                    </div>
+                </div>
+            </PopupAI>
+        )
+    }
 
 
                 </div>  

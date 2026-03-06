@@ -46,7 +46,7 @@ import {
   APP_DISPLAY_NAME,
   PATH_VERIFY_COMPARE_NEW_PMS,
   PATH_ZIPS_REGIONS_MAPPING,
-  PATH_DUPLICATED_LISTINGS
+  PATH_DUPLICATED_LISTINGS,
 } from "../../Util/constants";
 
 const Sidebar = ({ activeMenu, setActiveMenu, handleToggleMenu, showOrHideSideBarMenu }) => {
@@ -95,7 +95,7 @@ const Sidebar = ({ activeMenu, setActiveMenu, handleToggleMenu, showOrHideSideBa
           { text: "Tasks", path: PATH_TASKS, icon: <FiSettings size={18} /> },
           { text: "VT Reservations", path: PATH_RESERVATIONS, icon: <FiCalendar size={18} /> },
           { text: "Verify New PMs", path: PATH_VERIFY_COMPARE_NEW_PMS, icon: <MdVerifiedUser size={18} /> },
-          { text: "Mapping - Zipcodes & Regions ", path: PATH_ZIPS_REGIONS_MAPPING, icon: <MdVerifiedUser size={18} /> },
+          { text: "Mapping unmapped listings - Zipcodes & Regions", path: PATH_ZIPS_REGIONS_MAPPING, icon: <MdVerifiedUser size={18} /> },
         ]
       },
       {
