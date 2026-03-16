@@ -46,7 +46,7 @@ import {
 	PATH_LISTINGS,
 	PATH_SIGNOUT,
 	PATH_LOGIN,
-	APP_DISPLAY_NAME
+	APP_DISPLAY_NAME	
 } from "../../Util/constants";
 
 import { data } from "./makeData.js";
@@ -107,7 +107,7 @@ const NEW_PARTNER_VT = {
 	source: "VT"
 };
 
-const Partners = (props) => {
+const PartnersVT = (props) => {
 
 
 const dispatch = useDispatch();	
@@ -157,7 +157,7 @@ const showOrHideSideBarMenu=()=> {
 	// console.log("filterPartners >>>>", filterPartners);
 	const [searchPartners, setSearchPartners] = useState("");
 
-localStorage.setItem('partners_page','partners');
+localStorage.setItem('partners_page','partners-vt');
 let property_status_to_filter_gs = '';
 	//const [pageNumber, setPageNumber] = useState(page);
 		//added by jaison for Liron 2025-June 11
@@ -272,9 +272,10 @@ const [serialNumber, setSerialNumber] = useState(0);
  
 
 	const getAllPartners = async () => {
+
 		setIsLoading(true)
 		const partnersResponse = await userRequest.get(`local/partners`,
-			{ params: { limit: constants.PAGING_PARTNERS_SIZE, skip: partnersPagingFrom - 1, provider:'guesty_channel_api' } },
+			{ params: { limit: constants.PAGING_PARTNERS_SIZE, skip: partnersPagingFrom - 1, provider:'guesty_channel_api', source:constants.GUESTY_CHANNEL_SOURCE } },
 		);  
 		setIsLoading(false)
 		//console.log("response:",partnersResponse.data)
@@ -293,7 +294,7 @@ const [serialNumber, setSerialNumber] = useState(0);
 				skip: partnersPagingFrom - 1,
 				pmName: searchInputes.pmName,
 				provider:'guesty_channel_api',
-				//source:'VT',
+				source:constants.GUESTY_CHANNEL_SOURCE,
 				status:filterPropertyStatus 
 			} :
 				{
@@ -301,7 +302,7 @@ const [serialNumber, setSerialNumber] = useState(0);
 					skip: partnersPagingFrom - 1,
 					accountId: searchInputes.accountId,
 				provider:'guesty_channel_api',					
-				//source:'VT',
+				source:constants.GUESTY_CHANNEL_SOURCE,
 				status:filterPropertyStatus
 				} :
 
@@ -309,13 +310,13 @@ const [serialNumber, setSerialNumber] = useState(0);
 				limit: constants.PAGING_PARTNERS_SIZE,
 				skip: partnersPagingFrom - 1,
 				provider:'guesty_channel_api',
-				//source:'VT',
+				source:constants.GUESTY_CHANNEL_SOURCE,
 				status:filterPropertyStatus
 			}
 
 
 if(extranet_vt_logged_in_role==='admin') {	//By Jaison 2025 July 11
-	delete params.source
+	//delete params.source
 }			
 
 		console.log('loading search::::', params)
@@ -915,7 +916,7 @@ localStorage.setItem('partnerPropertiesUniqueZipcodes', JSON.stringify(partnerPr
 
 
 							<div className="agencies-title">
-	{extranet_vt_logged_in_role==='admin' && <span>Guesty PM List</span> }
+	{extranet_vt_logged_in_role==='admin' && <span>Guesty VT PM List</span> }
 	{extranet_vt_logged_in_role==='partner' && <span>Guesty PM Home</span> }
 
 								{!partnerLogin && (<>
@@ -1091,5 +1092,5 @@ localStorage.setItem('partnerPropertiesUniqueZipcodes', JSON.stringify(partnerPr
 	);
 };
 
-export default Partners;
+export default PartnersVT;
 

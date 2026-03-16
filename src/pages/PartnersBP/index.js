@@ -159,7 +159,7 @@ const showOrHideSideBarMenu=()=> {
     // console.log("filterPartners >>>>", filterPartners);
     const [searchPartners, setSearchPartners] = useState("");
 
-localStorage.setItem('partners_page','BP');    
+localStorage.setItem('partners_page','partners-bp');    
 let property_status_to_filter_bp = '';
     //const [pageNumber, setPageNumber] = useState(page);
         //added by jaison for Liron 2025-June 11

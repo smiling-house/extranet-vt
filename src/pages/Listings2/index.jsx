@@ -82,6 +82,7 @@ const goToPartnersPage = () => {
     const partners_page = localStorage.getItem('partners_page');    
 
     if(partners_page) {
+        /*
         if(partners_page === 'GUESTY') {
             history.push('/partners?page='+partnersPageLastPageNumber);
         } else if(partners_page === 'BP') {
@@ -89,9 +90,12 @@ const goToPartnersPage = () => {
         } else if(partners_page === 'RU') {
             history.push('/partners-ru?page='+partnersPageLastPageNumber);
         }
+         */
+        
+        history.push(`/${partners_page}?page=${partnersPageLastPageNumber}`);
     }
     else { //Default - GUESTY partners page
-        history.push('/partners?page='+partnersPageLastPageNumber);
+        history.push('/partners-sh?page='+partnersPageLastPageNumber);
     }
 }
 

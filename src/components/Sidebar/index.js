@@ -47,6 +47,8 @@ import {
   PATH_VERIFY_COMPARE_NEW_PMS,
   PATH_ZIPS_REGIONS_MAPPING,
   PATH_DUPLICATED_LISTINGS,
+  PATH_PARTNERS_SH,
+  PATH_PARTNERS_VT
 } from "../../Util/constants";
 
 const Sidebar = ({ activeMenu, setActiveMenu, handleToggleMenu, showOrHideSideBarMenu }) => {
@@ -76,7 +78,8 @@ const Sidebar = ({ activeMenu, setActiveMenu, handleToggleMenu, showOrHideSideBa
         title: 'Partner Management',
         icon: <FiUsers size={20} />,
         items: [
-          { text: "Guesty PMs", path: PATH_PARTNERS, icon: <MdBusiness size={18} /> },
+          { text: "Guesty SH PMs", path: PATH_PARTNERS_SH, icon: <MdBusiness size={18} /> },
+          { text: "Guesty VT PMs", path: PATH_PARTNERS_VT, icon: <MdBusiness size={18} /> },
           { text: "BP PMs (SH)", path: PATH_PARTNERS_BP, icon: <MdBusiness size={18} /> },
           { text: "RU PMs (SH)", path: PATH_PARTNERS_RU, icon: <MdBusiness size={18} /> },
           { text: "BART PMs", path: PATH_PARTNERS_BART, icon: <MdBusiness size={18} /> },

@@ -107,8 +107,7 @@ const NEW_PARTNER_VT = {
 	source: "VT"
 };
 
-const Partners = (props) => {
-
+const PartnersSH = (props) => {
 
 const dispatch = useDispatch();	
 
@@ -157,7 +156,7 @@ const showOrHideSideBarMenu=()=> {
 	// console.log("filterPartners >>>>", filterPartners);
 	const [searchPartners, setSearchPartners] = useState("");
 
-localStorage.setItem('partners_page','partners');
+localStorage.setItem('partners_page','partners-sh');
 let property_status_to_filter_gs = '';
 	//const [pageNumber, setPageNumber] = useState(page);
 		//added by jaison for Liron 2025-June 11
@@ -166,10 +165,9 @@ let property_status_to_filter_gs = '';
 		let page = parseInt( queryParams.get('page') );	
 
 		if(!page) {
-			
 			defaultPageNumber = 0;
-		} else {			
-			defaultPageNumber = page;			
+		} else {
+			defaultPageNumber = page;	
 		}
 		localStorage.setItem('partnersPageLastPageNumber', defaultPageNumber);
 		const [pageNumber, setPageNumber] = useState(defaultPageNumber);
@@ -274,7 +272,7 @@ const [serialNumber, setSerialNumber] = useState(0);
 	const getAllPartners = async () => {
 		setIsLoading(true)
 		const partnersResponse = await userRequest.get(`local/partners`,
-			{ params: { limit: constants.PAGING_PARTNERS_SIZE, skip: partnersPagingFrom - 1, provider:'guesty_channel_api' } },
+			{ params: { limit: constants.PAGING_PARTNERS_SIZE, skip: partnersPagingFrom - 1, provider:'guesty_channel_api', source:'SH' } },
 		);  
 		setIsLoading(false)
 		//console.log("response:",partnersResponse.data)
@@ -293,7 +291,7 @@ const [serialNumber, setSerialNumber] = useState(0);
 				skip: partnersPagingFrom - 1,
 				pmName: searchInputes.pmName,
 				provider:'guesty_channel_api',
-				//source:'VT',
+				source:'SH',
 				status:filterPropertyStatus 
 			} :
 				{
@@ -301,7 +299,7 @@ const [serialNumber, setSerialNumber] = useState(0);
 					skip: partnersPagingFrom - 1,
 					accountId: searchInputes.accountId,
 				provider:'guesty_channel_api',					
-				//source:'VT',
+				source:'SH',
 				status:filterPropertyStatus
 				} :
 
@@ -309,13 +307,13 @@ const [serialNumber, setSerialNumber] = useState(0);
 				limit: constants.PAGING_PARTNERS_SIZE,
 				skip: partnersPagingFrom - 1,
 				provider:'guesty_channel_api',
-				//source:'VT',
+				source:'SH',
 				status:filterPropertyStatus
 			}
 
 
 if(extranet_vt_logged_in_role==='admin') {	//By Jaison 2025 July 11
-	delete params.source
+	//delete params.source
 }			
 
 		console.log('loading search::::', params)
@@ -424,6 +422,7 @@ localStorage.setItem('partnerPropertiesUniqueZipcodes', JSON.stringify(partnerPr
 	};
 
 	const doSearch = pageNumber => {
+		
 		partnersPagingFrom = 1 + pageNumber * constants.PAGING_PARTNERS_SIZE;
 		partnersPagingTo = (partnersPagingFrom + constants.PAGING_PARTNERS_SIZE > totalPartners) ? totalPartners : partnersPagingFrom + constants.PAGING_PARTNERS_SIZE
 		console.log("skipping : ", partnersPagingFrom - 1);
@@ -443,7 +442,6 @@ localStorage.setItem('partnerPropertiesUniqueZipcodes', JSON.stringify(partnerPr
 		doSearch(pageNumber);
 
 		setSerialNumber(pageNumber * constants.PAGING_PARTNERS_SIZE);
-
 	};
 
 	const menuStyle = () => {
@@ -915,12 +913,12 @@ localStorage.setItem('partnerPropertiesUniqueZipcodes', JSON.stringify(partnerPr
 
 
 							<div className="agencies-title">
-	{extranet_vt_logged_in_role==='admin' && <span>Guesty PM List</span> }
+	{extranet_vt_logged_in_role==='admin' && <span>Guesty SH PM List</span> }
 	{extranet_vt_logged_in_role==='partner' && <span>Guesty PM Home</span> }
 
 								{!partnerLogin && (<>
 									{/*<a class="dropdown-item" href="#" onClick={onAddPartnerSH}><img src={addAdminIcon} /> connect GUESTY PM partner SH = Smiling House </a>*/}
-									<a class="dropdown-item" style={{whiteSpace: 'unset'}} href="#" onClick={onAddPartnerVT}><img src={addAdminIcon} /> connect GUESTY PM partner VT = Villa Tracker </a>
+									<a class="dropdown-item" style={{whiteSpace: 'unset'}} href="#" onClick={onAddPartnerSH}><img src={addAdminIcon} /> connect GUESTY PM partner SH = Smiling House </a>
 								</>)}
 
 								<div className="agencies-main-subtitle">Displaying PMs {partnersPagingFrom}-{partnersPagingTo} of {totalPartners ? totalPartners : "?"}
@@ -1091,5 +1089,5 @@ localStorage.setItem('partnerPropertiesUniqueZipcodes', JSON.stringify(partnerPr
 	);
 };
 
-export default Partners;
+export default PartnersSH;
 

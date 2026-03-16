@@ -41,6 +41,10 @@ import PropertyEdit from "./PropertyEdit";
 import PropertyReservePage from "./PropertyReserve";
 import VerifyNewPMs from './VerifyNewPMs';
 import Admin from "./Admin";
+
+import PartnersSH from "./PartnersSH";
+import PartnersVT from "./PartnersVT";
+
 import {
   PATH_PARTNERS,
   PATH_PARTNERS_BP,
@@ -90,7 +94,9 @@ import {
   PATH_ZIPS_REGIONS_MAPPING,
   PATH_ZIPS_REGIONS_MAPPING_COUNTRY,
   PATH_LISTINGS_SH_RU_DECLINED_BUT_LISTED_ON_RU,
-  PATH_LISTINGS_SH_BP_DECLINED_BUT_LISTED_ON_BP
+  PATH_LISTINGS_SH_BP_DECLINED_BUT_LISTED_ON_BP,
+  PATH_PARTNERS_SH,
+  PATH_PARTNERS_VT
 } from "../Util/constants";
 import AuthService from "../services/auth.service";
 import { baseURL } from "../core";
@@ -206,7 +212,8 @@ const showOrHideSideBarMenu=()=> {
 
 
 
-      history.push(PATH_PARTNERS);
+      //history.push(PATH_PARTNERS);
+      history.push(PATH_PARTNERS_SH);
     } else {
       history.push(PATH_LOGIN);
     }
@@ -458,7 +465,37 @@ const showOrHideSideBarMenu=()=> {
             handleToggleMenu={handleToggleMenu}
             setActiveMenu={setActiveMenu}
           />
-        </Route>
+        </Route> 
+
+        <Route exact path={[PATH_PARTNERS_SH]}>
+          <PartnersSH
+            agency={agency}
+            agent={agent}
+            token={token}
+            setProfile={setProfile}
+            screenSize={screenSize}
+            setScreenSize={setScreenSize}
+            activeMenu={activeMenu}
+            handleToggleMenu={handleToggleMenu}
+            setActiveMenu={setActiveMenu}
+          />
+        </Route>        
+
+        <Route exact path={[PATH_PARTNERS_VT]}>
+          <PartnersVT
+            agency={agency}
+            agent={agent}
+            token={token}
+            setProfile={setProfile}
+            screenSize={screenSize}
+            setScreenSize={setScreenSize}
+            activeMenu={activeMenu}
+            handleToggleMenu={handleToggleMenu}
+            setActiveMenu={setActiveMenu}
+          />
+        </Route>        
+
+
         <Route exact path={[PATH_PARTNERS_BP]}>
           <PartnersBP
             agency={agency}

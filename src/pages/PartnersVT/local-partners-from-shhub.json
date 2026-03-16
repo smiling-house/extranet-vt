@@ -1,0 +1,54 @@
+{
+    "success": true,
+    "partners": [
+        {
+            "_id": "64f4d0ddefb310104cfbbb44",
+            "email": "yavgar@gmail.com",
+            "provider": "guesty_channel_api",
+            "__v": 0,
+            "accountId": "640625ea0620e40031b8597d",
+            "agent": "TAL ARNON",
+            "basicChannels": [
+                "VT",
+                "SH"
+            ],
+            "bearerToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbklkIjoiNjQxOGE1YzY0NTUzNDdmMGExMjViNDRhIiwiYXBwbGljYXRpb25JZCI6IjY0MTJmNGI4NDA5OTIxZjVmM2VhY2M3YiIsImFjY291bnRJZCI6IjY0MDYyNWVhMDYyMGU0MDAzMWI4NTk3ZCIsImlzcyI6InByb2R1Y3Rpb24uZ3Vlc3R5LmNvbSIsIm5hbWUiOiJhcHBsaWNhdGlvbiIsInJvbGUiOiJ1c2VyIiwidXNlclJvbGVzIjpbeyJyb2xlSWQiOnsicGVybWlzc2lvbnMiOlsibGlzdGluZy52aWV3ZXIiXX19XSwicmVxdWVzdGVyIjoiT1RBQGd1ZXN0eS5jb20iLCJpYXQiOjE2NzkzMzY5MDJ9.nVtw-wy3qSQqF9anMjC0l9JJBG8SNiR-U0UOAkLiLJE",
+            "clientId": "not used for channel",
+            "clientSecret": "not used for channel",
+            "createdAt": "2023-09-03T18:30:53.884Z",
+            "password": "not used (user created via api)",
+            "updatedAt": "2023-09-05T06:58:37.785Z",
+            "SH": [
+                "64072805d57d670040d5fab6",
+                "64062db60744b6003827ce4d",
+                "64072fa0703563003d53fee5",
+                "64073007241f7800339fe50d"
+            ],
+            "TL": [],
+            "VT": [
+                "64072805d57d670040d5fab6",
+                "64062db60744b6003827ce4d",
+                "64072fa0703563003d53fee5",
+                "64073007241f7800339fe50d"
+            ],
+            "ids": [
+                "64072805d57d670040d5fab6",
+                "64062db60744b6003827ce4d",
+                "64072fa0703563003d53fee5",
+                "64073007241f7800339fe50d"
+            ],
+            "pending": [
+                "64072805d57d670040d5fab6",
+                "64062db60744b6003827ce4d",
+                "64072fa0703563003d53fee5",
+                "64073007241f7800339fe50d"
+            ]
+        }
+    ],
+    "limit": 2,
+    "skip": 0,
+    "sortBy": {
+        "createdAt": -1
+    },
+    "count": 1
+}
