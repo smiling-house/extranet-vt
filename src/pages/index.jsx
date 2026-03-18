@@ -211,9 +211,18 @@ const showOrHideSideBarMenu=()=> {
 
 
 
+const partnerAccountId = localStorage.getItem('partnerLogin');
+let GO_TO = '';
+if( /sh-ru/i.test(partnerAccountId) === true ) {
+  GO_TO = PATH_PARTNERS_RU
+} else if (/sh-bp/i.test(partnerAccountId) === true) {
+  GO_TO = PATH_PARTNERS_BP
+} else if(partnerAccountId.length === 24) {
+  GO_TO = PATH_PARTNERS_SH
+}
 
       //history.push(PATH_PARTNERS);
-      history.push(PATH_PARTNERS_SH);
+      history.push(GO_TO);
     } else {
       history.push(PATH_LOGIN);
     }
