@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useDispatch } from 'react-redux';
 import Topbar from '../Topbar/index.js';
 import Sidebar from '../Sidebar';
 import './layout.scss';
@@ -17,8 +18,7 @@ const Layout = ({
   const [showSideBarMenu, setShowSideBarMenu] = useState(false);
   
   const agentData = agent ? JSON.parse(agent) : null;
-  const extranet_vt_logged_in_role = localStorage.getItem('extranet-vt-logged-in-role') || 
-    (agentData?.role === 'admin' ? 'admin' : 'partner');
+  const extranet_vt_logged_in_role = agentData?.role === 'admin' ? 'admin' : 'partner';
 
   const showOrHideSideBarMenu = () => {
     setShowSideBarMenu(prev => !prev);
