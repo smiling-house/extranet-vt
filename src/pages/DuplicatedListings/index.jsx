@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import swal from "sweetalert";
-import { FiCheckCircle, FiCopy, FiSlash, FiXCircle } from "react-icons/fi";
+import { FiCheckCircle, FiCopy, FiRotateCcw, FiSlash, FiXCircle } from "react-icons/fi";
 
 import Layout from "../../components/Layout/index.js";
 import LoadingBox from "../../components/LoadingBox";
@@ -13,7 +13,9 @@ import RebuildImageHashesPopup from "./RebuildImageHashesPopup";
 import "./DuplicatedListings.scss";
 
 const DISABLE_PROPERTY_ENDPOINT = "/disable_property";
+const ENABLE_PROPERTY_ENDPOINT = "/enable_property";
 const BATCH_DISABLE_PROPERTY_ENDPOINT = "/listings_batchdisable";
+const BATCH_ENABLE_PROPERTY_ENDPOINT = "/listings_batchenable";
 
 const DuplicatedListings = (props) => {
   const { token, agency, agent, screenSize, activeMenu, handleToggleMenu, setActiveMenu } = props;
@@ -36,7 +38,8 @@ const DuplicatedListings = (props) => {
   const [isBatchDisabling, setIsBatchDisabling] = useState(false);
 
   const [disablingIds, setDisablingIds] = useState(() => new Set());
-  const [disabledIds, setDisabledIds] = useState(() => new Set());
+  const [enablingIds, setEnablingIds] = useState(() => new Set());
+  const [isBatchEnabling, setIsBatchEnabling] = useState(false);
 
   const authToken = token || "test-token";
 
@@ -157,13 +160,87 @@ const DuplicatedListings = (props) => {
     }
   };
 
+  const getListingsFromSelection = (ids) => {
+    const idSet = ids instanceof Set ? ids : new Set(ids);
+    const matched = [];
+    for (const group of groups) {
+      for (const listing of group) {
+        if (idSet.has(listing.id)) matched.push(listing);
+      }
+    }
+    return matched;
+  };
+
+  const askDuplicatedBy = async () => {
+    if (activeTab === "images") return "image";
+
+    const wrapper = document.createElement("div");
+    wrapper.style.cssText = "text-align:left;margin-top:12px;";
+
+    const label = document.createElement("label");
+    label.textContent = "Duplicated by";
+    label.style.cssText = "display:block;font-weight:700;margin-bottom:6px;font-size:0.92rem;color:#374151;";
+
+    const select = document.createElement("select");
+    select.style.cssText = "width:100%;padding:8px 10px;border:1px solid #d1d5db;border-radius:8px;font-size:0.95rem;";
+
+    const placeholder = document.createElement("option");
+    placeholder.value = "";
+    placeholder.textContent = "-- Select reason --";
+    placeholder.disabled = true;
+    placeholder.selected = true;
+
+    const optTitle = document.createElement("option");
+    optTitle.value = "title";
+    optTitle.textContent = "Title";
+
+    const optAddress = document.createElement("option");
+    optAddress.value = "address";
+    optAddress.textContent = "Address";
+
+    select.appendChild(placeholder);
+    select.appendChild(optTitle);
+    select.appendChild(optAddress);
+    wrapper.appendChild(label);
+    wrapper.appendChild(select);
+
+    const confirmed = await swal({
+      title: "Duplicated by",
+      text: "Please select the reason this listing is a duplicate:",
+      icon: "warning",
+      content: wrapper,
+      buttons: ["Cancel", "Confirm"],
+      dangerMode: true,
+    });
+
+    if (!confirmed) return null;
+
+    const value = select.value;
+    if (!value) {
+      swal({ icon: "warning", title: "Selection required", text: "Please select a duplicated-by reason." });
+      return null;
+    }
+
+    return value;
+  };
+
   const disableSelected = async () => {
     const ids = Array.from(selectedIds);
     if (!ids.length || isBatchDisabling) return;
 
+    const listings = getListingsFromSelection(selectedIds);
+    const hasAlreadyDisabled = listings.some((l) => l.duplicated === true);
+    if (hasAlreadyDisabled) {
+      swal({ icon: "warning", title: "Invalid selection", text: "Please select only non-disabled properties to disable." });
+      return;
+    }
+
+    const duplicatedby = await askDuplicatedBy();
+    if (!duplicatedby) return;
+
     const confirmed = await swal({
       title: "Disable selected properties?",
-      text: `This will disable ${ids.length} listing(s).`,
+      text: `This will mark ${ids.length} listing(s) as duplicated by "${duplicatedby}".`,
       icon: "warning",
       buttons: ["Cancel", "Disable"],
       dangerMode: true,
@@ -173,15 +250,9 @@ const DuplicatedListings = (props) => {
 
     setIsBatchDisabling(true);
     try {
-      await api.post(BATCH_DISABLE_PROPERTY_ENDPOINT, {
+      const res = await api.post(BATCH_DISABLE_PROPERTY_ENDPOINT, {
         ids,
-        listingIds: ids,
-      });
-
-      setDisabledIds((prev) => {
-        const next = new Set(prev);
-        ids.forEach((id) => next.add(id));
-        return next;
+        duplicatedby,
       });
 
       clearSelected();
@@ -189,21 +260,62 @@ const DuplicatedListings = (props) => {
       swal({
         icon: "success",
         title: "Disabled",
-        text: `Disabled ${ids.length} listing(s).`,
+        text: `Matched: ${res.data?.matchedCount ?? ids.length}, Modified: ${res.data?.modifiedCount ?? ids.length}.`,
       });
 
-      const data = await loadDuplicates();
-      if (data?.success) {
-        showToast("List refreshed");
-      }
+      await loadDuplicates();
     } catch (err) {
       swal({
         icon: "error",
         title: "Batch disable failed",
-        text: err?.message || "Failed to disable selected listings.",
+        text: err?.response?.data?.error || err?.message || "Failed to disable selected listings.",
       });
     } finally {
       setIsBatchDisabling(false);
+    }
+  };
+
+  const enableSelected = async () => {
+    const ids = Array.from(selectedIds);
+    if (!ids.length || isBatchEnabling) return;
+
+    const listings = getListingsFromSelection(selectedIds);
+    const hasNonDisabled = listings.some((l) => l.duplicated !== true);
+    if (hasNonDisabled) {
+      swal({ icon: "warning", title: "Invalid selection", text: "Please select only disabled properties to enable." });
+      return;
+    }
+
+    const confirmed = await swal({
+      title: "Enable selected properties?",
+      text: `This will remove the duplicated flag from ${ids.length} listing(s).`,
+      icon: "warning",
+      buttons: ["Cancel", "Enable"],
+    });
+
+    if (!confirmed) return;
+
+    setIsBatchEnabling(true);
+    try {
+      const res = await api.post(BATCH_ENABLE_PROPERTY_ENDPOINT, { ids });
+
+      clearSelected();
+
+      swal({
+        icon: "success",
+        title: "Enabled",
+        text: `Matched: ${res.data?.matchedCount ?? ids.length}, Modified: ${res.data?.modifiedCount ?? ids.length}.`,
+      });
+
+      await loadDuplicates();
+    } catch (err) {
+      swal({
+        icon: "error",
+        title: "Batch enable failed",
+        text: err?.response?.data?.error || err?.message || "Failed to enable selected listings.",
+      });
+    } finally {
+      setIsBatchEnabling(false);
     }
   };
 
@@ -233,9 +345,12 @@ const DuplicatedListings = (props) => {
   };
 
   const disableProperty = async (listing) => {
+    const duplicatedby = await askDuplicatedBy();
+    if (!duplicatedby) return;
+
     const confirmed = await swal({
       title: "Disable property?",
-      text: `This will disable ${listing?.id}.`,
+      text: `This will mark "${listing?.id}" as duplicated by "${duplicatedby}".`,
       icon: "warning",
       buttons: ["Cancel", "Disable"],
       dangerMode: true,
@@ -250,31 +365,69 @@ const DuplicatedListings = (props) => {
     });
 
     try {
-      await api.post(DISABLE_PROPERTY_ENDPOINT, {
+      const res = await api.post(DISABLE_PROPERTY_ENDPOINT, {
         id: listing.id,
-        accountId: listing.accountId,
-        source: listing.source,
-      });
-
-      setDisabledIds((prev) => {
-        const next = new Set(prev);
-        next.add(listing.id);
-        return next;
+        duplicatedby,
       });
 
       swal({
         icon: "success",
         title: "Disabled",
-        text: `Property ${listing.id} has been disabled.`,
+        text: `Matched: ${res.data?.matchedCount ?? 1}, Modified: ${res.data?.modifiedCount ?? 1}.`,
       });
+
+      await loadDuplicates();
     } catch (err) {
       swal({
         icon: "error",
         title: "Disable failed",
-        text: err?.message || "Failed to disable property.",
+        text: err?.response?.data?.error || err?.message || "Failed to disable property.",
       });
     } finally {
       setDisablingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(listing.id);
+        return next;
+      });
+    }
+  };
+
+  const enableProperty = async (listing) => {
+    const confirmed = await swal({
+      title: "Enable property?",
+      text: `This will remove the duplicated flag from "${listing?.id}".`,
+      icon: "warning",
+      buttons: ["Cancel", "Enable"],
+    });
+
+    if (!confirmed) return;
+
+    setEnablingIds((prev) => {
+      const next = new Set(prev);
+      next.add(listing.id);
+      return next;
+    });
+
+    try {
+      const res = await api.post(ENABLE_PROPERTY_ENDPOINT, {
+        id: listing.id,
+      });
+
+      swal({
+        icon: "success",
+        title: "Enabled",
+        text: `Matched: ${res.data?.matchedCount ?? 1}, Modified: ${res.data?.modifiedCount ?? 1}.`,
+      });
+
+      await loadDuplicates();
+    } catch (err) {
+      swal({
+        icon: "error",
+        title: "Enable failed",
+        text: err?.response?.data?.error || err?.message || "Failed to enable property.",
+      });
+    } finally {
+      setEnablingIds((prev) => {
         const next = new Set(prev);
         next.delete(listing.id);
         return next;
@@ -403,6 +556,18 @@ const DuplicatedListings = (props) => {
                   {selectedCount ? <span className="batch-disable-count">{selectedCount}</span> : null}
                 </button>
 
+                <button
+                  type="button"
+                  className="batch-enable-btn"
+                  onClick={enableSelected}
+                  disabled={selectedCount === 0 || isLoading || isBatchEnabling}
+                  title={selectedCount === 0 ? "Select one or more listings" : "Enable selected listings"}
+                >
+                  <FiRotateCcw style={{ marginRight: 8 }} />
+                  {isBatchEnabling ? "Enabling..." : "Enable selected"}
+                  {selectedCount ? <span className="batch-enable-count">{selectedCount}</span> : null}
+                </button>
+
                 {totalCount > limit && (
                   <Paging
                     perPage={limit}
@@ -445,13 +610,14 @@ const DuplicatedListings = (props) => {
                     <div className="properties-strip">
                       {group.map((listing) => {
                         const isDisabling = disablingIds.has(listing.id);
-                        const isDisabled = disabledIds.has(listing.id);
+                        const isEnabling = enablingIds.has(listing.id);
+                        const isDuplicated = listing.duplicated === true;
                         const pmName = listing?.pmName;
                         const isSelected = selectedIds.has(listing.id);
 
                         return (
                           <div
-                            className={`property-card ${isSelected ? "selected" : ""}`}
+                            className={`property-card ${isSelected ? "selected" : ""} ${isDuplicated ? "disabled-look" : ""}`}
                             key={listing.id}
                             role="button"
                             tabIndex={0}
@@ -527,6 +693,13 @@ const DuplicatedListings = (props) => {
                                     Active: {listing?.isActive === true ? "Yes" : listing?.isActive === false ? "No" : "Unknown"}
                                   </span>
                                 </div>
+
+                                {isDuplicated && (
+                                  <div className="status-pill duplicated">
+                                    <FiSlash size={16} />
+                                    <span>Duplicated by: {listing.duplicatedby || "—"}</span>
+                                  </div>
+                                )}
                               </div>
                               <div className="line"><strong>Id:</strong> {listing.id}</div>
                               <div className="line"><strong>Source:</strong> {listing.source}</div>
@@ -540,19 +713,37 @@ const DuplicatedListings = (props) => {
                             </div>
 
                             <div className="prop-actions">
-                              <button
-                                type="button"
-                                className={`btn ${isDisabled ? "btn-disabled" : "btn-disable"}`}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  disableProperty(listing);
-                                }}
-                                disabled={isDisabled || isDisabling}
-                                title={isDisabled ? "Already disabled" : "Disable this property"}
-                              >
-                                <FiSlash style={{ marginRight: 6 }} />
-                                {isDisabling ? "Disabling..." : isDisabled ? "Disabled" : "Disable"}
-                              </button>
+                              {!isDuplicated && (
+                                <button
+                                  type="button"
+                                  className="btn btn-disable"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    disableProperty(listing);
+                                  }}
+                                  disabled={isDisabling}
+                                  title="Disable this property"
+                                >
+                                  <FiSlash style={{ marginRight: 6 }} />
+                                  {isDisabling ? "Disabling..." : "Disable"}
+                                </button>
+                              )}
+
+                              {isDuplicated && (
+                                <button
+                                  type="button"
+                                  className="btn btn-enable"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    enableProperty(listing);
+                                  }}
+                                  disabled={isEnabling}
+                                  title="Enable this property"
+                                >
+                                  <FiRotateCcw style={{ marginRight: 6 }} />
+                                  {isEnabling ? "Enabling..." : "Enable"}
+                                </button>
+                              )}
 
                               <button
                                 type="button"
