@@ -186,6 +186,7 @@ const showOrHideSideBarMenu=()=> {
   });
 
   const getProfile = async () => {
+    
     const agentId = localStorage.getItem("agent_id") ? parseInt(localStorage.getItem("agent_id")) : null;
     if (agentId) {
       const res = await userRequest.get(`/agent/get-profile`, {
@@ -212,17 +213,22 @@ const showOrHideSideBarMenu=()=> {
 
 
 const partnerAccountId = localStorage.getItem('partnerLogin');
-let GO_TO = '';
-if( /sh-ru/i.test(partnerAccountId) === true ) {
-  GO_TO = PATH_PARTNERS_RU
-} else if (/sh-bp/i.test(partnerAccountId) === true) {
-  GO_TO = PATH_PARTNERS_BP
-} else if(partnerAccountId.length === 24) {
-  GO_TO = PATH_PARTNERS_SH
-}
 
-      //history.push(PATH_PARTNERS);
-      history.push(GO_TO);
+if(partnerAccountId) {
+  let GO_TO = '';
+  if( /sh-ru/i.test(partnerAccountId) === true ) {
+    GO_TO = PATH_PARTNERS_RU
+  } else if (/sh-bp/i.test(partnerAccountId) === true) {
+    GO_TO = PATH_PARTNERS_BP
+  } else if(partnerAccountId.length === 24) {
+    GO_TO = PATH_PARTNERS_SH
+  }
+
+  history.push(GO_TO);
+} 
+
+      history.push(PATH_PARTNERS_SH); //Default - for admins
+
     } else {
       history.push(PATH_LOGIN);
     }
