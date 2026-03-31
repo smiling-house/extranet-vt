@@ -71,6 +71,9 @@ const ResetPasswordPage = () => {
 		else {
 			// await dispatch(userActions.forgotPassword(email));
 			var paylod = { "email": email }
+
+			//OLD API call to VT backend. COmmented
+			/*
 			AuthService.ForgotPasswordApi(paylod)
 				.then((response) => {
 					if (response.message !== undefined) {
@@ -93,6 +96,32 @@ const ResetPasswordPage = () => {
 					console.log(e);
 				});
 			setSent(true);
+			*/
+
+			AuthService.ForgotPasswordApiVTHUB(paylod)
+				.then((response) => {
+console.log('response::', response)					
+					if (response.status === true) {
+						swal({
+							show: true,
+							icon: "success",
+							title: "Success",
+							text: `${response.message}`,
+						});
+					} else if (response.status === false) {
+						swal({
+							show: true,
+							icon: "error",
+							title: "error",
+							text: `${response.message}`,
+						});
+					}
+				})
+				.catch((e) => {
+					console.log(e);
+				});			
+
+
 		}
 	};
 
@@ -139,7 +168,7 @@ const ResetPasswordPage = () => {
 										fullwidth={true}
 										variant="primary"
 										loading={state.loading}
-										text="Reset password"
+										text="Resend VT EXtranet Access Details"
 										onClick={(e) => {
 											setState({ ...state, error: undefined });
 											handleSubmit(e);
@@ -148,14 +177,14 @@ const ResetPasswordPage = () => {
 								</div>
 							</div>
 							<div className={styles.return_to_login_wrapper}>
-								{/* Return to Sign In */}
-								<h5 className="mt-5">Return to <span className="link" onClick={() => history.push("/login")}>Sign in</span></h5>
+								{/* Return to Sign In 
+								<h5 className="mt-5">Return to <span className="link" onClick={() => history.push("/login")}>Sign in</span></h5>*/}
 							</div>
 							<h5 className="mt-5 mb-5" >Please contact us if you have any trouble resetting your password.</h5>
 
 						</div>
 						<div className="col-md-7 col-12 model-footer pt-5 mb-2 cst-footer-add-css">
-							<hr className="pb-3"></hr>
+							{/*<hr className="pb-3"></hr>*/}
 							<TermsFooter isMobile={smallScreen} />
 						</div>
 

@@ -282,6 +282,7 @@ const [serialNumber, setSerialNumber] = useState(0);
             setTotalPartners(parseInt(partnersResponse.data.count))
         } else { console.log("error on reading partners api from vthub/local/partners-ex") }
     };
+    
     const getSearchPartners = async () => {
  
         setIsLoading(true)

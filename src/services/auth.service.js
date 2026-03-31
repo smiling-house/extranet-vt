@@ -300,6 +300,18 @@ const ForgotPasswordApi = (data) => {
         });
 };
 
+const ForgotPasswordApiVTHUB = (data) => {
+    const headersForupdate = {
+        "authorization": `Bearer ${userToken}`,
+    }
+    return axios.post(`${constants.SHUB_URL}/local/resend-extranet-access-details-to-partner-email`, data, {
+        headers: headersForupdate
+    })
+        .then((response) => {
+            return response.data;
+        });
+};
+
 const GetReservation = (data) => {
     console.log(userToken, "userToken")
     const headersForupdate = {
@@ -572,7 +584,8 @@ const AuthService = {
     trianglLuxuryApiPerId,
     uploadSelectedListings,
     updateReservationStatus,
-    declineReservation
+    declineReservation,
+    ForgotPasswordApiVTHUB
 };
 
 export default AuthService;
