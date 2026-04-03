@@ -417,7 +417,8 @@ if(agent_role) {
 
 		console.log("see listings for account:", accountId, partner.source);
 		localStorage.setItem("partner", JSON.stringify(partner))
-//localStorage.setItem("property_status_to_filter", property_status_to_filter)
+localStorage.setItem('property_status_to_filter_listings', property_status_to_filter);
+
 		history.push(PATH_LISTINGS, { partner, accountId, source: partner.source });
 		// if (!partner.offsetRead) {
 		// 	swal({
