@@ -150,7 +150,7 @@ export const signInEx = (user, chkRememberMe, callback) => {
 				const result = await userService.signIn({
 					"email": "tech.smilinghouse@gmail.com",
 					//"password": "VT2024",
-					"password": "3fypfoyO",
+					"password": "VT2026",
 					"twofa":"extranetVT"
 				})
 				if (result == null) {
@@ -250,7 +250,7 @@ localStorage.setItem('extranet-vt-logged-in-role', 'partner');
 		const result = await userService.signIn({
 			"email": "tech.smilinghouse@gmail.com",
 			//"password": "VT2024",
-			"password": "3fypfoyO",
+			"password": "VT2026",
 			//"twofa":"extranetVT"
 		})
 		if (result == null) {
