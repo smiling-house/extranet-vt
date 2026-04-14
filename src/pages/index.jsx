@@ -44,6 +44,7 @@ import Admin from "./Admin";
 
 import PartnersSH from "./PartnersSH";
 import PartnersVT from "./PartnersVT";
+import SearchListings from "./SearchListings";
 
 import {
   PATH_PARTNERS,
@@ -96,7 +97,8 @@ import {
   PATH_LISTINGS_SH_RU_DECLINED_BUT_LISTED_ON_RU,
   PATH_LISTINGS_SH_BP_DECLINED_BUT_LISTED_ON_BP,
   PATH_PARTNERS_SH,
-  PATH_PARTNERS_VT
+  PATH_PARTNERS_VT,
+  PATH_SEARCH_LISTINGS
 } from "../Util/constants";
 import AuthService from "../services/auth.service";
 import { baseURL } from "../core";
@@ -653,8 +655,17 @@ if(partnerAccountId) {
             token={token}
             handleToggleMenu={handleToggleMenu}
           />
-        </Route>                                                   
-        
+        </Route>
+                                                
+        <Route path={[PATH_SEARCH_LISTINGS]}>
+          <SearchListings
+            agent={agent}
+            agency={agency}
+            token={token}
+            handleToggleMenu={handleToggleMenu}
+          />
+        </Route>
+    
         <div className="page-container">
           <div className="page-header"><img src={menuIcon} style={{'width':'25px'}} className="cst-cursor" onClick={showOrHideSideBarMenu} />&nbsp;{APP_DISPLAY_NAME} - {agentData?.firstName} (<span className="cst-cursor" onClick={signOut}>Sign Out</span>)</div>
           <Sidebar

@@ -65,6 +65,9 @@ export const PATH_ZIPS_REGIONS_MAPPING_AI = '/ai-regions-for-zipcodes';
 
 export const PATH_PARTNERS_SH = '/partners-sh';
 export const PATH_PARTNERS_VT = '/partners-vt';
+
+export const PATH_SEARCH_LISTINGS = '/search-listings';
+
  
 const constants = {
 	ENV: 'LOCAL',
