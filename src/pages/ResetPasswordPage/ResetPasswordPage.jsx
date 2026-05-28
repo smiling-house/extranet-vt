@@ -194,5 +194,5 @@ console.log('response::', response)
 		</>
 	);
 };
-
+ 
 export default ResetPasswordPage;
