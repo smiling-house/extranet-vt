@@ -141,7 +141,7 @@ console.log('response::', response)
 									<Logo />
 								</div>
 							</div>
-							<h1>Reset access details</h1>
+							<h1>Resend access details</h1>
 							<h4 className={styles.instructions}>
 								Enter the email address you usually log in with <br />
 								and we'll send your access details.
