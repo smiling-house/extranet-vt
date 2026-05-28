@@ -395,7 +395,7 @@ export const SignIn = () => {
 									</div>
 									<div className="col-sm-6 col-md-6 col-xs-12 "><h4>
 										<span onClick={() => history.push("/forgotPassword")} className="text-decoration-underline text-primary cst-cursor">
-											Forgot password?
+											Resend VT EXtranet access details
 										</span></h4>
 									</div>
 								</div>

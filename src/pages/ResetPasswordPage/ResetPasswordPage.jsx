@@ -141,10 +141,10 @@ console.log('response::', response)
 									<Logo />
 								</div>
 							</div>
-							<h1>Reset your password</h1>
+							<h1>Reset access details</h1>
 							<h4 className={styles.instructions}>
 								Enter the email address you usually log in with <br />
-								and we’ll send you instructions to reset your password.
+								and we'll send your access details.
 							</h4>
 							<div className="row justify-content-center mt-4">
 								<div className="col-7">
