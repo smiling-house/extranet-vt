@@ -95,7 +95,7 @@ const goToPartnersPage = () => {
         history.push(`/${partners_page}?page=${partnersPageLastPageNumber}`);
     }
     else { //Default - GUESTY partners page
-        history.push('/partners-sh?page='+partnersPageLastPageNumber);
+        history.push('/partners?page='+partnersPageLastPageNumber);
     }
 }
 

@@ -223,7 +223,7 @@ if(partnerAccountId) {
   } else if (/sh-bp/i.test(partnerAccountId) === true) {
     GO_TO = PATH_PARTNERS_BP
   } else if(partnerAccountId.length === 24) {
-    GO_TO = PATH_PARTNERS_SH
+    GO_TO = PATH_PARTNERS; //DEFAULT PAGE
   }
 
   history.push(GO_TO);

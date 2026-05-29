@@ -342,7 +342,7 @@ export const SignIn = () => {
 					<div className="container text-center p-4">
 						<div className="mt-5 mb-5 w-100 d-flex justify-content-center">
 							<div style={{ width: '250px' }}>
-								<Logo />
+								<Logo className="popup-close-icon" alt='' />
 							</div>
 						</div>
 						<h1>VT EXTRANET</h1>
