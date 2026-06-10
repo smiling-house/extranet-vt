@@ -32,7 +32,7 @@ import Map from "./Map";
 import Reports from "./Reports";
 import Touch from "./Touch";
 import Faq from "./Faq";
-import HotDestinations from "./HotDestinations";
+import HotDestinations from "./HotDestinations"; 
 import Collections from "./Collections";
 import WishList from "./WishList";
 import Favorites from "./Favorites";
@@ -45,6 +45,8 @@ import Admin from "./Admin";
 import PartnersSH from "./PartnersSH";
 import PartnersVT from "./PartnersVT";
 import SearchListings from "./SearchListings";
+
+import PropertiesNeedsAttention from "./PropertiesNeedsAttention";
 
 import {
   PATH_PARTNERS,
@@ -98,7 +100,8 @@ import {
   PATH_LISTINGS_SH_BP_DECLINED_BUT_LISTED_ON_BP,
   PATH_PARTNERS_SH,
   PATH_PARTNERS_VT,
-  PATH_SEARCH_LISTINGS
+  PATH_SEARCH_LISTINGS,
+  PATH_PROPERTIES_NEEDS_ATTENTION
 } from "../Util/constants";
 import AuthService from "../services/auth.service";
 import { baseURL } from "../core";
@@ -401,6 +404,12 @@ if(partnerAccountId) {
             agent={agent}
             agency={agency} />
         </Route>
+        <Route exact path={[PATH_PROPERTIES_NEEDS_ATTENTION]}>
+          <PropertiesNeedsAttention
+            token={token}
+            agent={agent}
+            agency={agency} />
+        </Route>        
         <Route exact path={[PATH_FAVORITES]}>
           <Favorites
             token={token}

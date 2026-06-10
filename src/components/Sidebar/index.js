@@ -49,7 +49,8 @@ import {
   PATH_DUPLICATED_LISTINGS,
   PATH_PARTNERS_SH,
   PATH_PARTNERS_VT,
-  PATH_SEARCH_LISTINGS
+  PATH_SEARCH_LISTINGS,
+  PATH_PROPERTIES_NEEDS_ATTENTION
 } from "../../Util/constants";
 
 const Sidebar = ({ activeMenu, setActiveMenu, handleToggleMenu, showOrHideSideBarMenu }) => {
@@ -112,6 +113,7 @@ const Sidebar = ({ activeMenu, setActiveMenu, handleToggleMenu, showOrHideSideBa
           { text: "Search Listings", path: PATH_SEARCH_LISTINGS, icon: <FiSearch size={18} /> },
           { text: "Interactive Map", path: PATH_MAP, icon: <FiMap size={18} /> },
           { text: "Hot Destinations", path: PATH_HOT_DESTINATIONS, icon: <MdLocationOn size={18} /> },
+          { text: "Properties Needs Attention", path: PATH_PROPERTIES_NEEDS_ATTENTION, icon: <MdLocationOn size={18} /> },
         ]
       }
     ],

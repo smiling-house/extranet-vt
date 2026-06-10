@@ -1,0 +1,928 @@
+import React, { useEffect, useState } from "react";
+import { useLocation, useHistory } from "react-router-dom";
+
+import Icon from 'react-web-vector-icons';
+import Button from "../../components/Buttons/Button/Button";
+import pageBg from '../../assets/SigninPic.jpeg';
+
+import CollectionIcon from "../../components/CollectionIcon";
+
+import VTChannelIcon from "../../assets/channels/icons/VTChannel.svg";
+import VTChannelIconOn from "../../assets/channels/icons/VTChannel-on.svg";
+import VTChannelIconOnBlue from "../../assets/channels/icons/VTChannel-on-blue.svg";
+import VTChannelLabel from "../../assets/channels/icons/label-VTChannel.svg";
+
+import SHChannelIcon from "../../assets/channels/icons/SHChannel.svg";
+import SHChannelIconOn from "../../assets/channels/icons/SHChannel-on.svg";
+import SHChannelIconOnBlue from "../../assets/channels/icons/SHChannel-on-blue.svg";
+import SHChannelLabel from "../../assets/channels/icons/label-SHChannel.svg";
+
+import TLChannelIcon from "../../assets/channels/icons/TLChannel.svg";
+import TLChannelIconOn from "../../assets/channels/icons/TLChannel-on.svg";
+import TLChannelIconOnBlue from "../../assets/channels/icons/TLChannel-on-blue.svg";
+import TLChannelLabel from "../../assets/channels/icons/label-TLChannel.svg";
+
+import eventsIcon from "../../assets/special-collection/icons/events.svg";
+import eventsIconOn from "../../assets/special-collection/icons/events-on.svg";
+import eventsIconOnBlue from "../../assets/special-collection/icons/events-on-blue.svg";
+import eventsLabel from "../../assets/special-collection/icons/label-events.svg";
+
+import addTitleIcon from "../../assets/icons/admin/add-title-icon.svg";
+import editTitleIcon from "../../assets/icons/admin/edit-title-icon.svg";
+
+import editIcon from '../../assets/icons/admin-edit-icon.png';
+import editAdminIcon from '../../assets/icons/admin/menu/edit.svg';
+import addAdminIcon from '../../assets/icons/admin/menu/add.svg';
+import deleteAdminIcon from '../../assets/icons/admin/menu/delete.svg';
+import PageHeader from "../../components/PageHeader";
+import swal from "sweetalert";
+import Datatable from "../../components/Datatable";
+
+import Popup from "../../components/Popup";
+import {
+	PATH_PARTNERS,
+	PATH_LISTINGS,
+	PATH_SIGNOUT,
+	PATH_LOGIN,
+	APP_DISPLAY_NAME
+} from "../../Util/constants";
+
+import "./Admin.scss";
+import axios from "axios";
+import { baseURL } from "../../core/index.js";
+import Paging from "../../components/Paging";
+import constants from "../../Util/constants";
+import countryList from "../../Util/data/countries.json";
+import { RawOff } from "@mui/icons-material";
+import { BsChevronDown } from "react-icons/bs";
+import Sidebar from "../../components/Sidebar";
+import LoadingBox from "../../components/LoadingBox";
+import { getStorageValue } from "../../Util/general.js";
+
+import menuIcon from '../../assets/icons8-menu-50.png'
+import * as userActions from "../../store/redux/User/actions";
+import { useDispatch, useSelector } from "react-redux";
+import Layout from "../../components/Layout";
+
+
+const NEW_PARTNER = {
+	id: "-1",
+	partnerName: "",
+	contactName: "",
+	email: "",
+	token: "",
+	phone: "",
+	basicChannels: [],
+	source: 'SH',
+	accountChannel: "Smiling House"
+};
+const NEW_PARTNER_SH = {
+	accountChannel: "Smiling House",
+	id: "-1",
+	partnerName: "",
+	contactName: "",
+	email: "",
+	token: "",
+	phone: "",
+	basicChannels: ["SH"],
+	source: "SH"
+};
+const NEW_PARTNER_VT = {
+	accountChannel: "Villa Tracker",
+	id: "-1",
+	partnerName: "",
+	contactName: "",
+	email: "",
+	token: "",
+	phone: "",
+	basicChannels: ["VT"],
+	source: "VT"
+};
+
+const PropertiesNeedsAttention = (props) => {
+
+const dispatch = useDispatch();	
+
+
+const [showSideBarMenu, setShowSideBarMenu] = useState(false);
+  const signOut = () => {
+	localStorage.clear();
+	dispatch(userActions.signOut());
+	history.push(PATH_LOGIN);
+  };
+const showOrHideSideBarMenu=()=> {
+	if(showSideBarMenu===true) {
+		setShowSideBarMenu(false);
+	} else if(showSideBarMenu===false) {
+		setShowSideBarMenu(true);
+	}
+}
+
+
+	const { token, agency, agent, screenSize, activeMenu, handleToggleMenu, setActiveMenu } = props
+
+	const agentData = JSON.parse(agent);
+
+	const divRefs = React.useRef([]);
+	const partnerLogin = getStorageValue('partnerLogin')
+	const partnerName = getStorageValue('partnerName')
+	const [searchInputes, setsearchInputes] = useState({
+		pmName: "",
+		accountId: partnerLogin,
+	})
+	const history = useHistory();
+	const location = useLocation();
+	const [editClickedId, setEditClickedId] = useState("")
+	//const [editPartnerId, seteditPartnerId] = useState("")
+	const [SelectedPartner, setSelectedPartner] = useState(null);
+	const [selectedRowToEdit, setSelectedRowToEdit] = useState(null);
+	const [selectedPartnerToEdit, setSelectedPartnerToEdit] = useState(null);
+	const [selectedPartnerToDelete, setSelectedPartnerToDelete] = useState(null);
+	const [partnerToApprove, setPartnerToApprove] = useState(null);
+	const [partnerToDisApprove, setPartnerToDisApprove] = useState(null);
+	const [totalPartners, setTotalPartners] = useState(null);
+	//const [partners, setPartners] = useState([]);
+	const [isLoading, setIsLoading] = useState(false)
+	// console.log("Partners >>>>", Partners);
+	const [filterPartners, setFilterPartners] = useState();
+	// console.log("filterPartners >>>>", filterPartners);
+	const [searchPartners, setSearchPartners] = useState("");
+
+localStorage.setItem('partners_page','-sh');
+let property_status_to_filter_gs = '';
+	//const [pageNumber, setPageNumber] = useState(page);
+		//added by jaison for Liron 2025-June 11
+		let defaultPageNumber = 0;
+		let queryParams = new URLSearchParams(window.location.search);
+		let page = parseInt( queryParams.get('page') );	
+
+		if(!page) {
+			defaultPageNumber = 0;
+		} else {
+			defaultPageNumber = page;	
+		}
+		localStorage.setItem('partnersPageLastPageNumber', defaultPageNumber);
+		const [pageNumber, setPageNumber] = useState(defaultPageNumber);
+
+
+/*		
+if( queryParams.get('page') ) {
+	property_status_to_filter = localStorage.getItem("property_status_to_filter");
+} else {
+	localStorage.setItem('property_status_to_filter', '');
+} 
+*/
+
+//Task: EXTRANET VT - Check the possibilities of adding admin login
+//Task URL : https://app.asana.com/1/1200178813358971/project/1209114491925523/task/1210009551590540
+//By Jaison on 2025-04-21 - START	
+/*			
+const agent_role = getStorageValue('agent_role');
+const agent_status = getStorageValue('agent_status');
+*/
+const agentLoggedIn = JSON.parse( localStorage.getItem('agent') );
+const extranet_vt_logged_in_role = localStorage.getItem('extranet-vt-logged-in-role');
+
+/*
+const [filterPropertyStatus, setFilterPropertyStatus] = useState('');
+const filterByisListedValue = (event) => {
+	console.log(event.target.value)
+	setFilterPropertyStatus(event.target.value);
+}
+*/
+
+const [isListedValue, setIsListedValue] = useState('All');
+const [NAListings, setNAListings] = useState([]);
+
+const property_status_to_filter_ls = localStorage.getItem('property_status_to_filter_gs'); //ls => local storage
+if(property_status_to_filter_ls) {
+	property_status_to_filter_gs = property_status_to_filter_ls;
+}
+	//const [filterPropertyStatus, setFilterPropertyStatus] = useState(property_status_to_filter_gs);
+	const filterByisListedValue = (event) => {
+		//localStorage.setItem('property_status_to_filter_gs', event.target.value);
+		setIsListedValue(event.target.value); 
+	}
+
+const [serialNumber, setSerialNumber] = useState(0);
+//By Jaison on 2025-04-21 - END	
+
+
+
+
+ 
+/*
+	const inputFileds = {
+		agentName: "",
+		managerLastName: "",
+		lastName: "",
+		agencyName: "",
+		agentName: "",
+		agentPhone: "",
+		email: "",
+		phone: "",
+		address: "",
+		zipcode: "",
+		city: "",
+		country: "",
+		currency: "",
+		password: "",
+		confirmPassword: "",
+		userImage: "",
+		IBAN: "",
+		bankName: "",
+		extraDetails: "",
+		holderAdress: "",
+		holderCity: "",
+		holderCountry: "",
+		holderFirstName: "",
+		holderzipcode: "",
+		swiftNumber: "",
+		addPaylodDyanmic: "",
+		emailTitle: "",
+		emailText: "",
+		postalCode: "",
+	  };
+	
+	  const [formData, setformData] = useState(inputFileds);
+
+
+	const handleInputField = (e) => {
+		const { name, value, files } = e.target;
+		console.log(name, value);
+		const updatedFormData = { ...formData, [name]: value };
+	
+		setformData(updatedFormData);
+		localStorage.setItem("formData", JSON.stringify(updatedFormData));
+
+	  };
+	  */
+
+	let partnersPagingFrom = 1 + pageNumber * constants.PAGING_PARTNERS_SIZE;
+	let partnersPagingTo = (partnersPagingFrom + constants.PAGING_PARTNERS_SIZE > totalPartners) ? totalPartners : partnersPagingFrom + constants.PAGING_PARTNERS_SIZE
+
+	const userRequest = axios.create({
+		baseURL: constants.SHUB_URL,
+		headers: {
+			Authorization: constants.SHUB_TOKEN,
+		},
+	});
+ 
+ 
+	//NA => Needs Attention
+	const getAllNAPropertiesPartners = async () => {
+	
+		setIsLoading(true)
+		const response = await userRequest.get(`local/partners-properties-needs-attention`,
+			{ params: { limit: constants.PAGING_PARTNERS_SIZE, skip: partnersPagingFrom - 1, isListedValue: isListedValue } },
+		);  
+		setIsLoading(false)
+		//console.log("response:",response.data)
+		if (response?.data?.success) {
+			//localStorage.setItem("partnerCount", response.data.count);
+			setNAListings(response.data.NAListings);
+			console.log('NA Listings:',response.data.NAListings);
+		} else { console.log("error on reading partners api from shub/local/partners-properties-needs-attention") }
+	};
+	const getSearchPartners = async () => {
+
+		setIsLoading(true)
+		const params = (searchInputes.pmName !== '' || searchInputes.accountId !== '') ?
+			(searchInputes.pmName !== '') ? {
+				limit: constants.PAGING_PARTNERS_SIZE,
+				skip: partnersPagingFrom - 1,
+				pmName: searchInputes.pmName,
+				/*
+				provider:'guesty_channel_api',
+				source:'SH',
+				status:filterPropertyStatus 
+				*/
+				isListedValue: isListedValue
+			} :
+				{
+					limit: constants.PAGING_PARTNERS_SIZE,
+					skip: partnersPagingFrom - 1,
+					accountId: searchInputes.accountId,
+					/*
+				provider:'guesty_channel_api',					
+				source:'SH',
+				status:filterPropertyStatus
+				*/
+				isListedValue: isListedValue
+				} :
+
+			{
+				limit: constants.PAGING_PARTNERS_SIZE,
+				skip: partnersPagingFrom - 1,
+				/*
+				provider:'guesty_channel_api',
+				source:'SH',
+				status:filterPropertyStatus
+				*/
+				isListedValue: isListedValue
+			}
+
+
+if(extranet_vt_logged_in_role==='admin') {	//By Jaison 2025 July 11
+	//delete params.source
+}			
+
+		console.log('loading search::::', params)
+
+
+//Task: EXTRANET VT - Check the possibilities of adding admin login
+//Task URL : https://app.asana.com/1/1200178813358971/project/1209114491925523/task/1210009551590540
+//By Jaison on 2025-04-21 - START	
+/*	
+if(agent_role) {
+	if(agent_role === 'admin' && agent_status==='approved') {
+		delete params.accountId; //To fetch all partners
+		console.log('loading search:', params)
+	}
+}
+*/ 
+//By Jaison on 2025-04-21 - END		
+
+		//const partnersResponse = await userRequest.get(`local/partners`,
+		const response = await userRequest.get(`local/partners-properties-needs-attention`,
+			{
+				params
+			},
+		);
+		console.log()
+		setIsLoading(false)
+		//localStorage.setItem("partnerCount", partnersResponse.data.count);
+		//setTotalPartners(parseInt(partnersResponse.data.count))
+		setNAListings(response.data.NAListings);
+
+		console.log('NA Listings:',response.data.NAListings);		
+	};
+
+
+
+async function allZipcodes() {
+	const responseDataAllZips = await userRequest.post('local/all-zipcodes');
+	const allZipcodes = responseDataAllZips.data;	
+	localStorage.setItem('allZipcodes', JSON.stringify(allZipcodes));
+	console.log('allZipcodes:', allZipcodes)		
+}
+//allZipcodes();
+
+const fetchCurrenciesExchangeRates = async () => {
+	try {
+		//axios.defaults.headers.common["Authorization"] = `Bearer ${jToken}`;
+		const response = await userRequest.get("https://api.villatracker.com/xchange");
+		const exchangeRates = response.data;
+
+		const exchangeRatesData = {}
+
+		if (exchangeRates.length > 0) {
+			exchangeRates.forEach((item, index) => {
+				exchangeRatesData[item.currency_code] = {conversion_rates:item.conversion_rates}
+			});
+		}
+
+		localStorage.setItem("exchangeRatesData", JSON.stringify(exchangeRatesData));
+	}
+	catch (error) {
+		console.error("Error fetching currencies:", error);
+	}
+}
+//fetchCurrenciesExchangeRates()  
+
+	useEffect(() => {
+		if (partnerLogin) {
+			console.log('partnerLogin: (should see only the PM listings)', partnerLogin, partnerName)
+		}
+		getAllNAPropertiesPartners();
+
+	allZipcodes();
+	fetchCurrenciesExchangeRates();
+
+	}, [isListedValue]);
+
+	useEffect(() => {
+		console.log('search:', searchInputes)
+	}, [searchInputes]);
+
+	const GoToPartnerListings = async(partner, accountId, propertyStatusToFilter='') => {
+localStorage.setItem('property_listed_flag_to_filter_listings', isListedValue);
+localStorage.setItem('property_status_to_filter_listings', propertyStatusToFilter);
+
+const responseDataUniqueZips = await userRequest.post(`local/partners/properties-unique-zipcodes`,
+	{ accountId: accountId, channelSource: partner.source },
+);
+
+const partnerPropertiesUniqueZipcodes = responseDataUniqueZips.data;
+localStorage.setItem('partnerPropertiesUniqueZipcodes', JSON.stringify(partnerPropertiesUniqueZipcodes));
+
+		console.log("see listings for account:", accountId, partner.source);
+		localStorage.setItem("partner", JSON.stringify(partner))
+
+		/*if (!partner.offsetRead) {
+			swal({
+				show: true,
+				icon: 'error',
+				title: 'Oops!!',
+				text: "No Data Found on Account ID :" + accountId + ' channel: ' + partner.source
+			})
+		} else {*/
+			history.push(PATH_LISTINGS, { partner, accountId, source: partner.source });
+		//}
+
+	};
+
+	const doSearch = pageNumber => {
+		
+		partnersPagingFrom = 1 + pageNumber * constants.PAGING_PARTNERS_SIZE;
+		partnersPagingTo = (partnersPagingFrom + constants.PAGING_PARTNERS_SIZE > totalPartners) ? totalPartners : partnersPagingFrom + constants.PAGING_PARTNERS_SIZE
+		console.log("skipping : ", partnersPagingFrom - 1);
+		getAllNAPropertiesPartners();
+		//setShowSelection(false);
+		//dispatch(PartnerActions.loadpartners(pageNumber));
+	};
+
+
+	const onChangePage = pageNumber => {
+		console.log("page=", pageNumber + 1);
+		
+		localStorage.setItem('partnersPageLastPageNumber', pageNumber); //added by jaison for Liron 2025-June 11
+
+		setPageNumber(pageNumber); //default
+
+		doSearch(pageNumber);
+
+		setSerialNumber(pageNumber * constants.PAGING_PARTNERS_SIZE);
+	};
+
+	const menuStyle = () => {
+		const pos = divRefs.current[selectedRowToEdit.id].getBoundingClientRect();
+		const top = (pos.top > window.innerHeight) ? (window.innerHeight) : pos.top;
+		return { top: `${top}px`, left: `${pos.left - 170}px` };
+	};
+
+	const goToTop = () => {
+		window.scrollTo({
+			top: 0,
+			behavior: 'smooth',
+		});
+	};
+
+	const clearEditMenu = () => {
+		setSelectedRowToEdit(null);
+		goToTop()
+	};
+	const onClose = () => {
+		setSelectedRowToEdit(null);
+		setSelectedPartner(null)
+		setSelectedPartnerToDelete(null)
+		setSelectedPartnerToEdit(null)
+		document.body.style.overflow = "auto";
+	};
+
+	const onShowEditMenu = (row) => {
+		setSelectedRowToEdit(row);
+		console.log("Row to edit=", row);
+	};
+
+	/*const onEditPartner = (id, selectedPartner) => {
+		setEditClickedId(id)
+		setSelectedPartnerToEdit(selectedPartner);
+		clearEditMenu();
+		document.body.style.overflow = "hidden";
+	};*/
+
+	const updatePartner = (accountId, editedPartner) => {
+		console.log("partner to save:", accountId, editedPartner)
+	};
+
+	const onAddPartnerSH = () => {
+		setEditClickedId(0)
+		setSelectedPartnerToEdit(NEW_PARTNER_SH);
+		document.body.style.overflow = "hidden";
+		clearEditMenu();
+	};
+	const onAddPartnerVT = () => {
+		setEditClickedId(0)
+		setSelectedPartnerToEdit(NEW_PARTNER_VT);
+		document.body.style.overflow = "hidden";
+		clearEditMenu();
+	};
+
+	const onDeletePartner = () => {
+		setSelectedPartnerToDelete(selectedRowToEdit);
+		document.body.style.overflow = "hidden";
+		clearEditMenu();
+	};
+
+	const onPartnerToApprove = (row) => {
+		setPartnerToApprove(row);
+		console.log("Row to approve=", row);
+		console.log("country=", row.country);
+		const ccIndex = countryList.findIndex((i) => i.name === row.country);
+		const cc = ccIndex ? countryList[ccIndex].code : "";
+		console.log("countryCode=", cc);
+
+	};
+	function getCountryCode(row) {
+		const ccIndex = countryList.findIndex((i) => i.name === row.country);
+		const cc = ccIndex ? countryList[ccIndex].code : "";
+		return cc;
+	}
+
+	const columns = [
+		{
+			name: '#',
+			width: '50px'
+		},
+		{
+			name: 'Partner Name',
+			width: '350px'
+		},  {
+			name: 'Account ID',
+			width: '250px'
+		},
+		{
+			name: 'Source',
+			width: '250px'
+		},		
+		{
+			name: 'Listings Needs Attention',
+			width: '100px'
+		}
+	];
+
+	// selectedRowToEdit && console.log("pos: ", selectedRowToEdit.id, divRefs.current[selectedRowToEdit.id].getBoundingClientRect().top);
+	// paging numbering:
+
+	const handleSearchFuntionality = (name, value) => {
+		console.log('set search:', name, value)
+		setsearchInputes({ ...searchInputes, [name]: value })
+	}
+	const handlSearchButtonAdmin = () => {
+		getSearchPartners();
+	}
+
+	const renderChannels = (row) => {
+		return (
+			<div className="channels-main-selection-icons"
+				style={{
+					paddingTop: '15px',
+					display: 'grid',
+					gridTemplateColumns: '80px 80px 80px',
+					justifyItems: 'center',
+				}}>
+				<CollectionIcon
+					path={VTChannelIcon}
+					pathOver={VTChannelIconOn}
+					selected={row?.source?.indexOf("VT") > -1}
+					selected2={false}
+					label={VTChannelLabel}
+					readOnly={true}
+				/>
+				<CollectionIcon
+					readOnly={true}
+					path={SHChannelIcon}
+					pathOver={SHChannelIconOn}
+					pathOver2={SHChannelIconOnBlue}
+					selected={row?.source?.indexOf("SH") > -1}
+					selected2={false}
+					label={SHChannelLabel}
+				/>
+			</div>
+		)
+	};
+
+
+	return (
+// 		<div className="page-container">
+// 			<div className="page-header" style={{
+// 				marginLeft: showSideBarMenu ? '250px' : '0',
+// 				transition: 'margin-left 0.3s ease',
+// 				// background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+// 				background: 'linear-gradient(135deg, #104109 0%, #2d5a2b 100%)',
+// 				boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
+// 				borderBottom: '1px solid rgba(255,255,255,0.1)'
+// 			}}>
+// 				<div className="container-fluid" style={{padding: '0px 50px'}}>
+// 					<div className="row align-items-center py-3">
+// 						{/* Left Section - Menu & Title */}
+// 						<div className="col-lg-8 col-md-7 col-sm-8 col-6">
+// 							<div className="d-flex align-items-center">
+// 								<button 
+// 									className="btn btn-link p-0 me-3 text-white border-0"
+// 									onClick={showOrHideSideBarMenu}
+// 									style={{
+// 										background: 'none',
+// 										fontSize: '1.2rem',
+// 										transition: 'transform 0.2s ease'
+// 									}}
+// 									onMouseOver={e => e.currentTarget.style.transform = 'scale(1.1)'}
+// 									onMouseOut={e => e.currentTarget.style.transform = 'scale(1)'}
+// 								>
+// 									<img 
+// 										src={menuIcon} 
+// 										alt="Menu" 
+// 										style={{
+// 											width: '28px',
+// 											height: '28px',
+// 											filter: 'brightness(0) invert(1)'
+// 										}} 
+// 									/>
+// 								</button>
+								
+// 								<div className="header-title">
+// 									<h1 className="mb-0 text-white d-none d-md-block" style={{
+// 										fontSize: 'clamp(1.2rem, 2.5vw, 1.8rem)',
+// 										fontWeight: '600',
+// 										letterSpacing: '-0.5px'
+// 									}}>
+// 										<span className="d-none d-sm-inline">{APP_DISPLAY_NAME} : </span>
+// 										<span>PMs</span>
+// 										<span className="d-none d-md-inline"> - {agentData.firstName}</span>
+// 									</h1>
+									
+// 									{/* Mobile-only welcome message aligned with menu button */}
+// 									<div className="d-md-none d-flex align-items-center">
+// 										<span className="text-white" style={{
+// 											fontSize: '1.1rem',
+// 											fontWeight: '500',
+// 											lineHeight: '28px' // Matches menu button height for alignment
+// 										}}>
+// 											Welcome, {agentData.firstName}
+// 										</span>
+// 									</div>
+// 								</div>
+// 							</div>
+// 						</div>
+						
+// 						{/* Right Section - User Actions */}
+// 						<div className="col-lg-4 col-md-5 col-sm-4 col-6">
+// 							<div className="d-flex justify-content-end align-items-center">
+// 								{/* User Info - Hidden on small screens */}
+// 								<div className="d-none d-lg-flex align-items-center me-3">
+// 									<div className="user-avatar me-2" style={{
+// 										width: '35px',
+// 										height: '35px',
+// 										borderRadius: '50%',
+// 										background: 'rgba(255,255,255,0.2)',
+// 										display: 'flex',
+// 										alignItems: 'center',
+// 										justifyContent: 'center',
+// 										color: 'white',
+// 										fontWeight: 'bold',
+// 										fontSize: '14px'
+// 									}}>
+// 										{agentData.firstName.charAt(0).toUpperCase()}
+// 									</div>
+// 									<div className="text-white">
+// 										<div style={{fontSize: '14px', fontWeight: '500'}}>
+// 											{agentData.firstName}
+// 										</div>
+// 										<div style={{fontSize: '12px', opacity: '0.8'}}>
+// 											{extranet_vt_logged_in_role === 'admin' ? 'Administrator' : 'Partner'}
+// 										</div>
+// 									</div>
+// 								</div>
+								
+// 								{/* Sign Out Button */}
+// 								<button
+// 									className="btn btn-outline-light btn-sm"
+// 									onClick={signOut}
+// 									style={{
+// 										borderRadius: '25px',
+// 										padding: '8px 20px',
+// 										fontSize: '14px',
+// 										fontWeight: '500',
+// 										border: '2px solid rgba(255,255,255,0.3)',
+// 										transition: 'all 0.3s ease',
+// 										backdropFilter: 'blur(10px)'
+// 									}}
+// 									onMouseOver={e => {
+// 										e.currentTarget.style.background = 'rgba(255,255,255,0.2)';
+// 										e.currentTarget.style.borderColor = 'rgba(255,255,255,0.6)';
+// 									}}
+// 									onMouseOut={e => {
+// 										e.currentTarget.style.background = 'transparent';
+// 										e.currentTarget.style.borderColor = 'rgba(255,255,255,0.3)';
+// 									}}
+// 								>
+// 									<span className=" d-sm-inline">Sign Out</span>
+// 									<span className="d-sm-none">
+// 										<i className="fas fa-sign-out-alt"></i>
+// 									</span>
+// 								</button>
+// 							</div>
+// 						</div>
+// 					</div>
+// 				</div>
+// 			</div>			
+// 			{/* <div className="page-header" style={{marginLeft: showSideBarMenu ? '250px' : 'unset'}}>
+// 				<img src={menuIcon} style={{'width':'25px'}} className="cst-cursor" onClick={showOrHideSideBarMenu} />
+// 				&nbsp;{APP_DISPLAY_NAME} : PMs - {agentData.firstName} 
+// 				<span className="cst-cursor" onClick={signOut}>Sign Out</span>
+// 			</div> */}
+// {showSideBarMenu===true &&			
+// 			<Sidebar
+// 				agency={agency}
+// 				agent={agent}
+// 				token={token}
+// 				screenSize={screenSize}
+// 				activeMenu={activeMenu}
+// 				handleToggleMenu={handleToggleMenu}
+// 				showOrHideSideBarMenu={showOrHideSideBarMenu}
+// 			/>
+// }
+// 			<div className={showSideBarMenu ? `${"page-body"}` : "page-body-nomargin"} >
+				<Layout
+					pageTitle="PMs"
+					agency={agency}
+					agent={agent}
+					token={token}
+					screenSize={screenSize}
+					activeMenu={activeMenu}
+					handleToggleMenu={handleToggleMenu}
+					setActiveMenu={setActiveMenu}
+				>
+					<div className="agencies-container" >
+						<LoadingBox visible={isLoading} />
+						{selectedRowToEdit &&
+							<>
+								<div className="agencies-floating-edit-menu-floater" onClick={clearEditMenu} />
+								<div className="agencies-floating-edit-menu" style={menuStyle()}>
+									{/* <div className="agencies-floating-edit-menu-row" onClick={onEditPartner}><img src={editAdminIcon} alt="" />&nbsp;&nbsp;Edit Partner</div> */}
+									<div className="agencies-floating-edit-menu-row" onClick={onDeletePartner}><img src={deleteAdminIcon} alt="" />&nbsp;&nbsp;Delete Partner</div>
+									<div className="agencies-floating-edit-menu-row" onClick={onAddPartnerSH}><img src={addAdminIcon} alt="" />&nbsp;&nbsp;Add Partner</div>
+									<div className="agencies-floating-edit-menu-row" onClick={clearEditMenu}>&nbsp;&nbsp;close X</div>
+								</div>
+							</>
+						}
+
+
+
+						<div className="agencies-main">
+
+
+	{extranet_vt_logged_in_role==='admin' && (
+			<div className="search-container">
+			
+			<div className="row">
+				<div className="col-lg-5 col-md-8 col-12" style={{margin: 2}}>
+				<input type="text" className="form-control" placeholder="Search by PM Name"  onChange={(e) => handleSearchFuntionality("pmName",e.target.value)} />
+				</div>
+				<div className="col-lg-2 col-md-2 col-12" style={{margin: 2}}>
+				<button 
+					className="btn btn-primary w-100" 
+					style={{ 
+						height: "60px", 
+						fontSize: "18px", 
+						borderRadius: "6px", 
+						fontWeight: 400 
+					}}  
+					onClick={() => handlSearchButtonAdmin()}>
+					<span>Search</span>
+				</button>
+				</div>
+				{/* <span className=" agencies-search-separator"></span> */}
+			</div>
+			</div>
+	)}
+
+
+							<div className="agencies-title">
+	{/*extranet_vt_logged_in_role==='admin' && <span>Guesty SH PM List</span> }
+	{extranet_vt_logged_in_role==='partner' && <span>Guesty PM Home</span>*/}
+<span>Search for properties needs attention</span>	
+
+								<div className="agencies-main-subtitle">Displaying PMs {partnersPagingFrom}-{partnersPagingTo} of {totalPartners ? totalPartners : "?"}
+								</div>
+							</div>
+
+
+
+	{extranet_vt_logged_in_role==='admin' && (
+		<div className="container-fluid px-0">
+			<div className="row mx-0">
+				<div className="col-12">
+					<div className="filterbystatus-container">
+						<div className="row align-items-end">
+							<div className="col-12 col-sm-6 col-md-4 col-lg-3 col-xl-2 mb-3">
+								<label className="form-label text-white mb-2">
+									<strong>Filter by listed / unlisted</strong>
+								</label>
+								<div className="dropdown w-100">
+									<button 
+										className="btn btn-outline-secondary dropdown-toggle w-100 text-start"
+										type="button" 
+										id="statusFilterDropdown" 
+										data-bs-toggle="dropdown" 
+										aria-expanded="false"
+										style={{
+											minWidth: '120px',
+											fontSize: '14px',
+											padding: '8px 12px',
+											border: '1px solid #ced4da',
+											borderRadius: '4px',
+											backgroundColor: '#fff',
+											color: '#333',
+											display: 'flex',
+											justifyContent: 'space-between',
+											alignItems: 'center'
+										}}
+									>
+										<span>{isListedValue || '--All--'}</span>
+									</button>
+									<ul 
+										className="dropdown-menu w-100" 
+										aria-labelledby="statusFilterDropdown"
+										style={{
+											maxHeight: '200px',
+											overflowY: 'auto',
+											fontSize: '14px'
+										}}
+									>
+										<li>
+											<button 
+												className={`dropdown-item ${isListedValue==='All' ? 'active' : ''}`}
+												type="button"
+												onClick={() => filterByisListedValue({target: {value: 'All'}})}
+											>
+												--All--
+											</button>
+										</li>
+										<li>
+											<button 
+												className={`dropdown-item ${isListedValue === 'Listed' ? 'active' : ''}`}
+												type="button"
+												onClick={() => filterByisListedValue({target: {value: 'Listed'}})}
+											>
+												Listed
+											</button>
+										</li>
+										<li>
+											<button 
+												className={`dropdown-item ${isListedValue === 'Unlisted' ? 'active' : ''}`}
+												type="button"
+												onClick={() => filterByisListedValue({target: {value: 'Unlisted'}})}
+											>
+												Unlisted
+											</button>
+										</li>
+
+									</ul>
+								</div>                      
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	)
+
+	}
+
+
+							{<Paging perPage={constants.PAGING_PARTNERS_SIZE} totalItems={localStorage.getItem("partnerCount")} currentPage={pageNumber} onChangePage={onChangePage} />}
+							<div className="table-responsive px-3">
+								<table class="table">
+									<thead style={{ backgroundColor: "#f9f9f7" }} >
+										<tr>
+											{columns?.map((item, index) => {
+												return <>
+													{/*<th scope="col" style={{ cursor: "pointer", width: item.width }}><h3>{item.name} <BsChevronDown /></h3></th>*/}
+	<th scope="col" style={{ cursor: "pointer", width: item.width }}>{item.name} <BsChevronDown /></th>
+												</>
+											})}
+										</tr>
+									</thead>
+									<tbody>
+										{NAListings?.map((item, index) => {
+											//console.log("item ", index, item)
+											return <>
+												<tr >
+													<td className="pmName px-4 p-3  text-primary  cst-cursor" ><h4>{/*totalPartners - partnersPagingFrom - index + 1*/}
+													{serialNumber+index+1}
+													</h4></td>
+													<td className="pmName px-4 p-3  text-primary  cst-cursor" ><h4>{item.pmName != null ? item.pmName : ""}</h4></td>
+													<td className="accountId px-4 p-3 text-primary text-decoration-underline cst-cursor"><h4 >{item.accountId !== null ? item.accountId : ""}</h4></td>
+
+	<td className="accountId px-4 p-3 text-primary cst-cursor"><h4>{item.source}</h4></td>												
+
+	<td className="Listings px-4 p-3 text-primary text-decoration-underline cst-cursor"><h4 onClick={() => GoToPartnerListings(item, item.accountId, 'Needs attention')}>{item.needs_attention_properties_count}</h4></td>
+
+												</tr >
+											</>
+										})}
+									</tbody>
+								</table>
+							</div>
+						</div>
+					</div >
+				</Layout>
+		// 	</div>
+		// </div>
+	);
+};
+
+export default PropertiesNeedsAttention;
+

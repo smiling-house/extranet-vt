@@ -67,7 +67,7 @@ export const PATH_PARTNERS_SH = '/partners-sh';
 export const PATH_PARTNERS_VT = '/partners-vt';
 
 export const PATH_SEARCH_LISTINGS = '/search-listings';
-
+export const PATH_PROPERTIES_NEEDS_ATTENTION = '/properties-needs-attention';
  
 const constants = {
 	ENV: 'LOCAL',

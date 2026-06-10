@@ -77,7 +77,7 @@ const Listingrow = (props) => {
   const agentData = JSON.parse( localStorage.getItem('agent') );
 const exchangeRatesData = JSON.parse( localStorage.getItem("exchangeRatesData") );
 
-  console.log('property:::', property)
+  //console.log('property:::', property)
 
   const [chk, setChk] = useState([])
   const [tags, setTags] = useState(xdata?.tags)

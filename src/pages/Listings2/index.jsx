@@ -118,7 +118,10 @@ const goToPartnersPage = () => {
     const partner = JSON.parse(localStorage.getItem("partner"))
     const accountId = localStorage.getItem("accountId")
 
+
     const property_status_to_filter = localStorage.getItem("property_status_to_filter_listings")
+    const property_listed_flag_to_filter_listings = localStorage.getItem("property_listed_flag_to_filter_listings")
+
 
     const user_image = agency?.userImage
     const [allPage, setAllPage] = useState(false)
@@ -163,7 +166,7 @@ const goToPartnersPage = () => {
 
     const [filterPropertyStatus, setFilterPropertyStatus] = useState('');
     const filterByPropertyStatus = (event) => {
-        console.log(event.target.value)
+        //console.log(event.target.value)
         setFilterPropertyStatus(event.target.value);
 
         unCheckAll();
@@ -186,7 +189,7 @@ const exchangeRatesData = JSON.parse( localStorage.getItem("exchangeRatesData") 
 
     const [filterRegionMappedUnmapped, setFilterRegionMappedUnmapped] = useState('');
     const filterByMappedUnmappedRegion = (event) => {
-        console.log(event.target.value)
+        //console.log(event.target.value)
         setFilterRegionMappedUnmapped(event.target.value);
 
         unCheckAll();
@@ -312,7 +315,7 @@ const listingIdsToUpdateCleaned = listingIdsToUpdate.map(id => id.replace('_unma
 
         const updateListingsData = {'accountId':partner?.accountId,'ids':listingIdsToUpdateCleaned, 'status':propStatus, decliningReason:reason_decline, statusUpdatedBy:agentData.firstName}
 
-console.log('updateListingsData:::', updateListingsData);
+//console.log('updateListingsData:::', updateListingsData);
 //return false;
 
         if(listingIdsToUpdateCleaned.length > 0 && propStatus !== '') {
@@ -409,7 +412,6 @@ const agentLoggedIn = JSON.parse( localStorage.getItem('agent') );
             sortBy: 'data.prices.basePrice:-1', //'data.nickname:1'
     }
 
-console.log('params::',params) 
 
     //task: EXTRANET VT - Check the possibilities of adding admin login - https://app.asana.com/1/1200178813358971/project/1209114491925523/task/1210009551590540
     //By Jaison 2025-04-22 START 
@@ -430,7 +432,24 @@ console.log('params::',params)
     } else if(property_status_to_filter === '' && filterPropertyStatus === '') {
         delete params.status;
     }
-  
+
+//For needs attention properties
+if(currentPropertyFilterStatus === 'Needs attention') {
+    if(property_listed_flag_to_filter_listings !== '' && property_listed_flag_to_filter_listings !== null) {
+        /*if(property_listed_flag_to_filter_listings === 'Listed') {
+            params.isListed = true;
+        } else*/ if(property_listed_flag_to_filter_listings === 'Unlisted') {
+            params.isListed = 'Unlisted';
+        }
+    }
+} else {
+    delete params.isListed;
+} 
+
+console.log('currentPropertyFilterStatus:', currentPropertyFilterStatus)
+console.log('property_listed_flag_to_filter_listings:', property_listed_flag_to_filter_listings)
+console.log('params:', params); 
+
 
     if(filterPropertyZipcode !== '') {       
         params.extranet_filter_zipcode = filterPropertyZipcode;
@@ -459,7 +478,7 @@ console.log('params::',params)
     }
     //By Jaison 2025 October 06 - END
 
-
+ 
     const queryString = Object.keys(params).map(key => key + '=' + params[key]).join('&');
     console.log('getting from /listings:',params)
     if (accountId.length > 0) {
@@ -954,7 +973,7 @@ if(allZipcodes[countryZipKey] !== 'undefined') {
     var listingAddressZipExists = false
 }
 
-                                            console.log("listing item:",index+1,iteam)
+                                            //console.log("listing item:",index+1,iteam)
                                             const ApropertyId = iteam.listing?._id
                                             const fullCalendar = iteam.fullCalendar
 //Custom Title & Desc   

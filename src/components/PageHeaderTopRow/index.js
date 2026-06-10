@@ -9,7 +9,8 @@ import {
 	PATH_FAVORITES,
 	PATH_HOT_DESTINATIONS,
 	PATH_LOGIN,
-	PATH_WISH_LIST
+	PATH_WISH_LIST,
+	PATH_PROPERTIES_NEEDS_ATTENTION
 } from "../../Util/constants";
 import * as userActions from "../../store/redux/User/actions";
 import AuthService from "../../services/auth.service";
