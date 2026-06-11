@@ -436,16 +436,12 @@ const agentLoggedIn = JSON.parse( localStorage.getItem('agent') );
 //For needs attention properties
 if(currentPropertyFilterStatus === 'Needs attention') {
     if(property_listed_flag_to_filter_listings !== '' && property_listed_flag_to_filter_listings !== null) {
-        /*if(property_listed_flag_to_filter_listings === 'Listed') {
-            params.isListed = true;
-        } else*/ if(property_listed_flag_to_filter_listings === 'Unlisted') {
-            params.isListed = 'Unlisted';
-        }
+        params.isListed = property_listed_flag_to_filter_listings;
     }
 } else {
     delete params.isListed;
 } 
-
+ 
 console.log('currentPropertyFilterStatus:', currentPropertyFilterStatus)
 console.log('property_listed_flag_to_filter_listings:', property_listed_flag_to_filter_listings)
 console.log('params:', params); 
