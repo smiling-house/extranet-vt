@@ -23,6 +23,38 @@ const updateXdata = async (ID, xdataPayload) => {
     return ShubResponse
 };
 
+// -------------------------------------------------
+// Hostaway (Phase 1) - hub-side endpoints. Use a dedicated axios instance
+// so we send X-API-KEY (the shub gate uses this header) alongside the
+// existing Bearer token. constants.X_API_KEY is the shared shub API key.
+// -------------------------------------------------
+const hostawayRequest = axios.create({
+    headers: {
+        Authorization: `Bearer ${token2}`,
+        'X-API-KEY': constants.X_API_KEY,
+    },
+})
+const listHostawayPartners = async () => {
+    return hostawayRequest.get(constants.SHUB_URL + `/hostaway-accounts`)
+}
+const connectHostawayPartner = async (payload) => {
+    // payload: { accountId: number, clientSecret: string, vtAccountId?: string }
+    return hostawayRequest.post(constants.SHUB_URL + `/hostaway-connect`, payload)
+}
+const triggerHostawaySync = async (accountId) => {
+    return hostawayRequest.get(constants.SHUB_URL + `/hostaway-syncing`, { params: { accountId } })
+}
+const createHostawayBooking = async (payload) => {
+    // payload: { accountId, listingMapId, channelId, guestName, guestEmail,
+    //            arrivalDate, departureDate, totalPrice, currency, numberOfGuests }
+    return hostawayRequest.post(constants.SHUB_URL + `/hostaway-create-reservation`, payload)
+}
+const cancelHostawayBooking = async (payload) => {
+    // payload: { accountId, reservationId, cancelledBy?: 'host'|'guest' }
+    return hostawayRequest.put(constants.SHUB_URL + `/hostaway-cancel-reservation`, payload)
+}
+
+
 const addNewPartner = async (payload) => {
     const ShubResponse = await userRequest.post(constants.SHUB_URL + `/services/guesty/channel/account`,
         payload);
@@ -585,7 +617,12 @@ const AuthService = {
     uploadSelectedListings,
     updateReservationStatus,
     declineReservation,
-    ForgotPasswordApiVTHUB
+    ForgotPasswordApiVTHUB,
+    listHostawayPartners,
+    connectHostawayPartner,
+    triggerHostawaySync,
+    createHostawayBooking,
+    cancelHostawayBooking,
 };
 
 export default AuthService;

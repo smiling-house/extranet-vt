@@ -1,0 +1,47 @@
+.edit-partner-container {
+	border-radius: 10px;
+
+	.edit-partner-header {
+		display: flex;
+		justify-content: center;
+		background-color: #FDFDFD;
+		padding: 20px 0;
+		column-gap: 10px;
+		border-radius: 10px 10px 0 0 ;
+
+		.edit-partner-title {
+			font-size: 25px;
+			font-weight: 500;
+			color: #133C73;
+		}
+	}
+
+	.edit-partner-main {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		padding: 20px;
+		// border-top: 1px solid #E7E7E7;
+		border-bottom: 1px solid #E7E7E7;
+		overflow-y: show;
+	}
+
+	.payment-text {
+		font-size: 25px;
+		font-weight: 500;
+		color: #2727ea;
+	}
+
+	.edit-partner-footer {
+		background-color: #FDFDFD;
+		height: 85px;
+		display: flex;
+		align-items: center;
+		justify-content: flex-end;
+		margin-right: 10px;
+	}
+}
+
+.form-control.pm-bnk-det-inp {
+	font-size: 15px;
+	height: unset;
+}

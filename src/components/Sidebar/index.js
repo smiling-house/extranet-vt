@@ -49,6 +49,7 @@ import {
   PATH_DUPLICATED_LISTINGS,
   PATH_PARTNERS_SH,
   PATH_PARTNERS_VT,
+  PATH_PARTNERS_HOSTAWAY,
   PATH_SEARCH_LISTINGS,
   PATH_PROPERTIES_NEEDS_ATTENTION
 } from "../../Util/constants";
@@ -82,6 +83,7 @@ const Sidebar = ({ activeMenu, setActiveMenu, handleToggleMenu, showOrHideSideBa
         items: [
           { text: "Guesty SH PMs", path: PATH_PARTNERS_SH, icon: <MdBusiness size={18} /> },
           { text: "Guesty VT PMs", path: PATH_PARTNERS_VT, icon: <MdBusiness size={18} /> },
+          { text: "Hostaway PMs", path: PATH_PARTNERS_HOSTAWAY, icon: <MdBusiness size={18} /> },
           { text: "BP PMs (SH)", path: PATH_PARTNERS_BP, icon: <MdBusiness size={18} /> },
           { text: "RU PMs (SH)", path: PATH_PARTNERS_RU, icon: <MdBusiness size={18} /> },
           { text: "BART PMs", path: PATH_PARTNERS_BART, icon: <MdBusiness size={18} /> },

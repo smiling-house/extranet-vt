@@ -44,6 +44,7 @@ import Admin from "./Admin";
 
 import PartnersSH from "./PartnersSH";
 import PartnersVT from "./PartnersVT";
+import PartnersHostaway from "./PartnersHostaway";
 import SearchListings from "./SearchListings";
 
 import PropertiesNeedsAttention from "./PropertiesNeedsAttention";
@@ -100,6 +101,7 @@ import {
   PATH_LISTINGS_SH_BP_DECLINED_BUT_LISTED_ON_BP,
   PATH_PARTNERS_SH,
   PATH_PARTNERS_VT,
+  PATH_PARTNERS_HOSTAWAY,
   PATH_SEARCH_LISTINGS,
   PATH_PROPERTIES_NEEDS_ATTENTION
 } from "../Util/constants";
@@ -519,7 +521,21 @@ if(partnerAccountId) {
             handleToggleMenu={handleToggleMenu}
             setActiveMenu={setActiveMenu}
           />
-        </Route>        
+        </Route>
+
+        <Route exact path={[PATH_PARTNERS_HOSTAWAY]}>
+          <PartnersHostaway
+            agency={agency}
+            agent={agent}
+            token={token}
+            setProfile={setProfile}
+            screenSize={screenSize}
+            setScreenSize={setScreenSize}
+            activeMenu={activeMenu}
+            handleToggleMenu={handleToggleMenu}
+            setActiveMenu={setActiveMenu}
+          />
+        </Route>
 
 
         <Route exact path={[PATH_PARTNERS_BP]}>
