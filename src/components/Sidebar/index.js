@@ -14,7 +14,7 @@ import getInTouchIcon from "../../assets/icons/menu/get-in-touch.png";
 import faqIcon from "../../assets/icons/menu/faq.png";
 import adminIcon from "../../assets/icons/menu/admin.png";
 import { AiOutlineMenu, AiOutlineClose, AiOutlineHome, AiOutlineUser, AiOutlineLogout } from "react-icons/ai";
-import { FiUsers, FiUserCheck, FiCalendar, FiMap, FiSearch, FiSettings, FiExternalLink, FiCopy } from "react-icons/fi";
+import { FiUsers, FiUserCheck, FiCalendar, FiMap, FiSearch, FiSettings, FiExternalLink, FiCopy, FiChevronsLeft, FiChevronsRight } from "react-icons/fi";
 import { MdDashboard, MdBusiness, MdLocationOn, MdVerifiedUser } from "react-icons/md";
 import { getStorageValue } from "../../Util/general";
 import "./sidebar.scss";
@@ -56,6 +56,14 @@ import {
 const Sidebar = ({ activeMenu, setActiveMenu, handleToggleMenu, showOrHideSideBarMenu }) => {
   const [hoverItem, setHoverItem] = useState(null);
   const [expandedGroup, setExpandedGroup] = useState(null);
+  const [collapsed, setCollapsed] = useState(() => localStorage.getItem("sidebarCollapsed") === "1");
+
+  useEffect(() => {
+    document.documentElement.style.setProperty("--sidebar-w", collapsed ? "72px" : "250px");
+    localStorage.setItem("sidebarCollapsed", collapsed ? "1" : "0");
+  }, [collapsed]);
+
+  const toggleCollapsed = () => setCollapsed((c) => !c);
   const dispatch = useDispatch();
   const user = useSelector((state) => state.user.user);
   const history = useHistory();
@@ -183,6 +191,7 @@ const Sidebar = ({ activeMenu, setActiveMenu, handleToggleMenu, showOrHideSideBa
     return (
       <div
         key={text}
+        title={text}
         className={`sidebar-item ${isActive ? 'active' : ''} ${isSubItem ? 'sub-item' : ''} ${isHovered ? 'hovered' : ''}`}
         onClick={doPress}
         onMouseEnter={() => setHoverItem(text)}
@@ -201,26 +210,26 @@ const Sidebar = ({ activeMenu, setActiveMenu, handleToggleMenu, showOrHideSideBa
   const currentMenuGroups = currentRole === 'admin' ? menuGroups.admin : menuGroups.partner;
 
   return (
-    <div className="sidebar-container">
+    <div className={`sidebar-container ${collapsed ? 'collapsed' : ''}`}>
       {/* Header */}
       <div className="sidebar-header">
         <div className="sidebar-logo">
-          <div className="sidebar-logo-icon">
-            <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-              <rect width="32" height="32" rx="8" fill="#104109"/>
-              <path d="M8 12h16v8H8z" fill="white"/>
-              <circle cx="12" cy="16" r="2" fill="#104109"/>
-              <circle cx="20" cy="16" r="2" fill="#104109"/>
-            </svg>
-          </div>
           <div className="sidebar-logo-text">
             <h3>{APP_DISPLAY_NAME}</h3>
             <small>{currentRole === 'admin' ? 'Administrator' : 'Partner'} Portal</small>
           </div>
         </div>
 
+        <button
+          className="sidebar-collapse-btn"
+          onClick={toggleCollapsed}
+          title={collapsed ? 'Expand menu' : 'Collapse menu'}
+        >
+          {collapsed ? <FiChevronsRight size={18} /> : <FiChevronsLeft size={18} />}
+        </button>
+
         {screenSize < 800 && (
-          <button 
+          <button
             className="sidebar-close-btn"
             onClick={showOrHideSideBarMenu}
           >

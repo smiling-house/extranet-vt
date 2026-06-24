@@ -15,13 +15,21 @@ const Layout = ({
   handleToggleMenu,
   setActiveMenu
 }) => {
-  const [showSideBarMenu, setShowSideBarMenu] = useState(false);
+  const [showSideBarMenu, setShowSideBarMenu] = useState(() => {
+    const saved = localStorage.getItem('sidebarOpen');
+    if (saved !== null) return saved === '1';
+    const w = Number(localStorage.getItem('screenSize')) || (typeof window !== 'undefined' ? window.innerWidth : 1024);
+    return w >= 800;
+  });
   
   const agentData = agent ? JSON.parse(agent) : null;
   const extranet_vt_logged_in_role = agentData?.role === 'admin' ? 'admin' : 'partner';
 
   const showOrHideSideBarMenu = () => {
-    setShowSideBarMenu(prev => !prev);
+    setShowSideBarMenu(prev => {
+      localStorage.setItem('sidebarOpen', prev ? '0' : '1');
+      return !prev;
+    });
   };
 
   return (

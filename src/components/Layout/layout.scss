@@ -10,7 +10,7 @@
   min-height: calc(100vh - 70px);
   
   &.with-sidebar {
-    margin-left: 250px;
+    margin-left: var(--sidebar-w, 250px);
     
     @media (max-width: 768px) {
       margin-left: 0;

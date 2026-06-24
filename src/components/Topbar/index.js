@@ -24,9 +24,8 @@ const Topbar = ({
 
   return (
     <div className="page-header" style={{
-      marginLeft: showSideBarMenu ? '250px' : '0',
+      marginLeft: showSideBarMenu ? 'var(--sidebar-w, 250px)' : '0',
       transition: 'margin-left 0.3s ease',
-      background: 'linear-gradient(135deg, #104109 0%, #2d5a2b 100%)',
       boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
       borderBottom: '1px solid rgba(255,255,255,0.1)'
     }}>
