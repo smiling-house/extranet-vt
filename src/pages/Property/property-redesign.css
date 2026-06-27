@@ -1,0 +1,263 @@
+/* ──────────────────────────────────────────────────────────────────────────
+   Property detail page — rebuilt to match the mockup (Navy #192C3D + Cyan
+   #44C8F5, Manrope). New .pr-* hooks + restyle of existing classes. Scoped
+   under .property-page-wrapper. Presentation only — every handler / the
+   pricing+calendar+booking flow is untouched.
+   ────────────────────────────────────────────────────────────────────────── */
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap");
+
+.property-page-wrapper {
+  --navy: #192c3d;
+  --navy2: #22384a;
+  --cyan: #44c8f5;
+  --cyan-ink: #0e7ca8;
+  --muted: #5b6b7a;
+  --muted-2: #8a99a8;
+  --border: #e6ecf1;
+  --bg: #ffffff;
+  --lightblue: #eaf6fc;
+  font-family: "Manrope", -apple-system, BlinkMacSystemFont, sans-serif !important;
+  color: var(--navy);
+  background: #ffffff;
+}
+.property-page-wrapper * { font-family: "Manrope", -apple-system, BlinkMacSystemFont, sans-serif; }
+
+.property-page-wrapper .property-page-container { max-width: 1400px; margin: 0 auto; padding: 22px 40px 80px; }
+.property-page-wrapper .container { max-width: none !important; padding: 0 !important; }
+.property-page-wrapper .row.m-5 { margin: 26px 0 0 !important; --bs-gutter-x: 44px; }
+.property-page-wrapper .row.m-5 > .col-md-8 { flex: 0 0 auto; width: 64%; }
+.property-page-wrapper .row.m-5 > .col-md-4 { flex: 0 0 auto; width: 36%; }
+
+/* ── Top bar: back pill + breadcrumb ─────────────────────────────────────── */
+.pr-topbar { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
+.pr-back {
+  display: inline-flex; align-items: center; gap: 6px; background: #fff; border: 1px solid #d7e2ea;
+  color: var(--navy); font: 700 13px "Manrope", sans-serif; padding: 9px 15px; border-radius: 10px; cursor: pointer;
+}
+.pr-back:hover { background: #f6fafc; }
+.pr-back-ic { font-size: 16px; line-height: 1; }
+.pr-crumbs { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font: 600 12px "Manrope", sans-serif; color: var(--muted-2); }
+.pr-crumb-sep { color: #c4d1dc; }
+.pr-crumb-cur { color: var(--navy); }
+
+/* ── Gallery hero (full content width) ───────────────────────────────────── */
+.pr-gallery { margin-top: 16px; position: relative; width: 100% !important; }
+.property-page-wrapper .property-main-top.pr-gallery,
+.pr-gallery .carousel,
+.pr-gallery .carousel-inner { width: 100% !important; max-width: 100% !important; }
+.pr-gallery .carousel { position: relative; }
+.pr-gallery .carousel-inner {
+  border-radius: 20px; overflow: hidden; box-shadow: 0 4px 20px rgba(25, 44, 61, 0.10);
+  background: linear-gradient(135deg, #dbe7f0, #c9def0);
+}
+.pr-gallery .carousel-item, .pr-gallery .carousel-item img, .pr-gallery .carousel-item .d-block { width: 100% !important; max-width: 100% !important; }
+.pr-gallery .carousel-item img, .pr-gallery .carousel-item .d-block {
+  height: 600px !important; object-fit: cover; width: 100%;
+}
+.pr-gallery .property-page-prev-next-pic {
+  width: 46px !important; height: 46px !important; border-radius: 50%;
+  background: rgba(255, 255, 255, 0.95); box-shadow: 0 6px 18px rgba(25, 44, 61, 0.22);
+  padding: 12px; margin: 0 16px; z-index: 3; transition: transform 0.15s ease;
+}
+.pr-gallery .property-page-prev-next-pic:hover { transform: translateY(-50%) scale(1.06); }
+.pr-photo-count {
+  position: absolute; bottom: 16px; right: 16px; z-index: 3;
+  background: rgba(25, 44, 61, 0.82); color: #fff; font: 600 12px "Manrope", sans-serif;
+  padding: 5px 11px; border-radius: 999px;
+}
+.property-page-wrapper .property-main-picture-bullets { display: none !important; }
+
+/* ── Title block ─────────────────────────────────────────────────────────── */
+.property-page-wrapper .property-page-body-top-title,
+.property-page-wrapper .property-title {
+  font: 800 30px/1.12 "Manrope", sans-serif !important; letter-spacing: -0.025em; color: var(--navy) !important;
+}
+.property-page-wrapper .property-page-body-top-subtitle {
+  font: 500 15px "Manrope", sans-serif !important; color: var(--muted) !important; margin-top: 8px;
+  display: flex; align-items: center; gap: 6px;
+}
+.property-page-wrapper .property-page-body-top-subtitle::before { content: "📍"; font-size: 14px; }
+.property-page-wrapper .col-2 { flex: 0 0 auto; width: auto; display: flex; align-items: center; gap: 8px; padding: 0; }
+.property-page-wrapper .col-2 > span { padding: 0 !important; display: inline-flex; }
+.property-page-wrapper .property-main-picture-icon { height: 26px !important; width: auto; opacity: 0.85; }
+
+/* Dividers */
+.property-page-wrapper .border { border: 0 !important; border-top: 1px solid var(--border) !important; margin: 24px 0 !important; }
+
+/* ── Section headings (inline-styled) ────────────────────────────────────── */
+.property-page-wrapper .col-md-8 > div > div[style],
+.property-page-wrapper .col-md-8 .py-2 > div[style] {
+  font: 800 21px "Manrope", sans-serif !important; letter-spacing: -0.01em; color: var(--navy) !important; padding-bottom: 10px !important;
+}
+
+/* Overview list → cyan bullets */
+.property-page-wrapper .col-md-8 > div > ul { list-style: none; padding-left: 2px; }
+.property-page-wrapper .col-md-8 > div > ul > li {
+  position: relative; padding-left: 20px; color: var(--muted); font-size: 15px; line-height: 1.6; padding-top: 8px;
+}
+.property-page-wrapper .col-md-8 > div > ul > li::before {
+  content: ""; position: absolute; left: 2px; top: 15px; width: 7px; height: 7px; border-radius: 50%; background: var(--cyan);
+}
+
+/* "Read more / All amenities" → cyan */
+.property-page-wrapper span[style*="blue"] {
+  color: var(--cyan-ink) !important; border-bottom-color: var(--cyan-ink) !important; font: 700 13px "Manrope", sans-serif !important;
+}
+
+/* ── Capacity chips ──────────────────────────────────────────────────────── */
+.property-page-wrapper .property-page-body-feature-row { display: flex; flex-wrap: wrap; gap: 14px; }
+.property-page-wrapper .property-page-body-feature-row .Row,
+.property-page-wrapper .property-page-body-feature-row > div { display: flex !important; flex-wrap: wrap; gap: 14px; width: 100%; }
+.property-page-wrapper .pr-stat {
+  display: flex !important; align-items: center !important; gap: 11px !important;
+  background: #fff !important; border: 1px solid var(--border) !important; border-radius: 13px !important;
+  padding: 11px 16px !important; margin: 0 !important; width: auto !important; flex: 0 0 auto !important;
+}
+.property-page-wrapper .pr-stat .pr-stat-ic {
+  width: 38px; height: 38px; border-radius: 10px; background: var(--lightblue);
+  display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto;
+}
+.property-page-wrapper .pr-stat .pr-stat-ic img { width: 22px !important; height: 22px !important; }
+.property-page-wrapper .pr-stat .pr-stat-text { display: flex; flex-direction: column; line-height: 1.15; }
+.property-page-wrapper .pr-stat .pr-stat-v { font: 800 16px "Manrope", sans-serif; color: var(--navy); }
+.property-page-wrapper .pr-stat .pr-stat-l { font: 500 12px "Manrope", sans-serif; color: var(--muted-2); }
+
+/* ── Amenities → cyan checkmark grid ─────────────────────────────────────── */
+.property-page-wrapper .pr-amenities ul { list-style: none; padding: 0; margin: 0; }
+.property-page-wrapper .pr-amenities li {
+  position: relative; padding: 7px 0 7px 26px; color: var(--muted); font: 500 14px "Manrope", sans-serif;
+}
+.property-page-wrapper .pr-amenities li::before {
+  content: "✓"; position: absolute; left: 0; top: 7px; color: var(--cyan); font-weight: 800; font-size: 14px;
+}
+
+/* ── House rules → red cancellation alert ────────────────────────────────── */
+.property-page-wrapper .col-md-8 .py-2 div[style*="#707070"] { font-size: 14px !important; color: var(--muted) !important; line-height: 1.6; }
+.property-page-wrapper .col-md-8 .py-2 div[style*="#707070"] { background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 18px 20px; }
+.property-page-wrapper .link18-bold { color: var(--cyan-ink) !important; font: 700 13px "Manrope", sans-serif !important; margin-top: 12px; }
+
+/* ── Sticky booking card (dark header) ───────────────────────────────────── */
+.property-page-wrapper .property-page-body-top-right {
+  position: sticky; top: 22px; background: #fff; border: 1px solid var(--border); border-radius: 18px;
+  box-shadow: 0 10px 30px rgba(25, 44, 61, 0.10); overflow: visible; padding-bottom: 18px;
+}
+/* dark price header */
+.property-page-wrapper .property-page-body-top-right .pr-price {
+  background: linear-gradient(150deg, #192c3d 0%, #22384a 100%); color: #fff;
+  padding: 24px 24px 24px; border-radius: 18px 18px 0 0; margin: 0;
+  display: flex; flex-direction: column; align-items: flex-start; gap: 14px;
+}
+.pr-price-label { font: 800 11px "Manrope", sans-serif; letter-spacing: 0.08em; text-transform: uppercase; color: #8ea1b4; margin: 0; }
+.pr-price-main { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin: 0; }
+.pr-price-cur { font: 700 18px "Manrope", sans-serif; color: var(--cyan); }
+.pr-price-num { font: 800 38px/1 "Manrope", sans-serif; color: #fff; letter-spacing: -0.02em; }
+.pr-price-per { font: 500 13px "Manrope", sans-serif; color: #aebfcf; }
+.pr-price-comm { display: flex; align-items: center; gap: 7px; font: 500 13px "Manrope", sans-serif; color: #c7d3de; margin: 0; }
+.pr-price-comm::before { content: "\1F4C4"; font-size: 12px; }
+.pr-price-pill { display: inline-flex; align-items: center; gap: 6px; margin: 2px 0 0;
+  background: rgba(68, 200, 245, 0.16); color: #9fe3fb; font: 700 12px "Manrope", sans-serif; padding: 7px 13px; border-radius: 999px; }
+.pr-price-pill::before { content: "\1F5D3"; }
+
+/* native date inputs (property page) + labels */
+.property-page-wrapper .property-page-body-top-right .container > .row.gap-3 { padding-top: 6px; }
+.property-page-wrapper .property-page-body-top-right .col { padding-bottom: 7px; }
+.property-page-wrapper .pr-dates { display: flex; gap: 12px; width: 100%; }
+.property-page-wrapper .pr-date-input {
+  flex: 1 1 0; min-width: 0; width: 100% !important; box-sizing: border-box;
+  border: 1px solid var(--border) !important; border-radius: 10px !important;
+  padding: 11px 12px !important; font: 500 14px "Manrope", sans-serif !important; color: var(--navy) !important;
+  background: #fff; min-height: 0 !important; height: auto !important;
+}
+.property-page-wrapper .pr-date-input::-webkit-calendar-picker-indicator { opacity: 0.6; cursor: pointer; }
+/* redundant min/max line (now shown as the pill) */
+.property-page-wrapper .property-page-body-top-right ul li[style*="green"] { display: none !important; }
+.property-page-wrapper .property-page-body-top-right ul { margin: 0 !important; padding: 0 !important; }
+.property-page-wrapper .property-page-body-top-right ul li[style*="red"] { color: #c0344d !important; font: 600 12px "Manrope", sans-serif !important; padding: 8px 18px 0 !important; }
+
+/* Arrive/Departure labels + datepicker + currency */
+.property-page-wrapper .property-page-body-top-right .container { padding: 0 18px !important; }
+.property-page-wrapper .property-page-body-top-right .container .row { margin: 0 !important; }
+.property-page-wrapper .property-page-body-top-right .col { font: 800 10px "Manrope", sans-serif; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted-2); }
+.property-page-wrapper .datepicker { gap: 10px; width: 100%; margin: 0 !important; overflow: visible; }
+.property-page-wrapper .datepicker, .property-page-wrapper .datepicker * { overflow: visible !important; }
+.property-page-wrapper .datepicker input,
+.property-page-wrapper .property-page-body-top-right input[type="text"] {
+  width: 100% !important; min-width: 0 !important; font-size: 13px !important; padding: 10px 10px !important;
+  border: 1px solid var(--border) !important; border-radius: 10px !important;
+}
+.property-page-wrapper .curr-dropdown { padding: 14px 18px 0 !important; width: 100% !important; flex: 0 0 100% !important; max-width: 100% !important; }
+.property-page-wrapper .curr-dropdown select {
+  display: block; width: 100% !important; max-width: 100% !important; box-sizing: border-box;
+  border: 1px solid var(--border) !important; border-radius: 10px !important; padding: 11px 12px !important;
+  font: 600 13px "Manrope", sans-serif !important; color: var(--navy) !important;
+}
+.property-page-wrapper .property-page-body-top-right ul li[style*="green"] {
+  color: var(--cyan-ink) !important; font: 600 12px "Manrope", sans-serif !important;
+}
+/* booking ACTION buttons only (Book / Request Hold live inside .container.mt-3) → cyan */
+.property-page-wrapper .property-page-body-top-right .container.mt-3 button {
+  width: 100% !important; border-radius: 11px !important; font: 700 14px "Manrope", sans-serif !important;
+  padding: 13px 14px !important; margin: 6px 0 !important;
+  background: var(--cyan) !important; border-color: var(--cyan) !important; color: var(--navy) !important;
+}
+.property-page-wrapper .property-page-body-top-right .container.mt-3 button:hover { filter: brightness(0.95); }
+/* never let the date-picker's own controls (clear ✕ etc.) become big cyan bars */
+.property-page-wrapper .datepicker button,
+.property-page-wrapper .datepicker .react-datepicker__close-icon,
+.property-page-wrapper .property-page-body-top-right .datepicker [role="button"] {
+  width: auto !important; background: transparent !important; color: var(--muted) !important;
+  padding: 0 4px !important; margin: 0 !important; border: 0 !important; box-shadow: none !important;
+}
+/* date fields: full width, readable (no truncated "ve"/"art") */
+.property-page-wrapper .property-page-body-top-right .container > .row.gap-3 { gap: 12px !important; flex-wrap: nowrap; }
+.property-page-wrapper .datepicker .col,
+.property-page-wrapper .datepicker > div { flex: 1 1 0; min-width: 0; }
+.property-page-wrapper .datepicker input {
+  width: 100% !important; min-width: 0 !important; box-sizing: border-box; font-size: 13px !important;
+  padding: 10px 8px 10px 34px !important;
+}
+
+/* ── react-dates date picker → mockup look ───────────────────────────────── */
+.property-page-wrapper .property-page-body-top-right .container .row.gap-3 + .container,
+.property-page-wrapper .propertyDatePicker { width: 100%; }
+.property-page-wrapper .propertyDatePicker .DateRangePicker { width: 100%; display: block; }
+.property-page-wrapper .propertyDatePicker .DateRangePickerInput {
+  display: flex !important; gap: 10px; align-items: center; background: transparent !important; border: 0 !important; width: 100%;
+}
+.property-page-wrapper .propertyDatePicker .DateInput {
+  flex: 1 1 0; min-width: 0; width: auto !important; background: #fff !important;
+  border: 1px solid var(--border) !important; border-radius: 10px !important; overflow: hidden;
+}
+.property-page-wrapper .propertyDatePicker .DateInput_input {
+  font: 500 14px "Manrope", sans-serif !important; color: var(--navy) !important; padding: 10px 12px !important;
+  border: 0 !important; border-radius: 10px !important; width: 100% !important; line-height: 1.2 !important;
+}
+.property-page-wrapper .propertyDatePicker .DateInput_input__focused { border: 0 !important; }
+.property-page-wrapper .propertyDatePicker .DateRangePickerInput_arrow { display: none !important; }
+.property-page-wrapper .propertyDatePicker .DateRangePickerInput_clearDates {
+  margin: 0 0 0 2px !important; padding: 4px !important; background: transparent !important;
+}
+.property-page-wrapper .propertyDatePicker .DateRangePickerInput_clearDates svg { width: 16px; height: 16px; fill: var(--muted-2); }
+/* calendar popup */
+.property-page-wrapper .propertyDatePicker .DayPicker__withBorder { box-shadow: 0 10px 30px rgba(25,44,61,0.18) !important; border-radius: 14px; }
+.CalendarDay__selected, .CalendarDay__selected:active, .CalendarDay__selected:hover {
+  background: var(--cyan) !important; border: 1px double var(--cyan) !important; color: var(--navy) !important;
+}
+.CalendarDay__selected_span, .CalendarDay__hovered_span, .CalendarDay__hovered_span:hover {
+  background: rgba(68, 200, 245, 0.20) !important; border: 1px double rgba(68, 200, 245, 0.4) !important; color: var(--navy) !important;
+}
+.CalendarMonth_caption { color: var(--navy) !important; font: 700 15px "Manrope", sans-serif !important; }
+.DayPickerKeyboardShortcuts_show { display: none !important; }
+
+/* ── Location / map ──────────────────────────────────────────────────────── */
+.property-page-wrapper .property-location { margin-top: 40px; }
+.property-page-wrapper .property-location > div { padding: 0 !important; }
+.property-page-wrapper .property-location h1 { font: 800 21px "Manrope", sans-serif !important; color: var(--navy); margin-bottom: 14px; }
+.property-page-wrapper .property-location [style*="height: 500px"] { border-radius: 16px; overflow: hidden; }
+
+@media (max-width: 900px) {
+  .property-page-wrapper .row.m-5 > .col-md-8,
+  .property-page-wrapper .row.m-5 > .col-md-4 { width: 100%; }
+  .property-page-wrapper .property-page-body-top-right { position: static; }
+  .pr-gallery .carousel-item img { height: 320px !important; }
+}

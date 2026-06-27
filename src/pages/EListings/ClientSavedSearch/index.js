@@ -178,7 +178,7 @@ const ClientSavedSearch = props => {
 
 	return (
 		<div className="saved-search-container">
-			<div className="saved-search-title">Saved Search Multiple <span style={{color: '#165093'}}>{client.firstName + ' ' + client.lastName}</span></div>
+			<div className="saved-search-title">Saved Search Multiple <span style={{color: '#192C3D'}}>{client.firstName + ' ' + client.lastName}</span></div>
 			<div className="saved-search-header">
 				<div>
 					<div className="saved-search-header-title">Nick Name</div>

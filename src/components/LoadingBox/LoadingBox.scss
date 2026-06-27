@@ -17,3 +17,13 @@
 	z-index: 9999999; 
   }
   
+  .loading-spinner-navy {
+	width: 56px;
+	height: 56px;
+	border: 6px solid #e8edf3;
+	border-top-color: #192C3D;
+	border-radius: 50%;
+	animation: loading-spin-navy 0.9s linear infinite;
+	z-index: 9999999;
+  }
+  @keyframes loading-spin-navy { to { transform: rotate(360deg); } }

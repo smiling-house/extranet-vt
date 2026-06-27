@@ -19,7 +19,9 @@ import sustainIcon from "../../assets/collections/icons/sustainable.png";
 import PageHeader from "../../components/PageHeader";
 import ImageWithHover from "../../components/ImageWithHover";
 import { PATH_SEARCH, PATH_RESERVE } from "../../Util/constants";
+import constants from "../../Util/constants";
 import "./Property.scss";
+import "./property-redesign.css";
 import Button from "../../components/Buttons/Button/Button";
 import Row from "../../components/Row";
 import { UseCreateObject } from "../../Hooks/UseCreateObject.jsx";
@@ -49,6 +51,7 @@ import swal from "sweetalert";
 import AuthService from "../../services/auth.service.js";
 import Modal from "../../components/Modal/Modal.js";
 import * as propertyActions from "../../store/redux/Property/actions";
+import Layout from "../../components/Layout";
 
 const Property = (props) => {
 
@@ -87,6 +90,30 @@ property,
   const channelSource = location?.state?.channelSource;
   const selectedNights = location?.state?.nights;
   const [errors, setErrors] = useState([]);
+
+  // Cold-load: when /property?id=XXX is opened directly or refreshed (no in-app
+  // navigation state), fetch the listing by id so shared links work.
+  useEffect(() => {
+    if (location?.state?.property) return;
+    const coldParams = new URLSearchParams(location.search || "");
+    const coldId = coldParams.get("id");
+    const coldAcc = coldParams.get("acc") || localStorage.getItem("accountId") || "";
+    if (!coldId) return;
+    const COLD_TOKEN = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2NvdW50X29iamVjdF9pZCI6Mzk5MTU4NzUsInVzZXJfaWQiOiI0MDY2NTAyMSIsInVzZXJfbmFtZSI6InN5c3RlbStsdW5hLTh5NXljIiwic2NvcGUiOlsiYnJpdm8uYXBpIl0sImF0aSI6ImI5MTliYmJiLTA1ZWItNDlmOC05MjlhLWM0MTJlYzY3NWI2YyIsImlzc3VlZCI6IjE2NzUzNzA2NDMzNzMiLCJleHAiOjIyOTczMzM3MjcsInNlcnZpY2VfdG9rZW4iOm51bGwsImF1dGhvcml0aWVzIjpbIlJPTEVfU1VQRVJfQURNSU4iLCJST0xFX0FETUlOIl0sImp0aSI6IjExODQzYjg2LWIyYzUtNGMwNS1hYWZlLTcxZTI4NGIyNjNlOCIsImNsaWVudF9pZCI6IjkzOTFlYjVkLWUwNmUtNDY4MS1iNTdhLWQwZTU3NDhhM2RlZSIsIndoaXRlX2xpc3RlZCI6ZmFsc2V9.Mqmx7onIVz_EVAunhwqBAhAmlsGXMQ18hh_EV_61KQIpaGXlrgXgx1hOOdNWLFriG3Un6jfS7H7vwMAYmBT6-8yl9L7VB7Cpxva49XozuSJazQ42UDDlTOsnWAmatzmFna-Uzjc8MDfVQbR8AwMiFq_Jb9ViaJ4XBkj2KhEKs1g";
+    const req = axios.create({ baseURL: constants.SHUB_URL, headers: { Authorization: `Bearer ${COLD_TOKEN}` } });
+    req.get(`/local/listings?accountId=${coldAcc}&searchPropertyId=${coldId}`)
+      .then((res) => {
+        const item = ((res && res.data && res.data.listings) || [])[0];
+        if (item && item.listing) {
+          history.replace(
+            { pathname: location.pathname, search: location.search },
+            { property: item.listing, xdata: item.xdata, fullCalendar: item.fullCalendar }
+          );
+        }
+      })
+      .catch((e) => console.error("Cold-load property by id failed:", e));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const [startDate, setStartDate] = useState(
     dayjs(getStorageValue("dateFrom")) || null
   );
@@ -151,7 +178,7 @@ property,
     // const fetchCurrencies = async () => {
     //   try {
     //     axios.defaults.headers.common["Authorization"] = `Bearer ${jToken}`;
-    //     const response = await axios.get("https://api.villatracker.com/xchange");
+    //     const response = await axios.get("https://api.triangle.luxury/xchange");
     //     const data = response.data;
     //     localStorage.setItem("exchange", JSON.stringify(data));
     //     setCurrencies(data);
@@ -221,8 +248,12 @@ property,
 
 
   const doBack = (params) => {
-    history.push("/search");
-    window.location.reload();
+    // Back → the listings page for the same partner/account the user was on.
+    const acc = new URLSearchParams(location.search || "").get("acc")
+      || location?.state?.property?.accountId
+      || localStorage.getItem("accountId")
+      || "";
+    history.push(acc ? `/listings?accountId=${acc}` : "/listings");
   };
 
   function formattedDate(dateStr) {
@@ -504,14 +535,12 @@ property,
     };
     const renderAmount = (title, pic, amount) => {
       return (
-        <div className="property-page-body-top-left-info-amount">
-          <div className="row d-flex justify-content-center m-2">
-            <img src={pic} alt="" style={{ width: "40px" }} />
-          </div>
-          <div className="row d-flex justify-content-center m-2">{title}</div>
-          <div className="row d-flex justify-content-center m-2">
-            {amount ? amount : ``}
-          </div>
+        <div className="property-page-body-top-left-info-amount pr-stat">
+          <span className="pr-stat-ic"><img src={pic} alt="" /></span>
+          <span className="pr-stat-text">
+            {(amount || amount === 0) ? <b className="pr-stat-v">{amount}</b> : null}
+            <span className="pr-stat-l">{title}</span>
+          </span>
         </div>
       );
     };
@@ -584,7 +613,7 @@ property,
     localStorage.setItem("SelectedPropertiesItem", JSON.stringify(property));
     localStorage.setItem("totalSelectedPropertiesItem", 1);
     //console.log("onDemand", onDemand)
-    return (
+    const __inner = (
       <>
 
         {!noMenu && showSaveSearch && (
@@ -604,30 +633,26 @@ property,
         <LoadingBox visible={isLoading} />
         <div className="property-page-wrapper fluid-container">
           <div ref={ref} className="property-page-container">
-            {!links && (
-              <div
-                className="link18-bold-no-line px-3"
-                style={{ display: "flex" }}
-                onClick={doBack}
-              >
-                <img onClick={doBack} src={goBack} alt="" />
-                &nbsp;&nbsp;Back
-              </div>
-            )}
-            <div className="property-main-top py-2">
+            <div className="pr-topbar">
+              {!links && (
+                <button type="button" className="pr-back" onClick={doBack}>
+                  <span className="pr-back-ic">‹</span> Back to listings
+                </button>
+              )}
+              <nav className="pr-crumbs">
+                <span>Listings</span>
+                {prop?.countryName && <><span className="pr-crumb-sep">›</span><span>{prop.countryName}</span></>}
+                {(xdata?.title || property?.title) && <><span className="pr-crumb-sep">›</span><span className="pr-crumb-cur">{xdata?.title || property?.title}</span></>}
+              </nav>
+            </div>
+            <div className="property-main-top py-2 pr-gallery">
               <div
                 id="carouselExampleControlsNoTouching"
                 className="carousel slide"
                 data-bs-touch="false"
                 data-bs-interval="false"
               >
-                <div
-                  className="carousel-inner"
-                  style={{
-                    paddingLeft: "30px",
-                    paddingRight: "30px",
-                  }}
-                >
+                <div className="carousel-inner">
                   <div className="carousel-item active">
                     <img
                       src={pic}
@@ -637,6 +662,9 @@ property,
                     />
                   </div>
                 </div>
+                {prop?.photos && !isNullOrEmptyArray(prop?.photos) && (
+                  <span className="pr-photo-count">📷 {(picIndex % prop.photos.length) + 1} / {prop.photos.length}</span>
+                )}
                 <ImageWithHover
                   path={picLeft}
                   pathOver={picLeftOn}
@@ -773,7 +801,7 @@ property,
                     >
                       Amenities
                     </div>
-                    <div className="row">
+                    <div className="row pr-amenities">
                       {columnsArray.map((column, columnIndex) => (
                         <div key={columnIndex} className="col-md-4">
                           <ul>{renderAmenitiesss(column)}</ul>
@@ -858,91 +886,30 @@ property,
                 <div className="col-12 col-md-4 p-3 pt-0 order-md-last order-first">
                   <div className="property-page-body-top-right">
                     {((!dateFrom || !dateTo) && !onDemand) && (
-                      <div className="p-4 pt-0">
-                        <div
-                          className="row d-flex justify-content-start"
-                          style={{ color: "#606466" }}
-                        >
-                          Starting from
+                      <div className="pr-price">
+                        <div className="pr-price-label">Starting from</div>
+                        <div className="pr-price-main">
+                          <span className="pr-price-cur">{getCurrencyDisplaySymbol(selectedCurrency)}</span>
+                          <span className="pr-price-num">{numeral(price?.totalAmount).format("0,0")}</span>
+                          <span className="pr-price-per">/ night</span>
                         </div>
-                        <div className="d-flex flex-row gap-2 justify-content-start align-items-center">
-                          <div className="property-page-body-top-price mr-2 ">
-                            <span>
-                              <span
-                                className="d-inline"
-                                style={{ fontSize: "28px" }}
-                              >
-                                {getCurrencyDisplaySymbol(
-                                  selectedCurrency
-                                )}
-                              </span>
-                            </span>
-                            <span style={{ fontSize: "48px" }}>
-                              {` ${numeral(price?.totalAmount).format("0,0")}`}
-                            </span>
-                          </div>
-                          <div className="property-page-body-top-night">
-                            Per night
-                          </div>
+                        <div className="pr-price-comm">
+                          + {getCurrencyDisplaySymbol(selectedCurrency)} {numeral((price?.totalAmount) / 10).format("0,0.0")} agency commission
                         </div>
-                        <div className="d-flex flex-row justify-content-start gap-2 align-items-center">
-                          <div className="property-page-body-top-commission-price mr-2">
-                            <span>
-                              <span className="d-inline commision">
-                                {getCurrencyDisplaySymbol(
-                                  selectedCurrency
-                                )}
-                              </span>
-                            </span>
-                            <span style={{ fontSize: "28px" }}>
-                              &nbsp;
-                              {` ${numeral((price?.totalAmount) / 10).format(
-                                "0,0.0"
-                              )}`}
-                            </span>
-                          </div>
-                          <div className="property-page-body-top-agency ml-2">
-                            Agency Commission
-                          </div>
-                        </div>
+                        {maxStay ? <span className="pr-price-pill">Up to {maxStay} nights</span> : null}
                       </div>
                     )}
 
                     {(dateFrom && dateTo && !onDemand) && (
-                      <div className="text-head-color">
-                        <h3 className="text-start">Total Booking Amount</h3>
-                        <div className="d-flex justify-content-between align-items-center">
-                          <div className="fw-bold currency-font currency-style">
-                            <span style={{ fontSize: "28px" }}>
-                              {getCurrencyDisplaySymbol(
-                                selectedCurrency
-                              )}
-                            </span>
-                            {price?.totalAmount.toFixed(0)}
-                          </div>
-                          <div className="h5">
-                            For{" "}
-                            {selectedNights
-                              ? selectedNights
-                              : calculateTotalNights()}{" "}
-                            Nights
-                          </div>
+                      <div className="pr-price">
+                        <div className="pr-price-label">Total booking amount</div>
+                        <div className="pr-price-main">
+                          <span className="pr-price-cur">{getCurrencyDisplaySymbol(selectedCurrency)}</span>
+                          <span className="pr-price-num">{price?.totalAmount.toFixed(0)}</span>
+                          <span className="pr-price-per">for {selectedNights ? selectedNights : calculateTotalNights()} nights</span>
                         </div>
-                        <div className="property-page-body-top-commission-price mr-2">
-                          <span>
-                            <span className="d-inline commision">
-                              {getCurrencyDisplaySymbol(
-                                selectedCurrency
-                              )}
-                            </span>
-                          </span>
-                          <span style={{ fontSize: "28px" }}>
-                            &nbsp;
-                            {(price?.totalAmount / 10).toFixed(1)}
-                          </span>
-                        </div>
-                        <div className="property-page-body-top-agency ml-2">
-                          Agency Commission
+                        <div className="pr-price-comm">
+                          + {getCurrencyDisplaySymbol(selectedCurrency)} {(price?.totalAmount / 10).toFixed(1)} agency commission
                         </div>
                       </div>
                     )}
@@ -1094,7 +1061,7 @@ property,
               <div style={{ padding: "0 40px" }}>
                 <h1>Location</h1>
                 <div>
-                  <LoadScript googleMapsApiKey="AIzaSyA6TmWVrRTP93bEIGqQG9e_1qvVwcwNJ2k">
+                  <LoadScript googleMapsApiKey="AIzaSyDJZiBl3NStDg82QA7I1t4La0Dqnwj7cb0">
                     <GoogleMap
                       id="marker-example"
                       mapContainerStyle={{ width: "100%", height: "500px" }}
@@ -1120,7 +1087,14 @@ property,
 
         )}
       </>
+    );
 
+    // Embedded / PDF render (noMenu) stays chrome-less; otherwise show the
+    // platform shell (top bar + left nav) like the rest of the site.
+    return (links || noMenu) ? __inner : (
+      <Layout agency={agency} agent={agent} token={jToken}>
+        {__inner}
+      </Layout>
     );
   }
 };

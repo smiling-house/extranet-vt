@@ -218,7 +218,7 @@ const ClientOfferLog = props => {
 				<div className="fluid-container">
 					<div class="modal-content" >
 						<div class="modal-body">
-							<h2 className="text-center pt-2">Client Offer Log <span style={{ color: '#165093' }}>{NickNameLog}</span></h2>
+							<h2 className="text-center pt-2">Client Offer Log <span style={{ color: '#192C3D' }}>{NickNameLog}</span></h2>
 							<div className=" p-2 row">
 								<div className="col-md-3">
 									<label>Nick Name</label>

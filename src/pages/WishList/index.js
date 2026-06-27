@@ -168,7 +168,7 @@ const WishList = props => {
 		}, {
 			id: 'offer',
 			name: 'Villa tracker Offer',
-			headerStyle: { color: '#1B9C5D' },
+			headerStyle: { color: '#192C3D' },
 			sortable: true,
 			selector: row => row.offer,
 			cell: row => <Row>

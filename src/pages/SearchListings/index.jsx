@@ -973,7 +973,7 @@ export const CreateNewAccountModal = ({
                 <button
                     type="submit"
                     className="btn btn-success border-radius-0 w-25 py-2"
-                    style={{ backgroundColor: "#165093" }}
+                    style={{ backgroundColor: "#192C3D" }}
                     onClick={handleSubmit}
                 >
                     Save

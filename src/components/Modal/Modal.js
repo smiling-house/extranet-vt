@@ -308,7 +308,7 @@ export default function Modal() {
                 className="btn  btn-lg mx-4 p-2"
                 style={{
                   fontFamily: "Quicksand",
-                  backgroundColor: "#165093",
+                  backgroundColor: "#192C3D",
                   color: "white",
                 }}
               >

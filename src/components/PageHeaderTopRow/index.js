@@ -50,7 +50,7 @@ const PageHeaderTopRow = props => {
 	return (
 		<div className="search-header-top-row row-sm-7" style={innerStyle}>
 			<div className="search-header-top-row-logo-container">
-				<span onClick={signOut}> Hello, {`${agent?.firstName} ${agent?.lastName} ${agency?.agencyName === null ? "" : "(" + agency?.agencyName + ")"}`}
+				<span onClick={signOut}> Hello, {[agent?.firstName, agent?.lastName].filter(Boolean).join(" ")}{agency?.agencyName ? ` (${agency.agencyName})` : ""}
 				</span>
 				
 			</div>

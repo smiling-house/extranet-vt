@@ -12,7 +12,7 @@ function ValidationDot({ valid, error }) {
                 cx="4"
                 cy="4"
                 r="4"
-                fill={valid ? "#282A35" : (error ? "#D9212C" : "#165093")}
+                fill={valid ? "#282A35" : (error ? "#D9212C" : "#192C3D")}
                 fillOpacity={valid ? "0.2" : "1.0"} />
         </svg>
     )

@@ -584,7 +584,7 @@ const columns = [
         name: 'Location',
         width: '1fr',
         header: (column, index) => (
-            <div key={index} style={{ color: '#1B9C5D', backgroundColor: '#F5F5F2', fontSize: '22px', fontWeight: 500 }}>
+            <div key={index} style={{ color: '#192C3D', backgroundColor: '#F5F5F2', fontSize: '22px', fontWeight: 500 }}>
                 Location
             </div>
         ),
@@ -596,7 +596,7 @@ const columns = [
         id: 'savedSearch',
         name: 'agent',
         header: (column, index) => (
-            <div key={index} style={{ color: '#1B9C5D', backgroundColor: '#F5F5F2', fontSize: '21px', lineHeight: '21px', fontWeight: 500 }}>
+            <div key={index} style={{ color: '#192C3D', backgroundColor: '#F5F5F2', fontSize: '21px', lineHeight: '21px', fontWeight: 500 }}>
                 Agent
             </div>
         ),
@@ -829,7 +829,7 @@ export const CreateNewAccountModal = ({
                 <button
                     type="submit"
                     className="btn btn-success border-radius-0 w-25 py-2"
-                    style={{ backgroundColor: "#165093" }}
+                    style={{ backgroundColor: "#192C3D" }}
                     onClick={handleSubmit}
                 >
                     Save

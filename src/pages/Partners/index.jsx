@@ -1051,7 +1051,7 @@ localStorage.setItem('partnerPropertiesUniqueZipcodes', JSON.stringify(partnerPr
 													<td className="pmName px-4 p-3  text-primary  cst-cursor" ><h4>{/*totalPartners - partnersPagingFrom - index + 1*/}
 													{serialNumber+index+1}
 													</h4></td>
-													<td className="pmName px-4 p-3  text-primary  cst-cursor" ><h4>{item.pmName != null ? item.pmName : ""}</h4></td>
+													<td className="pmName px-4 p-3  text-primary  cst-cursor text-decoration-underline" ><h4 onClick={() => GoToPartnerListings(item, item.accountId)}>{item.pmName != null ? item.pmName : ""}</h4></td>
 													<td className="accountId px-4 p-3 text-primary text-decoration-underline cst-cursor"><h4 onClick={() => onEditPartner(item.accountId, item)}>{item.accountId !== null ? item.accountId : ""}</h4></td>
 
 	<td className="accountId px-4 p-3 text-primary cst-cursor"><h4>{item.source}</h4></td>												

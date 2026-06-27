@@ -1,0 +1,413 @@
+/* ──────────────────────────────────────────────────────────────────────────
+   Listings redesign — 3 switchable layouts (Expanded / Grid / Table).
+   Mockup-exact palette (Navy #192C3D + Cyan #44C8F5). Scoped under .lr* so
+   nothing here leaks into the legacy ("Classic") view or the rest of the app.
+   Presentation only — no data/logic changes.
+   ────────────────────────────────────────────────────────────────────────── */
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&display=swap");
+
+.lr {
+  --navy: #192c3d;
+  --cyan: #44c8f5;
+  --cyan-ink: #0e7ca8;
+  --lightblue: #eaf6fc;
+  --chip-bg: #f4f8fb;
+  --chip-border: #e3ecf2;
+  --grey: #f1f5f9;
+  --border: #e6ecf1;
+  --divider: #eef3f7;
+  --muted: #5b6b7a;
+  --muted-2: #7c8b99;
+  --muted-3: #8a99a8;
+  --ok-bg: #e8f7ef;
+  --ok-fg: #15794a;
+  --info-bg: #e4f6fd;
+  --info-fg: #0e7ca8;
+  --neutral-bg: #eff3f6;
+  --warn-bg: #fff4e5;
+  --warn-fg: #b26a00;
+  --bad-bg: #fdecef;
+  --bad-fg: #c0344d;
+  --heart: #ff4d6d;
+  font-family: "Manrope", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: var(--navy);
+}
+
+/* ── Toolbar / view switcher ─────────────────────────────────────────────── */
+.lr-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 4px 0 16px;
+}
+.lr-switch {
+  display: inline-flex;
+  background: var(--grey);
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  padding: 3px;
+  gap: 2px;
+}
+.lr-switch button {
+  border: 0 !important;
+  background: transparent !important;
+  color: #334a5e !important;
+  font: 700 12px/1 "Manrope", sans-serif !important;
+  letter-spacing: 0.01em;
+  padding: 9px 16px !important;
+  border-radius: 8px !important;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0 !important;
+  height: auto !important;
+  transition: all 0.15s ease;
+  text-transform: none !important;
+}
+.lr-switch button:hover { color: var(--navy) !important; background: #e7edf2 !important; }
+.lr-switch button.is-active {
+  background: var(--navy) !important;
+  color: #fff !important;
+  box-shadow: 0 1px 3px rgba(25, 44, 61, 0.25);
+}
+.lr-count { font: 600 12px "Manrope", sans-serif; color: var(--muted-2); }
+
+/* ── Page spacing fixes ──────────────────────────────────────────────────
+   The legacy listings header/admin controls sit flush-left (no padding) and
+   bootstrap .row negative margins drag them past the edge. Give the whole
+   listings body consistent gutters and stop the rows from poking out. */
+.listings-main { padding: 4px 20px 28px !important; box-sizing: border-box; }
+.listings-main .row { margin-left: 0 !important; margin-right: 0 !important; }
+.listings-main .listings-search-container { margin-left: 0 !important; margin-right: 0 !important; }
+
+/* ── Page header / toolbar (top area) ────────────────────────────────────── */
+.lr-head { display: flex; flex-direction: column; gap: 18px; padding: 22px 2px 2px; }
+.lr-head-top { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.lr-goback {
+  display: inline-flex; align-items: center; gap: 7px;
+  background: #fff; border: 1px solid var(--border); color: var(--navy);
+  font: 700 13px "Manrope", sans-serif; padding: 9px 14px; border-radius: 10px;
+  cursor: pointer; white-space: nowrap;
+}
+.lr-goback:hover { background: #f6fafc; }
+.lr-crumbs { display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  font: 600 13px "Manrope", sans-serif; color: var(--muted-2); }
+.lr-crumbs .sep { color: #c4d1dc; }
+.lr-crumbs .accent { color: var(--cyan-ink); }
+
+.lr-title-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.lr-h1 { font: 800 28px/1.1 "Manrope", sans-serif; letter-spacing: -0.02em; color: var(--navy); margin: 0 0 6px; }
+.lr-sub { display: flex; align-items: center; gap: 7px; font: 500 14px "Manrope", sans-serif; color: var(--muted); }
+.lr-sub b { color: var(--navy); font-weight: 800; }
+.lr-sub .layers { color: var(--cyan); display: inline-flex; }
+
+/* Filter / search bar */
+.lr-filterbar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.lr-search { position: relative; flex: 1 1 320px; min-width: 240px; }
+.lr-search .si { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--cyan); display: inline-flex; }
+.lr.lr-head .lr-search input {
+  width: 100%; background: #fff !important; border: 1px solid var(--border) !important;
+  border-radius: 12px !important; padding: 12px 14px 12px 44px !important;
+  font: 500 14px "Manrope", sans-serif !important; color: var(--navy) !important;
+  min-height: 0 !important; height: auto !important;
+}
+.lr-search input::placeholder { color: var(--muted-3); }
+.lr-filter {
+  appearance: none; -webkit-appearance: none;
+  background: #fff url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%235b6b7a' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><path d='M6 9l6 6 6-6'/></svg>") no-repeat right 12px center;
+  border: 1px solid var(--border) !important; border-radius: 10px !important;
+  padding: 11px 34px 11px 14px !important; font: 600 13px "Manrope", sans-serif !important;
+  color: var(--navy) !important; cursor: pointer; min-height: 0 !important; height: auto !important;
+}
+.lr-clear { display: inline-flex; align-items: center; gap: 6px; margin-left: auto;
+  background: none; border: 0; color: var(--cyan-ink); font: 700 13px "Manrope", sans-serif; cursor: pointer; }
+.lr-clear:hover { text-decoration: underline; }
+
+/* Bulk action bar */
+.lr-bulkbar {
+  display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+  background: var(--navy); border-radius: 14px; padding: 14px 18px; color: #fff;
+}
+.lr-bulk-check { display: inline-flex; align-items: center; gap: 9px; font: 700 13px "Manrope", sans-serif; color: #fff; cursor: pointer; }
+.lr-bulk-check input { width: 17px; height: 17px; accent-color: var(--cyan); }
+.lr-bulkbar .lab { font: 500 13px "Manrope", sans-serif; color: #aebfcf; }
+.lr-bulkbar .lr-sep { width: 1px; height: 22px; background: rgba(255,255,255,0.16); }
+.lr-bulkbar select {
+  appearance: none; -webkit-appearance: none;
+  background: #ffffff url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%235b6b7a' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><path d='M6 9l6 6 6-6'/></svg>") no-repeat right 12px center;
+  border: 0 !important; border-radius: 9px !important; padding: 9px 32px 9px 13px !important;
+  font: 600 13px "Manrope", sans-serif !important; color: var(--navy) !important;
+  min-height: 0 !important; height: auto !important; cursor: pointer;
+}
+.lr-bulkbar input[type="text"] {
+  border: 0 !important; border-radius: 9px !important; padding: 9px 13px !important;
+  font: 500 13px "Manrope", sans-serif !important; min-height: 0 !important; height: auto !important;
+}
+.lr-bulk-btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  background: rgba(255,255,255,0.14); border: 1px solid rgba(255,255,255,0.18); color: #fff;
+  font: 700 13px "Manrope", sans-serif; padding: 9px 16px; border-radius: 9px; cursor: pointer;
+}
+.lr-bulk-btn:hover { background: var(--cyan); border-color: var(--cyan); color: var(--navy); }
+
+/* Pagination row */
+.lr-pagerow { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.lr-pagerow .showing { font: 500 13px "Manrope", sans-serif; color: var(--muted); }
+.lr-pagerow .showing b { color: var(--navy); font-weight: 700; }
+.lr-pagerow .right { display: flex; align-items: center; gap: 12px; }
+
+/* ── Shared atoms ────────────────────────────────────────────────────────── */
+.lr-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font: 700 11px/1 "Manrope", sans-serif;
+  padding: 5px 10px;
+  border-radius: 8px;
+  white-space: nowrap;
+}
+.lr-badge.ok { background: var(--ok-bg); color: var(--ok-fg); }
+.lr-badge.info { background: var(--info-bg); color: var(--info-fg); }
+.lr-badge.neutral { background: var(--neutral-bg); color: var(--muted); }
+.lr-badge.warn { background: var(--warn-bg); color: var(--warn-fg); }
+.lr-badge.bad { background: var(--bad-bg); color: var(--bad-fg); }
+.lr-badge.dot::before {
+  content: "";
+  width: 7px; height: 7px; border-radius: 50%;
+  background: currentColor; opacity: 0.9;
+}
+
+.lr-type {
+  font: 700 10px/1 "Manrope", sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--cyan-ink);
+  background: var(--lightblue);
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+
+/* Capacity icon + number + label */
+.lr-caps { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; }
+.lr-cap { display: inline-flex; align-items: center; gap: 7px; }
+.lr-cap .ic {
+  width: 30px; height: 30px; border-radius: 9px;
+  background: var(--lightblue); color: var(--cyan-ink);
+  display: inline-flex; align-items: center; justify-content: center;
+  flex: 0 0 auto;
+}
+.lr-cap .ic img { width: 16px; height: 16px; object-fit: contain; }
+.lr-cap b { font: 800 15px/1 "Manrope", sans-serif; color: var(--navy); }
+.lr-cap span { font: 500 11px/1 "Manrope", sans-serif; color: var(--muted-3); }
+/* compact capacity (table/grid) — no chip box */
+.lr-caps.sm .lr-cap .ic { width: auto; height: auto; background: transparent; }
+.lr-caps.sm .lr-cap .ic img { width: 17px; height: 17px; }
+.lr-caps.sm b { font-size: 14px; }
+
+/* Collection chips */
+.lr-cols { display: flex; flex-wrap: wrap; gap: 7px; }
+.lr-col {
+  display: inline-flex; align-items: center; gap: 6px;
+  font: 600 12px/1 "Manrope", sans-serif; color: #3c5061;
+  background: var(--chip-bg); border: 1px solid var(--chip-border);
+  padding: 5px 10px; border-radius: 999px;
+}
+.lr-col img { width: 15px; height: 15px; }
+/* icon-only collection chip (grid/table) */
+.lr-colmini {
+  width: 27px; height: 27px; border-radius: 8px;
+  background: var(--chip-bg); border: 1px solid var(--chip-border);
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.lr-colmini img { width: 15px; height: 15px; }
+
+/* Location breadcrumb */
+.lr-loc {
+  display: flex; align-items: center; gap: 7px; flex-wrap: wrap;
+  font: 500 13px/1.35 "Manrope", sans-serif; color: var(--muted);
+}
+.lr-loc .pin { color: var(--cyan); display: inline-flex; flex: 0 0 auto; }
+.lr-loc b { color: var(--navy); font-weight: 700; }
+.lr-loc .sep { color: #c4d1dc; }
+.lr-loc .zip { color: var(--muted-3); }
+
+/* Image / carousel */
+.lr-img {
+  position: relative; overflow: hidden; border-radius: 14px;
+  background: linear-gradient(135deg, #c9def0, #aecbe6);
+  flex: 0 0 auto;
+}
+.lr-img .ph {
+  position: absolute; inset: 0; display: flex; align-items: center;
+  justify-content: center; color: rgba(25, 44, 61, 0.35);
+  font: 700 12px "Manrope", sans-serif; letter-spacing: 0.18em;
+  text-transform: uppercase; background-size: cover; background-position: center;
+}
+.lr-img .idtag {
+  position: absolute; top: 10px; left: 10px; z-index: 2;
+  background: rgba(25, 44, 61, 0.82); color: #fff;
+  font: 700 12px "Manrope", sans-serif; padding: 5px 10px; border-radius: 8px;
+}
+.lr-img .heart {
+  position: absolute; top: 10px; right: 10px; z-index: 2;
+  width: 34px; height: 34px; border-radius: 50%; border: 0; cursor: pointer;
+  background: rgba(25, 44, 61, 0.42); color: #fff;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.lr-img .heart.on { color: var(--heart); }
+.lr-img .nav {
+  position: absolute; top: 50%; transform: translateY(-50%); z-index: 2;
+  width: 36px; height: 36px; border-radius: 50%; border: 0; cursor: pointer;
+  background: rgba(255, 255, 255, 0.94); color: var(--navy);
+  box-shadow: 0 4px 12px rgba(25, 44, 61, 0.22);
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.lr-img .nav.prev { left: 10px; }
+.lr-img .nav.next { right: 10px; }
+.lr-img .nav.sm { width: 28px; height: 28px; }
+.lr-img .counter {
+  position: absolute; bottom: 10px; right: 10px; z-index: 2;
+  background: rgba(25, 44, 61, 0.8); color: #fff;
+  font: 600 11px "Manrope", sans-serif; padding: 4px 9px; border-radius: 999px;
+  display: inline-flex; align-items: center; gap: 5px;
+}
+
+/* Pricing block (expanded/table) */
+.lr-pricing .lab {
+  font: 800 10px/1 "Manrope", sans-serif; letter-spacing: 0.07em;
+  text-transform: uppercase; color: var(--muted-2); margin-bottom: 8px;
+}
+.lr-price-grid { display: grid; grid-template-columns: auto auto; gap: 6px 22px; }
+.lr-price-grid .k { font: 500 12px "Manrope", sans-serif; color: var(--muted); }
+.lr-price-grid .v { font: 800 13px "Manrope", sans-serif; color: var(--navy); }
+.lr-bigprice { font: 800 19px/1 "Manrope", sans-serif; color: var(--navy); }
+.lr-bigprice small { font: 500 11px "Manrope", sans-serif; color: var(--muted-3); }
+.lr-fromlab { font: 800 9px/1 "Manrope", sans-serif; letter-spacing: 0.06em;
+  text-transform: uppercase; color: #a4b1bd; margin-bottom: 3px; }
+
+/* Buttons */
+.lr-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  font: 700 13px/1 "Manrope", sans-serif; cursor: pointer;
+  border-radius: 11px; padding: 12px 14px; border: 1px solid transparent;
+  transition: all 0.15s ease;
+}
+.lr-btn.primary { background: var(--navy); color: #fff; }
+.lr-btn.primary:hover { background: #0f1f2c; }
+.lr-btn.ghost { background: #fff; color: var(--navy); border-color: #d7e2ea; }
+.lr-btn.ghost:hover { background: #f6fafc; }
+.lr-icobtn {
+  width: 42px; height: 42px; border-radius: 11px; flex: 0 0 auto;
+  background: #fff; border: 1px solid #d7e2ea; color: var(--navy);
+  display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
+}
+.lr-icobtn:hover { background: #f6fafc; }
+.lr-icobtn.sm { width: 34px; height: 34px; border-radius: 9px; }
+
+/* Selection checkbox */
+.lr-check { width: 17px; height: 17px; accent-color: var(--navy); cursor: pointer; }
+
+/* ── LAYOUT: Expanded row (default) ──────────────────────────────────────── */
+.lr-expanded-list { display: flex; flex-direction: column; gap: 16px; }
+.lr-exp {
+  display: grid; grid-template-columns: 312px 1fr 252px; gap: 24px;
+  background: #fff; border: 1px solid var(--border); border-radius: 18px;
+  padding: 20px; box-shadow: 0 1px 2px rgba(25, 44, 61, 0.04);
+}
+.lr-exp .lr-img { min-height: 214px; }
+.lr-exp .lr-img .ph { font-size: 12px; }
+.lr-exp-mid { display: flex; flex-direction: column; gap: 13px; min-width: 0; }
+.lr-exp-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.lr-exp-title { font: 800 21px/1.1 "Manrope", sans-serif; letter-spacing: -0.02em; color: var(--navy); }
+.lr-exp-sub { display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  font: 600 12px "Manrope", sans-serif; color: var(--muted-3); }
+.lr-exp-sub .code { color: var(--cyan-ink); }
+.lr-exp-select { display: inline-flex; align-items: center; gap: 8px; }
+.lr-divider { height: 1px; background: var(--divider); border: 0; margin: 2px 0; }
+.lr-exp-pc { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+.lr-exp-rail {
+  display: flex; flex-direction: column; gap: 10px;
+  border-left: 1px solid var(--divider); padding-left: 22px;
+}
+.lr-exp-rail .badges { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
+.lr-exp-rail .spacer { flex: 1 1 auto; min-height: 8px; }
+.lr-exp-rail .lr-btn.primary { width: 100%; }
+.lr-exp-rail .row2 { display: flex; gap: 8px; }
+.lr-exp-rail .row2 .lr-btn.ghost { flex: 1; }
+
+/* ── LAYOUT: Card grid ───────────────────────────────────────────────────── */
+.lr-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 22px; }
+.lr-card {
+  display: flex; flex-direction: column;
+  background: #fff; border: 1px solid var(--border); border-radius: 18px;
+  box-shadow: 0 1px 2px rgba(25, 44, 61, 0.04); overflow: hidden;
+}
+.lr-card .lr-img { height: 208px; border-radius: 0; }
+.lr-card-body { display: flex; flex-direction: column; gap: 12px; padding: 16px; flex: 1; }
+.lr-card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.lr-card-title { font: 800 18px/1.15 "Manrope", sans-serif; letter-spacing: -0.01em; color: var(--navy); }
+.lr-card-caps { border-top: 1px solid var(--divider); border-bottom: 1px solid var(--divider); padding: 11px 0; }
+.lr-card-pc { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.lr-card-foot { display: flex; gap: 8px; margin-top: auto; }
+.lr-card-foot .lr-btn.primary { flex: 1; padding: 11px; }
+.lr-card .lr-icobtn { width: 40px; height: 40px; }
+
+/* ── LAYOUT: Compact table ───────────────────────────────────────────────── */
+.lr-tablewrap { background: #fff; border: 1px solid var(--border); border-radius: 18px; overflow: hidden; }
+table.lr-table { width: 100%; border-collapse: collapse; }
+table.lr-table thead th {
+  background: #f7fafc; border-bottom: 1px solid var(--border);
+  font: 800 11px/1 "Manrope", sans-serif; letter-spacing: 0.07em;
+  text-transform: uppercase; color: var(--muted-2); text-align: left;
+  padding: 14px 18px; white-space: nowrap;
+}
+table.lr-table tbody td { padding: 16px 18px; border-bottom: 1px solid #f0f4f7; vertical-align: middle; }
+table.lr-table tbody tr:last-child td { border-bottom: 0; }
+table.lr-table tbody tr:hover td { background: #fafcfe; }
+.lr-tbl-prop { display: flex; align-items: center; gap: 12px; }
+.lr-tbl-prop .lr-img { width: 118px; height: 84px; border-radius: 11px; }
+.lr-tbl-prop .meta { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.lr-tbl-title { font: 800 15px/1.2 "Manrope", sans-serif; color: var(--navy);
+  max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lr-tbl-sub { font: 600 11px "Manrope", sans-serif; color: var(--muted-3); display: flex; gap: 7px; align-items: center; }
+.lr-tbl-sub .code { color: var(--cyan-ink); }
+.lr-tbl-price { display: flex; flex-direction: column; gap: 3px; }
+.lr-tbl-status { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
+.lr-tbl-status .acts { display: flex; gap: 6px; margin-top: 2px; }
+
+/* ── States: empty / loading / error ─────────────────────────────────────── */
+.lr-state {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 12px; text-align: center; padding: 64px 24px;
+  background: #fff; border: 1px dashed var(--border); border-radius: 18px;
+  color: var(--muted);
+}
+.lr-state h3 { font: 800 18px "Manrope", sans-serif; color: var(--navy); margin: 0; }
+.lr-state p { font: 500 14px "Manrope", sans-serif; margin: 0; }
+.lr-state a, .lr-state .link { color: var(--cyan-ink); font-weight: 700; cursor: pointer; }
+.lr-skel { background: linear-gradient(90deg, #eef3f7 25%, #f6fafc 37%, #eef3f7 63%);
+  background-size: 400% 100%; animation: lr-shimmer 1.3s ease infinite; border-radius: 12px; }
+@keyframes lr-shimmer { 0% { background-position: 100% 0 } 100% { background-position: 0 0 } }
+
+/* Manage / classic link on cards */
+.lr-manage {
+  font: 700 12px "Manrope", sans-serif; color: var(--cyan-ink);
+  background: none; border: 0; cursor: pointer; padding: 0; text-decoration: underline;
+}
+
+/* Responsive: collapse expanded 3-col on narrow screens */
+@media (max-width: 1100px) {
+  .lr-exp { grid-template-columns: 260px 1fr; }
+  .lr-exp-rail { grid-column: 1 / -1; border-left: 0; border-top: 1px solid var(--divider);
+    padding-left: 0; padding-top: 14px; flex-direction: row; flex-wrap: wrap; align-items: center; }
+  .lr-exp-rail .spacer { display: none; }
+  .lr-exp-rail .badges { flex-direction: row; }
+  .lr-exp-rail .lr-btn.primary { width: auto; }
+}
+@media (max-width: 720px) {
+  .lr-exp { grid-template-columns: 1fr; }
+  .lr-exp-pc { grid-template-columns: 1fr; }
+}

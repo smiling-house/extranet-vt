@@ -57,7 +57,7 @@ export const PATH_EPS_EPARTNER_MANAGE = '/eps-epartner-manage';
 export const PATH_EPS_EPARTNERS_RESERVATIONS = '/eps-epartners-reservations';
 export const PATH_EPS_EPARTNER_RESERVATIONS_PROPERTIES = '/eps-epartner-reservations-properties';
 
-export const APP_DISPLAY_NAME = 'Villa Tracker EXTRANET';
+export const APP_DISPLAY_NAME = 'Villa Tracker Extranet';
 
 export const PATH_ZIPS_REGIONS_MAPPING = '/zipcodes-regions-mapping';
 export const PATH_ZIPS_REGIONS_MAPPING_COUNTRY = '/zipcodes-regions-mapping-country';
@@ -79,12 +79,12 @@ const constants = {
 	BASE_URL2: 'https://vt-backend-8zwvrrlxf-smiling-house.vercel.app',
 	BASE_URL1: 'http://vtbackend-env.eba-b3vxhzrg.us-east-2.elasticbeanstalk.com',
 	GLOBAL_ACTION_INIT_STATE: 'GLOBAL_ACTION_INIT_STATE',
-	PAGING_PAGE_SIZE: 21,
-	PAGING_CLIENT_SIZE: 20,
-	PAGING_LISTING_SIZE: 20,
-	PAGING_AGENCIES_SIZE: 20,
-	PAGING_PARTNERS_SIZE: 20,
-	PAGING_EPARTNERS_SIZE: 20,
+	PAGING_PAGE_SIZE: 100,
+	PAGING_CLIENT_SIZE: 100,
+	PAGING_LISTING_SIZE: 100,
+	PAGING_AGENCIES_SIZE: 100,
+	PAGING_PARTNERS_SIZE: 100,
+	PAGING_EPARTNERS_SIZE: 100,
 	REACT_APP_STORAGE_SIGNED_USER_KEY: "selfit-frontend-user-data",
 
 	TOAST_TYPE_INFO: 'toast_info',

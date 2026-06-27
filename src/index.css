@@ -8,7 +8,7 @@ body {
 
   box-sizing: border-box;
   font-family: "Noto Sans", sans-serif;
-  font-family: "Quicksand", sans-serif !important;
+  font-family: "Inter", "Quicksand", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif !important;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -19,7 +19,7 @@ html {
 }
 
 /* *:focus {
-  outline: #165093 solid 2px;
+  outline: #192C3D solid 2px;
 } */
 
 input:-webkit-autofill,
@@ -30,11 +30,11 @@ input:-webkit-autofill:active {
 }
 
 code {
-  font-family: "Quicksand", sans-serif !important;
+  font-family: "Inter", "Quicksand", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif !important;
 }
 
 .css-10hburv-MuiTypography-root {
-  font-family: "Quicksand", sans-serif !important;
+  font-family: "Inter", "Quicksand", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif !important;
 }
 
 .header-main {
@@ -57,7 +57,7 @@ code {
 .logout_btn {
   border: none;
   background-color: transparent;
-  font-family: "Quicksand", sans-serif !important;
+  font-family: "Inter", "Quicksand", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif !important;
   font-style: normal;
   font-weight: normal;
   font-size: 14px;
@@ -75,13 +75,13 @@ code {
 }
 
 .btn-custom {
-  background-color: #165093 !important;
+  background-color: #192C3D !important;
   border-radius: 6px !important;
   padding: 8px 12px !important;
 }
 
 .btn-custom-sec {
-  background-color: #44c8f5 !important;
+  background-color: #44C8F5 !important;
   outline: none !important;
   border-radius: 6px !important;
   padding: 8px 12px !important;
@@ -112,7 +112,7 @@ code {
 }
 
 .page-header {
-  background-color: #104109;
+  background-color: #192C3D;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -151,7 +151,7 @@ body {
 }
 
 .drawer-nav-link:hover {
-  background-color: #002564 !important;
+  background-color: #192C3D !important;
   text-decoration: none;
   margin-left: 25px;
   color: white;
@@ -163,22 +163,22 @@ body {
 }
 
 .text-head-color {
-  color: #002564 !important;
+  color: #192C3D !important;
 }
 
 .cst-class-edit {
-  color: #036AE1;
+  color: #192C3D;
   font-size: 25px;
   padding-bottom: 6px;
 }
 
 .privase-cst {
-  color: #036AE1;
+  color: #192C3D;
   text-decoration: underline;
 }
 
 .profile-heading-cst {
-  color: #193c73;
+  color: #192C3D;
   font-weight: 500;
 
 }
@@ -195,7 +195,7 @@ input {
   font-size: 22px;
   border-radius: 6px;
   font-weight: 100;
-  background-color: #18447d;
+  background-color: #192C3D;
   color: white;
 }
 
@@ -214,7 +214,7 @@ input {
   font-size: 22px;
   border-radius: 6px;
   font-weight: 300;
-  background-color: #44c8f5;
+  background-color: #44C8F5;
   color: white;
 }
 

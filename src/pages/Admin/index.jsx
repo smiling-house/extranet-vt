@@ -372,7 +372,7 @@ const Admin = ({ props, token }) => {
         <div
           key={index}
           style={{
-            color: "#1B9C5D",
+            color: "#192C3D",
             backgroundColor: "#F5F5F2",
             fontSize: "22px",
             fontWeight: 500,

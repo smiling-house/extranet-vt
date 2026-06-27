@@ -154,7 +154,7 @@ const Welcome = (props) => {
                   <div className="row"></div>
                   <div className="row mt-5">
                     <div className="col mt-5">
-                      <button className="btn btn-success form-control p-3 mt-2 mb-5" style={{ "background": "#165093", "color": "white", "border": "#165093" }}>Send Message</button>
+                      <button className="btn btn-success form-control p-3 mt-2 mb-5" style={{ "background": "#192C3D", "color": "white", "border": "#192C3D" }}>Send Message</button>
                     </div>
                   </div>
                 </div>

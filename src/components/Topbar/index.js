@@ -24,56 +24,40 @@ const Topbar = ({
 
   return (
     <div className="page-header" style={{
-      marginLeft: showSideBarMenu ? '250px' : '0',
+      marginLeft: showSideBarMenu ? 'var(--sidebar-w, 250px)' : '0',
       transition: 'margin-left 0.3s ease',
-      background: 'linear-gradient(135deg, #104109 0%, #2d5a2b 100%)',
       boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
       borderBottom: '1px solid rgba(255,255,255,0.1)'
     }}>
       <div className="container-fluid" style={{padding: '0px 50px'}}>
         <div className="row align-items-center py-3">
           {/* Left Section - Menu & Title */}
-          <div className="col-lg-8 col-md-7 col-sm-8 col-6">
+          <div className="col-lg-8 col-md-7 col-sm-8 col-6" style={{ paddingLeft: 0 }}>
             <div className="d-flex align-items-center">
-              <button 
-                className="btn btn-link p-0 me-3 text-white border-0"
+              <button
+                type="button"
+                className="topbar-burger d-md-none"
+                aria-label="Open menu"
                 onClick={showOrHideSideBarMenu}
-                style={{
-                  background: 'none',
-                  fontSize: '1.2rem',
-                  transition: 'transform 0.2s ease'
-                }}
-                onMouseOver={e => e.currentTarget.style.transform = 'scale(1.1)'}
-                onMouseOut={e => e.currentTarget.style.transform = 'scale(1)'}
               >
-                <img 
-                  src={menuIcon} 
-                  alt="Menu" 
-                  style={{
-                    width: '28px',
-                    height: '28px',
-                    filter: 'brightness(0) invert(1)'
-                  }} 
-                />
+                <span /><span /><span />
               </button>
-              
               <div className="header-title">
                 <h1 className="mb-0 text-white d-none d-md-block" style={{
                   fontSize: 'clamp(1.2rem, 2.5vw, 1.8rem)',
                   fontWeight: '600',
                   letterSpacing: '-0.5px'
                 }}>
-                  <span className="d-none d-sm-inline">{APP_DISPLAY_NAME} : </span>
-                  <span>{pageTitle}</span>
-                  <span className="d-none d-md-inline"> - {agentData?.firstName}</span>
+                  <span>{APP_DISPLAY_NAME}</span>
+                  {agentData?.firstName ? <span className="d-none d-md-inline"> — {agentData.firstName}</span> : null}
                 </h1>
                 
-                {/* Mobile-only welcome message */}
+                {/* Mobile-only welcome message aligned with menu button */}
                 <div className="d-md-none d-flex align-items-center">
                   <span className="text-white" style={{
                     fontSize: '1.1rem',
                     fontWeight: '500',
-                    lineHeight: '28px'
+                    lineHeight: '28px' // Matches menu button height for alignment
                   }}>
                     Welcome, {agentData?.firstName}
                   </span>

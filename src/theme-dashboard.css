@@ -1,0 +1,292 @@
+/* ──────────────────────────────────────────────────────────────────────────
+   Dashboard-matching theme override for extranet-sh.
+   Mirrors /SH/dashboard globals.css (VillaTracker navy + Geist).
+   Imported LAST in index.js so it wins. Reskin only — no logic changes.
+   Stylesheet !important beats inline (non-important) styles, so this also
+   neutralises the per-page green bgColor/topBgColor props.
+   ────────────────────────────────────────────────────────────────────────── */
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap");
+
+:root {
+  --brand: #192C3D;          /* dashboard --color-primary (navy) */
+  --brand-hover: #11202d;
+  --brand-pressed: #0c1722;
+  --accent: #44C8F5;
+  --bg: #ffffff;
+  --fg: #0f1c2e;
+  --muted: #f1f5f9;
+  --muted-fg: #64748b;
+  --sidebar: #192C3D;        /* warm off-white */
+  --sidebar-border: rgba(255,255,255,0.08);
+  --border: #dde3ea;
+  --success: #22c55e;
+  --warning: #f59e0b;
+  --destructive: #ef4444;
+  --radius: 8px;
+  --font-sans: "Manrope", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+}
+
+/* ── Typography ───────────────────────────────────────────────────────────
+   Reasonable, consistent sizing. The legacy CSS pins a tiny rem base
+   (calc(40% + 0.8vmin)) then over-corrects with huge px values everywhere.
+   Reset the base to a predictable 16px and tame the oversized rules. */
+html { font-size: 16px !important; }
+body,
+.MuiTypography-root,
+.css-10hburv-MuiTypography-root,
+button, input, select, textarea, table, td, th, p, span, div, a, label, li {
+  font-family: var(--font-sans) !important;
+}
+body { font-size: 14px; color: var(--fg); }
+h1 { font-size: 1.5rem; }
+h2 { font-size: 1.25rem; }
+h3 { font-size: 1.125rem; }
+h4 { font-size: 1rem; }
+h1, h2, h3, h4 { letter-spacing: -0.01em; line-height: 1.25; }
+
+/* Tame the legacy giant font-sizes (all had px / !important) */
+.link18, .link18-bold, .link18-no-line, .link18-bold-no-line,
+.Accordian_Heading, .Accordian_SubHeading, .Accordian_body, #Read_More_ {
+  font-size: 0.95rem !important;
+}
+.link, .small-link, .link18-date { font-size: 0.9rem !important; }
+#coloredInput { font-size: 0.95rem !important; }
+
+/* Inputs: legacy forces 60px tall + 20px text — way too big. Normalise. */
+input:not([type="checkbox"]):not([type="radio"]),
+select, textarea, .form-control {
+  font-size: 0.9rem !important;
+  height: auto !important;
+  min-height: 40px;
+  padding: 8px 12px !important;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+input:focus, select:focus, textarea:focus, .form-control:focus {
+  outline: 2px solid var(--brand);
+  outline-offset: -1px;
+  box-shadow: none;
+}
+
+/* Oversized legacy action buttons */
+.save-chnages-cst-btn, .cancle-chnages-cst-btn, .file-uplod-cst {
+  font-size: 0.9rem !important;
+  height: auto !important;
+  min-height: 40px;
+  padding: 8px 16px !important;
+}
+
+/* ── Kill the green chrome everywhere → navy ──────────────────────────────
+   These classes receive inline green bgColor/topBgColor props on many pages.
+   !important here overrides those inline (non-important) styles globally. */
+.page-header,                       /* fixed top bar (Topbar) */
+.page-header-container,             /* PageHeader search panel */
+.search-header-top-row,             /* "Hello, …" strip */
+.page-header-top-row2,
+.sub-header {
+  background: var(--brand) !important;
+  background-image: none !important;
+  color: #fff !important;
+}
+.page-header { font-size: 1rem !important; }
+
+/* Green search / action buttons → navy (inline #192C3D etc.) */
+.btn-success, button.btn-success {
+  background: var(--brand) !important;
+  background-color: var(--brand) !important;
+  border-color: var(--brand) !important;
+  color: #fff !important;
+}
+.btn-success:hover { background-color: var(--brand-hover) !important; }
+
+/* Brand action buttons */
+.btn-custom, .save-chnages-cst-btn {
+  background-color: var(--brand) !important;
+  border-radius: var(--radius) !important;
+  color: #fff !important;
+}
+.btn-custom:hover, .save-chnages-cst-btn:hover { background-color: var(--brand-hover) !important; }
+.btn-custom-sec, .file-uplod-cst { background-color: var(--accent) !important; border-radius: var(--radius) !important; color:#fff !important; }
+
+/* Links align to brand */
+.link, .link18, .link18-bold, .small-link, .cst-class-edit, .privase-cst { color: var(--brand) !important; }
+
+/* ── Consistent page padding ─────────────────────────────────────────────
+   The fixed 70px topbar + 250px sidebar leave content cramped against the
+   top edge. Give every page body breathing room. */
+.page-body { padding: 24px 28px !important; margin-left: var(--sidebar-w, 250px) !important; transition: margin-left 0.3s ease; }
+.page-body-sm { padding: 16px !important; }
+.page-container { padding-top: 70px; }
+
+/* ── /listings cleanup ────────────────────────────────────────────────────
+   Custom HTML table with very tall rows. Tighten, align, zebra-stripe and
+   neutralise the green geo box. Scoped to .listings-container so nothing
+   else is affected. */
+.listings-title { font-size: 0.95rem !important; font-weight: 600; color: var(--fg); }
+.listings-paging { font-size: 0.85rem !important; color: var(--muted-fg); margin-bottom: 8px; }
+
+.listings-container table.table { border-collapse: separate; border-spacing: 0; }
+.listings-container table.table thead { position: sticky; top: 70px; z-index: 4; }
+.listings-container table.table thead th {
+  background: #f1f4f8 !important;
+  color: var(--fg) !important;
+  font-size: 0.8rem !important;
+  font-weight: 600;
+  text-transform: none;
+  border-bottom: 1px solid var(--border) !important;
+  padding: 12px 16px !important;
+}
+.listings-container table.table td {
+  vertical-align: top !important;
+  padding: 14px 16px !important;
+  font-size: 0.85rem !important;
+  border-bottom: 1px solid #eef1f5 !important;
+}
+.listings-container table.table tbody tr:nth-child(even) > td { background: #fafbfc; }
+.listings-container table.table tbody tr:hover > td { background: #f1f5f9; }
+.listings-container td label { font-size: 0.78rem !important; color: var(--muted-fg); font-weight: 600; }
+
+/* Halve the <br/><br/> stacking in the details cell → tighter rows */
+.listings-container td br + br { display: none; }
+
+/* Neutralise the green "Geo-Location" box → calm navy chip */
+.listings-container td h4[style] {
+  background: #f1f5f9 !important;
+  color: var(--fg) !important;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 10px !important;
+  font-size: 0.8rem !important;
+  font-weight: 500 !important;
+  line-height: 1.35;
+}
+
+/* Filter / search bar → brand navy panel with clean controls */
+.listings-search-container {
+  background: var(--brand) !important;
+  border-radius: var(--radius);
+  padding: 16px !important;
+  margin: 8px 0 16px !important;
+  gap: 12px;
+}
+.listings-search-container label { color: #fff !important; font-size: 0.8rem !important; }
+.listings-search-container .form-control, .listings-search-container select { background: #fff; }
+
+/* Listings cells wrap content in generic <h4> — normalise so nothing is huge */
+.listings-container td h4 { font-size: 0.85rem !important; font-weight: 500 !important; margin: 4px 0 !important; line-height: 1.4; }
+
+/* ── Property card: image on top + bigger + circular arrows inside ──────── */
+.listings-container td .property-main-picture-container {
+  display: flex !important;
+  flex-direction: column;
+  align-items: flex-start;
+  width: auto !important;
+}
+/* nested container holds the image slider → float it to the top */
+.listings-container td .property-main-picture-container .property-main-picture-container { order: -1; width: auto !important; margin-bottom: 8px; }
+.listings-container td .nickname   { order: 1; margin-top: 6px; }
+.listings-container td .text-title { order: 2; }
+.listings-container td .img-number { order: 3; font-size: 0.75rem; color: var(--muted-fg); }
+.listings-container td .text-title h4 { font-weight: 600 !important; }
+
+.listings-container .img-slider {
+  position: relative !important;
+  min-width: 0 !important;
+  width: 340px !important;
+  max-width: 100%;
+}
+.listings-container .property-main-picture {
+  width: 340px !important;
+  max-width: 100%;
+  height: 220px !important;
+  border-radius: 10px;
+  position: relative;
+}
+/* arrows → small circles floating inside the image */
+.listings-container .property-page-prev-next-pic {
+  position: absolute !important;
+  top: 50% !important;
+  transform: translateY(-50%);
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.3);
+  padding: 6px;
+  z-index: 3;
+}
+
+/* ── Special Collections cell: stop icon overlap + tidy occupancy ───────── */
+.listings-container .search-main-selection-icons {
+  display: flex !important;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  padding: 4px 0 14px !important;
+}
+.listings-container .search-main-selection-icons > div { height: auto !important; }
+.listings-container .search-main-selection-icons img { width: 34px !important; height: 34px !important; }
+
+.listings-container .property-box-footer-left {
+  display: flex !important;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  margin-top: 10px;
+}
+.listings-container .property-box-footer-left-icon {
+  display: flex !important;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  color: var(--fg);
+}
+.listings-container .property-box-footer-left-icon img { width: 20px !important; height: 20px !important; }
+.listings-container .property-box-footer-right-icon { font-size: 0.85rem; color: var(--muted-fg); }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   GLOBAL RESTYLE — bring every admin page onto the new navy/cyan + Manrope
+   design (partners, tasks, reservations, mapping, search, hot-destinations…).
+   CSS only — no markup/logic changes, nothing removed.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* 1. Kill the blue-pool / image page backgrounds (and green tints) → white */
+[style*="bk_pool"] { background-image: none !important; background-color: #ffffff !important; }
+.search-container, .favorites-container, .reservations-container,
+.hotdestinations-container, .hot-destinations-container,
+.shub-panel-container, .properties-needs-attention-container {
+  background: #ffffff !important; background-image: none !important;
+}
+/* legacy light-green page tints → white */
+[style*="background-color: rgb(226"], [style*="background-color:#e"],
+[style*="background: rgb(226"], [style*="#d8efd"] { background-color: #ffffff !important; }
+
+/* 2. Tables → unified clean style (listings keeps its own, more-specific rules) */
+table.table { width: 100%; border-collapse: separate; border-spacing: 0; background: #fff; }
+table.table thead th {
+  background: #f7fafc !important; color: var(--fg) !important;
+  font-weight: 700 !important; font-size: 0.78rem !important; text-transform: none !important;
+  letter-spacing: 0.01em; border-bottom: 1px solid var(--border) !important; border-top: 0 !important;
+  padding: 13px 16px !important; vertical-align: middle;
+}
+table.table tbody td {
+  padding: 13px 16px !important; border-bottom: 1px solid #f0f4f7 !important; border-top: 0 !important;
+  font-size: 0.85rem !important; color: var(--fg); vertical-align: middle;
+}
+table.table tbody tr:hover > td { background: #fafcfe; }
+
+/* 3. Table / list links → navy (no harsh blue underline) */
+table.table a, td a {
+  color: var(--brand) !important; text-decoration: none !important; font-weight: 600;
+}
+table.table a:hover, td a:hover { color: #0e7ca8 !important; text-decoration: underline !important; }
+
+/* 4. Buttons → navy / cyan */
+.btn-primary, button.btn-primary {
+  background: var(--brand) !important; background-color: var(--brand) !important;
+  border-color: var(--brand) !important; color: #fff !important; border-radius: var(--radius) !important;
+}
+.btn-primary:hover { background-color: var(--brand-hover) !important; }
+
+/* 5. Page headings that were green → navy */
+.page-body h1, .page-body h2, .page-body h3 { color: var(--brand) !important; }
