@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { validateEmail, } from "../../Util/ValidationUtil.js";
 import Logo from "../../components/Icons/Logo/Logo";
+import brandLogo from "../../assets/logos/vt-extranet-logo.svg";
+import "./auth-redesign.css";
 import "./Auth.css";
 import styles from "./Auth.module.scss";
 import { useDispatch } from "react-redux";
@@ -245,108 +247,60 @@ localStorage.removeItem("partnerName");
 	}, [screenSize]);
 
     
-	return <>
-		<section>
-			<div className="row">
-				{/* Left Image */}
-				<div className="col-md-5 d-none d-md-block">
-					<img src={LeftImage} className="img-fluid" alt="Left Image" style={{ height: '178vh', objectFit: 'cover' }} />
+	return (
+		<div className="auth-split">
+			<div className="auth-left">
+				<div className="auth-left-logo"><img src={brandLogo} alt="Villa Tracker Extranet" /></div>
+				<div className="auth-left-mid">
+					<h1 className="auth-headline">Manage your villas, all in one place.</h1>
+					<p className="auth-sub">The VT Extranet gives partners real-time access to bookings, availability and guest details.</p>
 				</div>
-				{/* Right Content */}
-				<div className="col-12 col-md-7" style={{ position: 'relative' }}>
-					<div className="container text-center p-4">
-						<div className="mt-5 mb-5 w-100 d-flex justify-content-center">
-							<div style={{ width: '250px' }}>
-								<Logo />
-							</div>
-						</div>
-						<h1>VT-EXTRANET ADMIN LOGIN</h1>
-
-						<div className="row justify-content-center mt-4">
-							<div className="col-8">
-								<EmailInput
-									value={email}
-									setValue={setEmail}
-									label="Admin E-Mail*"
-									inputName="email"
-									showLoginLink="none"
-									placeholder="E-mail address"
-									error={state.error}
-								/>
-							</div>
-							<div className="col-8 mt-2">
-								<PasswordInput
-									value={password}
-									setValue={setPassword}
-									label="Admin Password*"
-									inputName="password"
-									placeholder="Password"
-									error={state?.error}
-									showLoginLink="none"
-								/>
-							</div>
-							{/*
-								codeSent && (
-									<div className="col-8 mt-2">
-										<NameInput
-											onSubmit={handleSubmit}
-											value={twoFA}
-											setValue={setTwoFA}
-											label="2FA Code*"
-											inputName="twoFA"
-											placeholder="2FA Code"
-											error={state?.error}
-											showLoginLink="none"
-										/>
-									</div>
-								)
-							*/}
-							{<div className="col-8 mt-2">
-								<div className="row d-flex justify-content-between align-items-center">
-									<div className="col-12 mb-2">
-										<Checkbox uid="chkRememberMe" label="Remember Me" checked={chkRememberMe} onChange={(value) => setChkRememberMe(value)} />
-									</div>
-									{/*<div className="col-6"><h4>
-										<span onClick={() => history.push("/forgotPassword")} className="text-decoration-underline text-primary cst-cursor">
-											Forgot password?
-										</span></h4>
-									</div>*/}
-								</div>
-							</div>}
-						</div>
-						<div className="row mt-4 d-flex justify-content-center">
-
-							<div className="col-8">
-								<button
-									style={{
-										height: "66px",
-										borderRadius: '6px',
-										fontWeight: "100",
-										fontSize: "22px",
-										color: "#fff",
-										backgroundColor: "#192C3D",
-									}}
-									className="btn btn-primary p-3 col-12"
-									fullwidth={true}
-									loading={state.loading}
-									text="VT-Extranet login"
-									onClick={(e) => {
-										setState({ ...state, error: undefined });
-										handleSubmit(e);
-									}}
-								>Login</button>
-							</div>
-						</div>
-
-					</div>
-					{/* Model Footer */}
-					<div className="col-12 model-footer pt-5 mb-2 cst-footer-add-css">
-						<hr className="pb-3"></hr>
-						<TermsFooter isMobile={smallScreen} />
-					</div>
-				</div>
+				<div className="auth-left-footer">By Smiling House</div>
+				<span className="auth-circle c1" />
+				<span className="auth-circle c2" />
 			</div>
-		</section>
-	</>
+
+			<div className="auth-right">
+				<form className="auth-form" onSubmit={(e) => { e.preventDefault(); setState({ ...state, error: undefined }); handleSubmit(e); }}>
+					<div className="auth-eyebrow">VT Extranet · Admin</div>
+					<h2 className="auth-title">Admin sign in</h2>
+					<p className="auth-desc">Enter your admin credentials below to continue.</p>
+
+					{state?.error?.msg && <div className="auth-error">{state.error.msg}</div>}
+
+					<label className="auth-label" htmlFor="auth-email">Admin E-Mail</label>
+					<input
+						id="auth-email"
+						className="auth-input"
+						type="email"
+						value={email}
+						onChange={(e) => setEmail(e.target.value)}
+						placeholder="E-mail address"
+						autoComplete="username"
+					/>
+
+					<label className="auth-label" htmlFor="auth-pw">Admin Password</label>
+					<input
+						id="auth-pw"
+						className="auth-input pw"
+						type="password"
+						value={password}
+						onChange={(e) => setPassword(e.target.value)}
+						placeholder="Password"
+						autoComplete="current-password"
+					/>
+
+					<label className="auth-remember">
+						<input type="checkbox" checked={chkRememberMe} onChange={(e) => setChkRememberMe(e.target.checked)} />
+						Remember me
+					</label>
+
+					<button type="submit" className="auth-btn" disabled={state.loading}>
+						Log in to Extranet
+					</button>
+				</form>
+			</div>
+		</div>
+	);
 }
 
