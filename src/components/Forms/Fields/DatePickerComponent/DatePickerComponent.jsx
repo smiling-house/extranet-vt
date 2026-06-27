@@ -20,9 +20,6 @@ const DatePickerComponent = ({ arrivalDate, departDate, fullCalendar, onChange, 
   const [focusedInput, setFocusedInput] = useState(null);
 
   const getOrientation = () => {
-    if (isPropertyPath) {
-      return "vertical";
-    }
     return window.matchMedia("(max-width: 768px)").matches ? "vertical" : "horizontal";
   };
 
@@ -144,6 +141,35 @@ const DatePickerComponent = ({ arrivalDate, departDate, fullCalendar, onChange, 
     padding: isPropertyPath ? '0' : '0 10px'
   };
 
+  // Property page: use simple native date inputs (matches the mockup, no
+  // overlapping icons). Reuses the same handleDatesChange/onChange contract.
+  if (isPropertyPath) {
+    const fmt = (d) => {
+      if (!d) return "";
+      const m = moment.isMoment(d) ? d : moment(d);
+      return m.isValid() ? m.format("YYYY-MM-DD") : "";
+    };
+    const today = moment().format("YYYY-MM-DD");
+    return (
+      <div className="propertyDatePicker pr-dates">
+        <input
+          type="date"
+          className="pr-date-input"
+          min={today}
+          value={fmt(startDate)}
+          onChange={(e) => handleDatesChange({ startDate: e.target.value ? moment(e.target.value) : null, endDate })}
+        />
+        <input
+          type="date"
+          className="pr-date-input"
+          min={fmt(startDate) || today}
+          value={fmt(endDate)}
+          onChange={(e) => handleDatesChange({ startDate, endDate: e.target.value ? moment(e.target.value) : null })}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className={isPropertyPath ? "propertyDatePicker" : ""}>
       <DateRangePicker
@@ -151,7 +177,7 @@ const DatePickerComponent = ({ arrivalDate, departDate, fullCalendar, onChange, 
         startDate={startDate}
         minimumNights={isPropertyPath ? parseInt(minNights) : 1}
         endDate={endDate}
-        numberOfMonths={2}
+        numberOfMonths={1}
         onDatesChange={handleDatesChange}
         focusedInput={focusedInput}
         onFocusChange={(focusedInput) => setFocusedInput(focusedInput)}

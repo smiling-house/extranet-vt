@@ -1,11 +1,11 @@
 // @import "./../../../Style/base";
 
-// $primary-green: #165093;
+// $primary-green: #192C3D;
 // $hover-green: #0f4c90;
 // $pressed-green: #11447e;
-$primary-green: #16395b;
-$hover-green: #0f2a45;
-$pressed-green: #0b2236;
+$primary-green: #192C3D;
+$hover-green: #11202d;
+$pressed-green: #0c1722;
 $disabled-bkg: #e2e8ea;
 $disabled-text: #798488;
 
@@ -235,19 +235,19 @@ a.button {
 	}
 
 	&.green {
-		background-color: #04BE63;
+		background-color: #192C3D;
 		color: $white;
 
 		&:hover {
-			background-color: #04BE63;
+			background-color: #192C3D;
 		}
 
 		&:not(:disabled):not(.disabled):active {
-			background-color: #04BE63;
+			background-color: #192C3D;
 		}
 
 		&:focus {
-			background-color: #04BE63;
+			background-color: #192C3D;
 			outline: 0;
 		}
 
@@ -258,7 +258,7 @@ a.button {
 		}
 
 		.spin_wrapper {
-			background-color: #04BE63;
+			background-color: #192C3D;
 		}
 
 		.suffix_icon,

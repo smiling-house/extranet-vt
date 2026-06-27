@@ -201,7 +201,7 @@ const ClientOfferLog = props => {
 				<div className="fluid-container">
 					<div class="modal-content" >
 						<div class="modal-body">
-							<h2 className="text-center pt-2">PM listings <span style={{ color: '#165093' }}>{partner.partnerName}</span></h2>
+							<h2 className="text-center pt-2">PM listings <span style={{ color: '#192C3D' }}>{partner.partnerName}</span></h2>
 							<div className=" p-2 row">
 								<div className="col-md-3">
 									<label>Account ID</label>

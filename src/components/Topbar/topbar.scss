@@ -3,7 +3,7 @@
   top: 0;
   left: 0;
   right: 0;
-  // z-index: 999;
+  z-index: 999;
   height: 70px;
   
   .container-fluid {
@@ -26,8 +26,6 @@
     .container-fluid {
       padding: 0 20px !important;
     }
-    
-    margin-left: 0 !important;
   }
   
   @media (max-width: 576px) {
@@ -40,4 +38,32 @@
 // Ensure page content doesn't get hidden behind fixed header
 .page-container {
   padding-top: 70px;
+}
+
+// Mobile hamburger — opens the full-screen modal menu
+.topbar-burger {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 9px;
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  margin-right: 14px;
+  cursor: pointer;
+  flex-shrink: 0;
+  padding: 0;
+
+  span {
+    display: block;
+    width: 18px;
+    height: 2px;
+    background: #fff;
+    border-radius: 2px;
+  }
+
+  &:hover { background: rgba(255, 255, 255, 0.22); }
 }

@@ -324,7 +324,7 @@ localStorage.removeItem("partnerName");
 										fontWeight: "100",
 										fontSize: "22px",
 										color: "#fff",
-										backgroundColor: "#165093",
+										backgroundColor: "#192C3D",
 									}}
 									className="btn btn-primary p-3 col-12"
 									fullwidth={true}

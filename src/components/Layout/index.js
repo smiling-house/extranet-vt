@@ -15,13 +15,15 @@ const Layout = ({
   handleToggleMenu,
   setActiveMenu
 }) => {
+  // Persist open/closed so the nav "sticks" across page navigation — each page
+  // re-mounts Layout, so previously the local-only state reset to closed.
   const [showSideBarMenu, setShowSideBarMenu] = useState(() => {
     const saved = localStorage.getItem('sidebarOpen');
     if (saved !== null) return saved === '1';
     const w = Number(localStorage.getItem('screenSize')) || (typeof window !== 'undefined' ? window.innerWidth : 1024);
     return w >= 800;
   });
-  
+
   const agentData = agent ? JSON.parse(agent) : null;
   const extranet_vt_logged_in_role = agentData?.role === 'admin' ? 'admin' : 'partner';
 
@@ -43,15 +45,18 @@ const Layout = ({
       />
       
       {showSideBarMenu && (
-        <Sidebar
-          agency={agency}
-          agent={agent}
-          token={token}
-          screenSize={screenSize}
-          activeMenu={activeMenu}
-          handleToggleMenu={handleToggleMenu}
-          showOrHideSideBarMenu={showOrHideSideBarMenu}
-        />
+        <>
+          <div className="sidebar-backdrop" onClick={showOrHideSideBarMenu} />
+          <Sidebar
+            agency={agency}
+            agent={agent}
+            token={token}
+            screenSize={screenSize}
+            activeMenu={activeMenu}
+            handleToggleMenu={handleToggleMenu}
+            showOrHideSideBarMenu={showOrHideSideBarMenu}
+          />
+        </>
       )}
       
       <div className={`layout-content ${showSideBarMenu ? 'with-sidebar' : 'without-sidebar'}`}>

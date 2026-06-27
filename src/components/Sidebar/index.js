@@ -4,6 +4,7 @@ import { useHistory, useLocation } from "react-router-dom";
 import * as userActions from "../../store/redux/User/actions";
 import Logo from "../../components/Icons/Logo/Logo";
 import Logo2 from "../../components/Icons/Logo/shub-logo.png";
+import brandLogo from "../../assets/logos/vt-extranet-logo.svg";
 import searchIcon from "../../assets/icons/menu/search.png";
 import mapIcon from "../../assets/icons/menu/map.png";
 import customersIcon from "../../assets/icons/menu/customers.png";
@@ -214,10 +215,7 @@ const Sidebar = ({ activeMenu, setActiveMenu, handleToggleMenu, showOrHideSideBa
       {/* Header */}
       <div className="sidebar-header">
         <div className="sidebar-logo">
-          <div className="sidebar-logo-text">
-            <h3>{APP_DISPLAY_NAME}</h3>
-            <small>{currentRole === 'admin' ? 'Administrator' : 'Partner'} Portal</small>
-          </div>
+          <img className="sidebar-logo-img" src={brandLogo} alt="Villa Tracker Extranet" />
         </div>
 
         <button

@@ -42,6 +42,7 @@ import CollectionIcon from "../../components/CollectionIcon"
 import * as propertyActions from "../../store/redux/Property/actions";
 import Sidebar from "../../components/Sidebar";
 import Listingrow from "./row/listingRow"
+import { ListingsHeader, ListingsViewport } from "./views/ListingViews"
 
 
 import menuIcon from '../../assets/icons8-menu-50.png'
@@ -116,12 +117,10 @@ const goToPartnersPage = () => {
     const history = useHistory();
     const location = useLocation();
     const partner = JSON.parse(localStorage.getItem("partner"))
-    const accountId = localStorage.getItem("accountId")
-
+    const accountId = localStorage.getItem("accountId") || ''
 
     const property_status_to_filter = localStorage.getItem("property_status_to_filter_listings")
     const property_listed_flag_to_filter_listings = localStorage.getItem("property_listed_flag_to_filter_listings")
-
 
     const user_image = agency?.userImage
     const [allPage, setAllPage] = useState(false)
@@ -138,6 +137,7 @@ const goToPartnersPage = () => {
     const [tableData, setTableData] = useState(() => data)
     // state for Listings
     const [listings, setListings] = useState([])
+    const [viewMode, setViewMode] = useState(() => { try { const m = localStorage.getItem('lr_view_mode'); return (m && m !== 'classic') ? m : 'expanded' } catch (e) { return 'expanded' } })
     const [isRefresh, setIsRefresh] = useState(false)
     const [filterChannel, setFilterChannel] = useState([])
     //modal state
@@ -151,6 +151,37 @@ const goToPartnersPage = () => {
     const dispatch = useDispatch();
     const properties = useSelector((state) => state.property.properties);
     const source = location.state && location.state.source;
+
+    // Shareable URLs: keep ?accountId in the URL, and cold-load the partner from
+    // it when a shared link is opened without that partner in local storage.
+    useEffect(() => {
+        const sp = new URLSearchParams(location.search);
+        const urlAcc = sp.get('accountId');
+        const haveAcc = partner?.accountId || accountId;
+
+        if (urlAcc && String(haveAcc || '') !== String(urlAcc)) {
+            (async () => {
+                try {
+                    const req = axios.create({ baseURL: constants.SHUB_URL, headers: { Authorization: `Bearer ${token2}` } });
+                    const res = await req.get(`local/partners?accountId=${urlAcc}`);
+                    const list = res?.data?.partners || res?.data || [];
+                    const p = Array.isArray(list) ? (list.find(x => String(x.accountId) === String(urlAcc)) || list[0]) : list;
+                    if (p && p.accountId) {
+                        localStorage.setItem('partner', JSON.stringify(p));
+                        localStorage.setItem('accountId', String(p.accountId));
+                        window.location.reload();
+                    }
+                } catch (e) { console.error('Cold-load partner by accountId failed:', e); }
+            })();
+            return;
+        }
+
+        if (haveAcc && sp.get('accountId') !== String(haveAcc)) {
+            sp.set('accountId', haveAcc);
+            history.replace({ pathname: location.pathname, search: sp.toString() });
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
 //By Jaison 2025-04-22 - START
     const partnerPropertiesUniqueZipcodes = JSON.parse(getStorageValue('partnerPropertiesUniqueZipcodes') );
@@ -166,7 +197,7 @@ const goToPartnersPage = () => {
 
     const [filterPropertyStatus, setFilterPropertyStatus] = useState('');
     const filterByPropertyStatus = (event) => {
-        //console.log(event.target.value)
+        console.log(event.target.value)
         setFilterPropertyStatus(event.target.value);
 
         unCheckAll();
@@ -189,7 +220,7 @@ const exchangeRatesData = JSON.parse( localStorage.getItem("exchangeRatesData") 
 
     const [filterRegionMappedUnmapped, setFilterRegionMappedUnmapped] = useState('');
     const filterByMappedUnmappedRegion = (event) => {
-        //console.log(event.target.value)
+        console.log(event.target.value)
         setFilterRegionMappedUnmapped(event.target.value);
 
         unCheckAll();
@@ -315,7 +346,7 @@ const listingIdsToUpdateCleaned = listingIdsToUpdate.map(id => id.replace('_unma
 
         const updateListingsData = {'accountId':partner?.accountId,'ids':listingIdsToUpdateCleaned, 'status':propStatus, decliningReason:reason_decline, statusUpdatedBy:agentData.firstName}
 
-//console.log('updateListingsData:::', updateListingsData);
+console.log('updateListingsData:::', updateListingsData);
 //return false;
 
         if(listingIdsToUpdateCleaned.length > 0 && propStatus !== '') {
@@ -412,6 +443,7 @@ const agentLoggedIn = JSON.parse( localStorage.getItem('agent') );
             sortBy: 'data.prices.basePrice:-1', //'data.nickname:1'
     }
 
+console.log('params::',params) 
 
     //task: EXTRANET VT - Check the possibilities of adding admin login - https://app.asana.com/1/1200178813358971/project/1209114491925523/task/1210009551590540
     //By Jaison 2025-04-22 START 
@@ -432,6 +464,7 @@ const agentLoggedIn = JSON.parse( localStorage.getItem('agent') );
     } else if(property_status_to_filter === '' && filterPropertyStatus === '') {
         delete params.status;
     }
+  
 
 //For needs attention properties
 if(currentPropertyFilterStatus === 'Needs attention') {
@@ -444,7 +477,7 @@ if(currentPropertyFilterStatus === 'Needs attention') {
  
 console.log('currentPropertyFilterStatus:', currentPropertyFilterStatus)
 console.log('property_listed_flag_to_filter_listings:', property_listed_flag_to_filter_listings)
-console.log('params:', params); 
+console.log('params:', params);
 
 
     if(filterPropertyZipcode !== '') {       
@@ -474,7 +507,7 @@ console.log('params:', params);
     }
     //By Jaison 2025 October 06 - END
 
- 
+
     const queryString = Object.keys(params).map(key => key + '=' + params[key]).join('&');
     console.log('getting from /listings:',params)
     if (accountId.length > 0) {
@@ -842,103 +875,45 @@ return (
                 </div>
 
                 <div className="listings-main">
-                    <div className="listings-title">{partner?.pmName ? partner?.pmName : ''} /{partner?.contactName ? partner?.contactName : ''} / AccountID {partner?.accountId ? partner?.accountId : ''} / channelSource {partner.source}</div>
-                    <div className="listings-paging">Displaying  {ListingsPagingFrom}-{ListingsPagingTo} of {totalListings ? totalListings : "?"} Listings</div>
+                    <ListingsHeader
+                        partner={partner}
+                        accountId={accountId}
+                        from={ListingsPagingFrom}
+                        to={ListingsPagingTo}
+                        total={totalListings}
+                        viewMode={viewMode}
+                        onViewMode={(m) => { setViewMode(m); try { localStorage.setItem('lr_view_mode', m) } catch (e) {} }}
+                        isAdmin={extranet_vt_logged_in_role === 'admin'}
+                        onGoBack={goToPartnersPage}
+                        onSearchId={setSearchPropertyId}
+                        onFilterStatus={filterByPropertyStatus}
+                        onFilterZip={filterByZipcode}
+                        zipcodes={partnerPropertiesUniqueZipcodes}
+                        onFilterRegion={filterByMappedUnmappedRegion}
+                        propStatus={propStatus}
+                        onPropStatus={setPropStatus}
+                        decliningReason={decliningReason}
+                        onDecliningReason={setDecliningReason}
+                        onDecliningOther={setDecliningReasonOther}
+                        onUpdateStatus={updateSelectedListingsStatus}
+                        onSelectAll={checkUncheckAll}
+                        selectAllChecked={checkedAll}
+                        onClearFilters={() => {
+                            filterByPropertyStatus({ target: { value: '' } });
+                            filterByZipcode({ target: { value: '' } });
+                            filterByMappedUnmappedRegion({ target: { value: '' } });
+                            setSearchPropertyId('');
+                        }}
+                        paging={<Paging perPage={constants.PAGING_LISTING_SIZE} totalItems={totalListings} currentPage={pageNumber} onChangePage={onChangePage} />}
+                    />
 
-<div className="col-sm-1">
-    <Button style={{ margin:'10px', height: '30px', width: '100px', fontSize: '15px', borderRadius: '5px' }} variant="green" text="GO BACK" onClick={goToPartnersPage} />
-</div>
+                    {viewMode !== 'classic' &&
+                        <div>
+                            <ListingsViewport mode={viewMode} listings={listings} loading={isLoading} hasPartner={!!partner} />
+                        </div>
+                    }
 
-{extranet_vt_logged_in_role==='admin' &&
-                    <div className="listings-search-container row">
-                    <div className="col-sm-2">
-                        <label style={{'color':'white'}}><strong>Filter by Status</strong></label>
-                        <select class="form-control" onChange={(e)=>filterByPropertyStatus(e)}>
-                            <option value="">--All--</option>
-                            <option value="Approved">Approved</option>
-                            <option value="Pending">Pending</option>
-                            <option value="Declined">Declined</option>
-                        </select>                        
-                    </div>
-
-                    <div className="col-sm-2">
-                    <label style={{'color':'white'}}><strong>Filter by Zipcode</strong></label>
-                    <select class="form-control" onChange={(e)=>filterByZipcode(e)}>
-                        <option value="">--All--</option>
-                        {partnerPropertiesUniqueZipcodes && partnerPropertiesUniqueZipcodes.map((item, index) => {
-                            return <>
-                                <option value={item}>{item}</option>
-                            </>
-                        })}            
-                    </select>
-                    </div>
-
-                    <div className="col-sm-2">
-                    <label style={{'color':'white'}}><strong>Filter by Mapped/unmapped Region</strong></label>
-                    <select class="form-control" onChange={(e)=>filterByMappedUnmappedRegion(e)}>
-                        <option value="">--All--</option>
-                        <option value="Mapped">Mapped</option>
-                        <option value="Unmapped">Unmapped</option>
-                    </select>
-                    </div>
-
-                    </div>
-}                    
-            
-{extranet_vt_logged_in_role==='admin' &&
-    <section>
-<div style={{'padding':'10px', 'display':'flex', 'align-items':'center', 'row-gap':'20px', 'position':'sticky'}}>
-    <div class="col-3">
-        <label><strong>Change Selected Property Status:</strong></label>
-        <select class="form-control" onChange={ (e) => setPropStatus(e.target.value) }>
-            <option value="">-Select Status--</option>
-            <option value="Approved">Approved</option>
-            <option value="Pending">Pending</option>
-            <option value="Declined">Declined</option>
-        </select>
-
-            {propStatus==='Declined' &&
-            <section>
-            <label><strong>Select Declining Reason:</strong></label>
-            <select class="form-control" onChange={ (e) => setDecliningReason(e.target.value)  }>
-                <option value="">-Select Reason--</option>
-                <option value="Too cheap">Too cheap</option>
-                <option value="With watermark/Picture information">With watermark/Picture information</option>
-                <option value="Not feet quality">Not feet quality</option>
-                <option value="Existing as SH partner">Existing as SH partner</option>
-                <option value="Existing as SH partner">Existing as SH partner</option>
-                <option value="Other">Other</option>
-            </select>
-            </section>
-            }
-
-            {decliningReason==='Other' &&
-            <section>
-            <label><strong>Enter the other reason for declining:</strong></label>
-            <input required type="text" class="form-control" onChange={ (e) => setDecliningReasonOther(e.target.value) }  />
-            </section>
-            }
-
-    </div>
-</div>
-
-<div style={{'padding':'10px', 'display':'flex', 'align-items':'center', 'row-gap':'20px', 'position':'sticky'}}>
-    <div class="col-3">
-        <button class="btn btn-primary" onClick={updateSelectedListingsStatus}>Update Status</button>        
-    </div>       
-</div>
-
-<hr />
-<div class="row">
-    <div class="col-3">
-        <label><strong>Search by Property ID</strong></label>
-        <input required type="text" placeholder="Search by Property ID" class="form-control" onChange={ (e) => setSearchPropertyId(e.target.value) }  />
-    </div>
-</div>
-</section>
-}            
-
-                    {<Paging perPage={constants.PAGING_LISTING_SIZE} totalItems={totalListings} currentPage={pageNumber} onChangePage={onChangePage} />}
+                    {viewMode === 'classic' &&
                     <div style={{ padding: '0 20px' }}>
                         <div class="table-responsive" style={{ overflow: "auto" }}>
                                 <table class="table">
@@ -969,7 +944,7 @@ if(allZipcodes[countryZipKey] !== 'undefined') {
     var listingAddressZipExists = false
 }
 
-                                            //console.log("listing item:",index+1,iteam)
+                                            console.log("listing item:",index+1,iteam)
                                             const ApropertyId = iteam.listing?._id
                                             const fullCalendar = iteam.fullCalendar
 //Custom Title & Desc   
@@ -1023,6 +998,7 @@ if(property?.prices?.currency && property.prices.currency !== 'USD') {
                                 </table>
                         </div>
                     </div>
+                    }
                 </div>
 
                 <CreateNewAccountModal
@@ -1159,7 +1135,7 @@ export const CreateNewAccountModal = ({
                 <button
                     type="submit"
                     className="btn btn-success border-radius-0 w-25 py-2"
-                    style={{ backgroundColor: "#165093" }}
+                    style={{ backgroundColor: "#192C3D" }}
                     onClick={handleSubmit}
                 >
                     Save

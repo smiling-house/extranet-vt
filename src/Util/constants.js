@@ -56,7 +56,7 @@ export const PATH_EPS_EPARTNER_MANAGE = '/eps-epartner-manage';
 export const PATH_EPS_EPARTNERS_RESERVATIONS = '/eps-epartners-reservations';
 export const PATH_EPS_EPARTNER_RESERVATIONS_PROPERTIES = '/eps-epartner-reservations-properties';
 
-export const APP_DISPLAY_NAME = 'Villa Tracker EXTRANET';
+export const APP_DISPLAY_NAME = 'Villa Tracker Extranet';
 
 export const PATH_ZIPS_REGIONS_MAPPING = '/zipcodes-regions-mapping';
 export const PATH_ZIPS_REGIONS_MAPPING_COUNTRY = '/zipcodes-regions-mapping-country';

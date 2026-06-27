@@ -267,7 +267,7 @@ const Admin = (props) => {
 			id: 'edit',
 			name: 'Edit',
 			header: (column, index) => (
-				<div key={index} style={{ color: '#1B9C5D', backgroundColor: '#F5F5F2', fontSize: '22px', fontWeight: 500 }}>
+				<div key={index} style={{ color: '#192C3D', backgroundColor: '#F5F5F2', fontSize: '22px', fontWeight: 500 }}>
 					Edit
 				</div>
 			),

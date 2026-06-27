@@ -330,7 +330,7 @@ const Signup = (props) => {
                                             'font-weight': "100",
                                             "font-size": "22px",
                                             "color": "#fff",
-                                            "background-color": "#165093",
+                                            "background-color": "#192C3D",
                                         }}
                                         className="btn btn-primary col-12"
                                         fullwidth={true}
