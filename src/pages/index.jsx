@@ -22,6 +22,8 @@ import PartnersBP from "./PartnersBP";
 import PartnersRU from "./PartnersRU";
 import PartnersBART from "./PartnersBART";
 import PartnersINVENIO from "./PartnersINVENIO";
+import PartnersBookingpal from "./PartnersBookingpal";
+import ListingsBookingpal from "./ListingsBookingpal";
 import EPartners from "./EPartners";
 // material ui
 import Welcome from "./Welcome";
@@ -94,6 +96,8 @@ import {
   APP_DISPLAY_NAME,
   PATH_PARTNERS_BART,
   PATH_PARTNERS_INVENIO,
+  PATH_PARTNERS_BOOKINGPAL,
+  PATH_LISTINGS_BOOKINGPAL,
   PATH_VERIFY_COMPARE_NEW_PMS,
   PATH_ZIPS_REGIONS_MAPPING,
   PATH_ZIPS_REGIONS_MAPPING_COUNTRY,
@@ -579,6 +583,32 @@ if(partnerAccountId) {
         </Route>    
         <Route exact path={[PATH_PARTNERS_INVENIO]}>
           <PartnersINVENIO
+            agency={agency}
+            agent={agent}
+            token={token}
+            setProfile={setProfile}
+            screenSize={screenSize}
+            setScreenSize={setScreenSize}
+            activeMenu={activeMenu}
+            handleToggleMenu={handleToggleMenu}
+            setActiveMenu={setActiveMenu}
+          />
+        </Route>
+        <Route exact path={[PATH_PARTNERS_BOOKINGPAL]}>
+          <PartnersBookingpal
+            agency={agency}
+            agent={agent}
+            token={token}
+            setProfile={setProfile}
+            screenSize={screenSize}
+            setScreenSize={setScreenSize}
+            activeMenu={activeMenu}
+            handleToggleMenu={handleToggleMenu}
+            setActiveMenu={setActiveMenu}
+          />
+        </Route>
+        <Route exact path={[PATH_LISTINGS_BOOKINGPAL]}>
+          <ListingsBookingpal
             agency={agency}
             agent={agent}
             token={token}

@@ -30,6 +30,7 @@ import {
   PATH_PARTNERS_RU,
   PATH_PARTNERS_BART,
   PATH_PARTNERS_INVENIO,
+  PATH_PARTNERS_BOOKINGPAL,
   PATH_EPARTNERS,
   PATH_RESERVE,
   PATH_COLLECTIONS,
@@ -97,6 +98,7 @@ const Sidebar = ({ activeMenu, setActiveMenu, handleToggleMenu, showOrHideSideBa
           { text: "RU PMs (SH)", path: PATH_PARTNERS_RU, icon: <MdBusiness size={18} /> },
           { text: "BART PMs", path: PATH_PARTNERS_BART, icon: <MdBusiness size={18} /> },
           { text: "INVENIO PMs", path: PATH_PARTNERS_INVENIO, icon: <MdBusiness size={18} /> },
+          { text: "BP PMs", path: PATH_PARTNERS_BOOKINGPAL, icon: <MdBusiness size={18} /> },
         ]
       },
       {
