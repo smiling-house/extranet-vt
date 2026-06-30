@@ -54,6 +54,39 @@ const cancelHostawayBooking = async (payload) => {
     return hostawayRequest.put(constants.SHUB_URL + `/hostaway-cancel-reservation`, payload)
 }
 
+// -------------------------------------------------
+// BookingPal Reservation Management (OUTBOUND to BookingPal via VTHub/SHub).
+// All hit /local/bookingpal/* (auth.verifyAccessToken Bearer).
+// -------------------------------------------------
+const bpCheckAvailability = async (params) => {
+    // params: { listing_id, start_date, nights }
+    return userRequest.get(constants.SHUB_URL + `/local/bookingpal/check-availability`, { params })
+}
+const bpQuote = async (params) => {
+    // params: { listing_id, start_date, nights, number_of_guests }
+    return userRequest.get(constants.SHUB_URL + `/local/bookingpal/quote`, { params })
+}
+const bpQuotePreview = async (params) => {
+    // params: { reservation_id, start_date, nights, number_of_guests }
+    return userRequest.get(constants.SHUB_URL + `/local/bookingpal/quote-preview`, { params })
+}
+const bpCreateReservation = async (payload) => {
+    // payload: { listing_id, start_date, nights, number_of_guests, total, currency, guest{...} }
+    return userRequest.post(constants.SHUB_URL + `/local/bookingpal/reservation`, payload)
+}
+const bpReservationDetails = async (params) => {
+    // params: { confirmation_id }
+    return userRequest.get(constants.SHUB_URL + `/local/bookingpal/reservation-details`, { params })
+}
+const bpModifyReservation = async (payload) => {
+    // payload: { confirmation_id, channel, start_date, nights, body }
+    return userRequest.put(constants.SHUB_URL + `/local/bookingpal/reservation-modification`, payload)
+}
+const bpCancelReservation = async (params) => {
+    // params: { confirmation_code, confirmation_id }
+    return userRequest.delete(constants.SHUB_URL + `/local/bookingpal/reservation`, { params })
+}
+
 
 const addNewPartner = async (payload) => {
     const ShubResponse = await userRequest.post(constants.SHUB_URL + `/services/guesty/channel/account`,
@@ -623,6 +656,13 @@ const AuthService = {
     triggerHostawaySync,
     createHostawayBooking,
     cancelHostawayBooking,
+    bpCheckAvailability,
+    bpQuote,
+    bpQuotePreview,
+    bpCreateReservation,
+    bpReservationDetails,
+    bpModifyReservation,
+    bpCancelReservation,
 };
 
 export default AuthService;

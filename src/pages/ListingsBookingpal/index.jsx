@@ -8,6 +8,7 @@ import LoadingBox from "../../components/LoadingBox";
 import Paging from "../../components/Paging";
 import constants from "../../Util/constants";
 import { PATH_PARTNERS_BOOKINGPAL } from "../../Util/constants";
+import ReservationDemo from "../PartnersBookingpal/ReservationDemo";
 
 // Read-only view of a direct-BookingPal PM's listings. Data comes from VTHub
 // (`/local/listings-bookingpal`), which reads `bookingpal_listings_test` in test
@@ -25,6 +26,7 @@ const columns = [
   { name: "Beds / Baths", width: "120px" },
   { name: "Status", width: "120px" },
   { name: "Updated at", width: "140px" },
+  { name: "Reservation", width: "120px" },
 ];
 
 const ListingsBookingpal = (props) => {
@@ -57,6 +59,7 @@ const ListingsBookingpal = (props) => {
   const [isLoading, setIsLoading] = useState(false);
   const [pageNumber, setPageNumber] = useState(0);
   const [serialNumber, setSerialNumber] = useState(0);
+  const [reserveListing, setReserveListing] = useState(null);
 
   const userRequest = axios.create({
     baseURL: constants.SHUB_URL,
@@ -176,6 +179,11 @@ const ListingsBookingpal = (props) => {
                         : ""}
                     </h4>
                   </td>
+                  <td className="px-4 p-3">
+                    <button className="btn btn-sm btn-outline-primary" onClick={() => setReserveListing(item)}>
+                      Reserve
+                    </button>
+                  </td>
                 </tr>
               ))}
               {(!listings || listings.length === 0) && !isLoading && (
@@ -188,6 +196,10 @@ const ListingsBookingpal = (props) => {
             </tbody>
           </table>
         </div>
+
+        {reserveListing && (
+          <ReservationDemo listing={reserveListing} onClose={() => setReserveListing(null)} />
+        )}
       </div>
     </Layout>
   );
