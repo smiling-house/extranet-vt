@@ -53,7 +53,10 @@ import {
   PATH_PARTNERS_VT,
   PATH_PARTNERS_HOSTAWAY,
   PATH_SEARCH_LISTINGS,
-  PATH_PROPERTIES_NEEDS_ATTENTION
+  PATH_PROPERTIES_NEEDS_ATTENTION,
+  PATH_AGODA_LISTINGS,
+  PATH_AGODA_SYNC,
+  PATH_AGODA_ACCOUNT
 } from "../../Util/constants";
 
 const Sidebar = ({ activeMenu, setActiveMenu, handleToggleMenu, showOrHideSideBarMenu }) => {
@@ -127,6 +130,16 @@ const Sidebar = ({ activeMenu, setActiveMenu, handleToggleMenu, showOrHideSideBa
           { text: "Interactive Map", path: PATH_MAP, icon: <FiMap size={18} /> },
           { text: "Hot Destinations", path: PATH_HOT_DESTINATIONS, icon: <MdLocationOn size={18} /> },
           { text: "Properties Needs Attention", path: PATH_PROPERTIES_NEEDS_ATTENTION, icon: <MdLocationOn size={18} /> },
+        ]
+      },
+      {
+        id: 'channels',
+        title: 'Channels / Distribution',
+        icon: <FiExternalLink size={20} />,
+        items: [
+          { text: "Agoda — Properties", path: PATH_AGODA_LISTINGS, icon: <MdBusiness size={18} /> },
+          { text: "Agoda — Sync Status", path: PATH_AGODA_SYNC, icon: <FiSettings size={18} /> },
+          { text: "Agoda — Account", path: PATH_AGODA_ACCOUNT, icon: <MdVerifiedUser size={18} /> },
         ]
       }
     ],

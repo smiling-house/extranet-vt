@@ -28,6 +28,7 @@ import CollectionIcon from "../../components/CollectionIcon"
 import * as propertyActions from "../../store/redux/Property/actions";
 import Sidebar from "../../components/Sidebar";
 import Listingrow from "./row/listingRow"
+import { ViewSwitcher, ListingsViewport } from "../Listings2/views/ListingViews"
 
 
 import menuIcon from '../../assets/icons8-menu-50.png'
@@ -103,6 +104,7 @@ const showOrHideSideBarMenu=()=> {
 
     // state for Listings
     const [listings, setListings] = useState([])
+    const [viewMode, setViewMode] = useState(() => { try { const m = localStorage.getItem('lr_view_mode'); return (m && m !== 'classic') ? m : 'expanded' } catch (e) { return 'expanded' } })
     const [isRefresh, setIsRefresh] = useState(false)
     const [filterChannel, setFilterChannel] = useState([])
     //modal state
@@ -759,6 +761,18 @@ return (
 }            
 
                     {<Paging perPage={constants.PAGING_LISTING_SIZE} totalItems={totalListings} currentPage={pageNumber} onChangePage={onChangePage} />}
+
+                    <div style={{ padding: '0 20px' }}>
+                        <ViewSwitcher value={viewMode} onChange={(m) => { setViewMode(m); try { localStorage.setItem('lr_view_mode', m) } catch (e) {} }} count={totalListings} />
+                    </div>
+
+                    {viewMode !== 'classic' && (
+                        <div style={{ padding: '0 20px' }}>
+                            <ListingsViewport mode={viewMode} listings={listings} hasPartner={true} />
+                        </div>
+                    )}
+
+                    {viewMode === 'classic' && (
                     <div style={{ padding: '0 20px' }}>
                         <div class="table-responsive" style={{ overflow: "auto" }}>
                                 <table class="table">
@@ -843,6 +857,7 @@ if(property?.prices?.currency && property.prices.currency !== 'USD') {
                                 </table>
                         </div>
                     </div>
+                    )}
                 </div>
 
 

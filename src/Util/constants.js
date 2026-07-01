@@ -71,12 +71,19 @@ export const PATH_PARTNERS_VT = '/partners-vt';
 
 export const PATH_SEARCH_LISTINGS = '/search-listings';
 export const PATH_PROPERTIES_NEEDS_ATTENTION = '/properties-needs-attention';
- 
+
+// Agoda (YCS) distribution — see extranet-vt/AGODA-UI-PLAN.md
+export const PATH_AGODA_LISTINGS = '/agoda-listings';
+export const PATH_AGODA_SYNC = '/agoda-sync';
+export const PATH_AGODA_INQUIRIES = '/agoda-inquiries';
+export const PATH_AGODA_ACCOUNT = '/agoda-account';
+export const PATH_AGODA_KEYS = '/agoda-keys';
+
 const constants = {
 	ENV: 'LOCAL',
 	BASE_URL: 'https://backend.villatracker.com',
 	//SHUB_URL: 'http://localhost:3331',
-	SHUB_URL: 'https://api.villatracker.com',
+	SHUB_URL: 'https://api.villatracker.ch',
 	//BASE_URL: 'http://localhost:8080',
 	BASE_URL2: 'https://vt-backend-8zwvrrlxf-smiling-house.vercel.app',
 	BASE_URL1: 'http://vtbackend-env.eba-b3vxhzrg.us-east-2.elasticbeanstalk.com',

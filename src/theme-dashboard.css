@@ -290,3 +290,17 @@ table.table a:hover, td a:hover { color: #0e7ca8 !important; text-decoration: un
 
 /* 5. Page headings that were green → navy */
 .page-body h1, .page-body h2, .page-body h3 { color: var(--brand) !important; }
+
+/* 6. Legacy green leftovers (branding green) → navy / cyan.
+   Covers the SHUB/Smiling/Search page titles, Hot-Destinations year, and any
+   inline `color: green` / bright-green hex still floating around. */
+.search-main-title, .shub-main-title, .hot-destinations-title,
+.search-results-title, .search-top-panel .col-lg-4 .search-main-title {
+  color: var(--brand) !important;
+}
+.hot-destinations-title span { color: var(--accent) !important; }   /* the ~year~ accent */
+.text-success, [class*="text-success"] { color: var(--brand) !important; }
+[style*="color: green"], [style*="color:green"],
+[style*="#0BE70B"], [style*="0be70b"], [style*="rgb(6, 99, 34)"], [style*="rgb(6,99,34)"] {
+  color: var(--brand) !important;
+}
