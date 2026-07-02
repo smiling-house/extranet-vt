@@ -10,7 +10,16 @@ import axios from 'axios'
 import constants from '../Util/constants.js'
 import { ShubAuth } from '../core/index.js'
 
-const api = axios.create({ headers: { Authorization: `Bearer ${ShubAuth}` } })
+// VTHub requires the shared X-API-Key header alongside the Bearer token
+// (same as auth.service.js and the other VT services). Without it the
+// /v1/agoda/* and /services/agoda/* endpoints reject with 401
+// "X-API-Key header is required".
+const api = axios.create({
+  headers: {
+    Authorization: `Bearer ${ShubAuth}`,
+    'X-API-Key': constants.X_API_KEY,
+  },
+})
 const base = constants.SHUB_URL
 
 // ---- Listings feed (existing) --------------------------------------------
