@@ -69,6 +69,11 @@ export const PATH_ZIPS_REGIONS_MAPPING_AI = '/ai-regions-for-zipcodes';
 export const PATH_PARTNERS_SH = '/partners-sh';
 export const PATH_PARTNERS_VT = '/partners-vt';
 
+// New RU/DH source-partitioned partner pages (source-partitioned by G- vs RU-
+// accountId prefix; served by GET /local/partners-by-source in VTHub).
+export const PATH_PARTNERS_GUESTY_DH = '/partners-guesty-dh';
+export const PATH_PARTNERS_RU_DH = '/partners-ru-dh';
+
 export const PATH_SEARCH_LISTINGS = '/search-listings';
 export const PATH_PROPERTIES_NEEDS_ATTENTION = '/properties-needs-attention';
 

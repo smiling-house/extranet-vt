@@ -50,6 +50,8 @@ import {
   PATH_DUPLICATED_LISTINGS,
   PATH_PARTNERS_SH,
   PATH_PARTNERS_VT,
+  PATH_PARTNERS_GUESTY_DH,
+  PATH_PARTNERS_RU_DH,
   PATH_PARTNERS_HOSTAWAY,
   PATH_SEARCH_LISTINGS,
   PATH_PROPERTIES_NEEDS_ATTENTION,
@@ -93,6 +95,8 @@ const Sidebar = ({ activeMenu, setActiveMenu, handleToggleMenu, showOrHideSideBa
         title: 'Partner Management',
         icon: <FiUsers size={20} />,
         items: [
+          { text: "Guesty PMs", path: PATH_PARTNERS_GUESTY_DH, icon: <MdBusiness size={18} /> },
+          { text: "RU PMs", path: PATH_PARTNERS_RU_DH, icon: <MdBusiness size={18} /> },
           { text: "Guesty SH PMs", path: PATH_PARTNERS_SH, icon: <MdBusiness size={18} /> },
           { text: "Guesty VT PMs", path: PATH_PARTNERS_VT, icon: <MdBusiness size={18} /> },
           { text: "Hostaway PMs", path: PATH_PARTNERS_HOSTAWAY, icon: <MdBusiness size={18} /> },

@@ -46,6 +46,8 @@ import Admin from "./Admin";
 import PartnersSH from "./PartnersSH";
 import PartnersVT from "./PartnersVT";
 import PartnersHostaway from "./PartnersHostaway";
+import PartnersGuestyDH from "./PartnersGuestyDH";
+import PartnersRuDH from "./PartnersRuDH";
 import SearchListings from "./SearchListings";
 
 import PropertiesNeedsAttention from "./PropertiesNeedsAttention";
@@ -106,6 +108,8 @@ import {
   PATH_LISTINGS_SH_BP_DECLINED_BUT_LISTED_ON_BP,
   PATH_PARTNERS_SH,
   PATH_PARTNERS_VT,
+  PATH_PARTNERS_GUESTY_DH,
+  PATH_PARTNERS_RU_DH,
   PATH_PARTNERS_HOSTAWAY,
   PATH_SEARCH_LISTINGS,
   PATH_PROPERTIES_NEEDS_ATTENTION
@@ -558,6 +562,32 @@ if(partnerAccountId) {
         </Route>
         <Route exact path={[PATH_PARTNERS_RU]}>
           <PartnersRU
+            agency={agency}
+            agent={agent}
+            token={token}
+            setProfile={setProfile}
+            screenSize={screenSize}
+            setScreenSize={setScreenSize}
+            activeMenu={activeMenu}
+            handleToggleMenu={handleToggleMenu}
+            setActiveMenu={setActiveMenu}
+          />
+        </Route>
+        <Route exact path={[PATH_PARTNERS_GUESTY_DH]}>
+          <PartnersGuestyDH
+            agency={agency}
+            agent={agent}
+            token={token}
+            setProfile={setProfile}
+            screenSize={screenSize}
+            setScreenSize={setScreenSize}
+            activeMenu={activeMenu}
+            handleToggleMenu={handleToggleMenu}
+            setActiveMenu={setActiveMenu}
+          />
+        </Route>
+        <Route exact path={[PATH_PARTNERS_RU_DH]}>
+          <PartnersRuDH
             agency={agency}
             agent={agent}
             token={token}
