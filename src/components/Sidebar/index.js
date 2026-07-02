@@ -38,6 +38,7 @@ import {
   PATH_HOT_DESTINATIONS,
   PATH_SHUB,
   PATH_HOME,
+  PATH_DASHBOARD,
   PATH_SEARCH,
   PATH_MAP,
   PATH_RESERVATIONS,
@@ -59,6 +60,15 @@ import {
   PATH_AGODA_SYNC,
   PATH_AGODA_ACCOUNT
 } from "../../Util/constants";
+
+// -----------------------------------------------------------------------
+// Initial-letter badge for partner menu items. Instead of every entry using
+// the same MdBusiness building glyph, each PM cohort gets a coloured letter
+// so a glance is enough to distinguish them in the collapsed sidebar rail.
+// -----------------------------------------------------------------------
+const InitialBadge = ({ letters, tint }) => (
+  <span className={`sidebar-initial-badge tint-${tint}`}>{letters}</span>
+);
 
 const Sidebar = ({ activeMenu, setActiveMenu, handleToggleMenu, showOrHideSideBarMenu }) => {
   const [hoverItem, setHoverItem] = useState(null);
@@ -90,21 +100,36 @@ const Sidebar = ({ activeMenu, setActiveMenu, handleToggleMenu, showOrHideSideBa
 
   const menuGroups = {
     admin: [
+      // Standalone dashboard entry at the very top — the admin landing page.
+      // Rendered as a single-item group so it takes one row in the sidebar
+      // instead of collapsing under a header.
+      {
+        id: 'dashboard',
+        title: 'Dashboard',
+        icon: <MdDashboard size={20} />,
+        standalone: true,
+        items: [
+          { text: "Dashboard", path: PATH_DASHBOARD, icon: <MdDashboard size={18} /> },
+        ]
+      },
       {
         id: 'partners',
         title: 'Partner Management',
         icon: <FiUsers size={20} />,
         items: [
-          { text: "Guesty PMs", path: PATH_PARTNERS_GUESTY_DH, icon: <MdBusiness size={18} /> },
-          { text: "RU PMs", path: PATH_PARTNERS_RU_DH, icon: <MdBusiness size={18} /> },
-          { text: "Guesty SH PMs", path: PATH_PARTNERS_SH, icon: <MdBusiness size={18} /> },
-          { text: "Guesty VT PMs", path: PATH_PARTNERS_VT, icon: <MdBusiness size={18} /> },
-          { text: "Hostaway PMs", path: PATH_PARTNERS_HOSTAWAY, icon: <MdBusiness size={18} /> },
-          { text: "BP PMs (SH)", path: PATH_PARTNERS_BP, icon: <MdBusiness size={18} /> },
-          { text: "RU PMs (SH)", path: PATH_PARTNERS_RU, icon: <MdBusiness size={18} /> },
-          { text: "BART PMs", path: PATH_PARTNERS_BART, icon: <MdBusiness size={18} /> },
-          { text: "INVENIO PMs", path: PATH_PARTNERS_INVENIO, icon: <MdBusiness size={18} /> },
-          { text: "BP PMs", path: PATH_PARTNERS_BOOKINGPAL, icon: <MdBusiness size={18} /> },
+          // New RU/DH source-partitioned pages — primary going forward.
+          { text: "Guesty PMs", path: PATH_PARTNERS_GUESTY_DH, icon: <InitialBadge letters="G" tint="green" /> },
+          { text: "RU PMs", path: PATH_PARTNERS_RU_DH, icon: <InitialBadge letters="R" tint="cyan" /> },
+          // Modern-era channel-specific pages.
+          { text: "Hostaway PMs", path: PATH_PARTNERS_HOSTAWAY, icon: <InitialBadge letters="H" tint="purple" /> },
+          { text: "BART PMs", path: PATH_PARTNERS_BART, icon: <InitialBadge letters="B" tint="amber" /> },
+          { text: "INVENIO PMs", path: PATH_PARTNERS_INVENIO, icon: <InitialBadge letters="I" tint="indigo" /> },
+          { text: "BP PMs", path: PATH_PARTNERS_BOOKINGPAL, icon: <InitialBadge letters="P" tint="pink" /> },
+          // Legacy pages — grey badges signal their status.
+          { text: "Guesty SH PMs (Legacy)", path: PATH_PARTNERS_SH, icon: <InitialBadge letters="GS" tint="legacy" /> },
+          { text: "Guesty VT PMs (Legacy)", path: PATH_PARTNERS_VT, icon: <InitialBadge letters="GV" tint="legacy" /> },
+          { text: "BP PMs (SH) (Legacy)", path: PATH_PARTNERS_BP, icon: <InitialBadge letters="PS" tint="legacy" /> },
+          { text: "RU PMs (SH) (Legacy)", path: PATH_PARTNERS_RU, icon: <InitialBadge letters="RS" tint="legacy" /> },
         ]
       },
       {
@@ -167,6 +192,7 @@ const Sidebar = ({ activeMenu, setActiveMenu, handleToggleMenu, showOrHideSideBa
         key={group.id}
         className={`sidebar-group-header ${isExpanded || hasActiveItem ? 'active' : ''}`}
         onClick={() => setExpandedGroup(isExpanded ? null : group.id)}
+        data-tooltip={group.title}
       >
         <div className="sidebar-group-icon">
           {group.icon}
@@ -212,7 +238,7 @@ const Sidebar = ({ activeMenu, setActiveMenu, handleToggleMenu, showOrHideSideBa
     return (
       <div
         key={text}
-        title={text}
+        data-tooltip={text}
         className={`sidebar-item ${isActive ? 'active' : ''} ${isSubItem ? 'sub-item' : ''} ${isHovered ? 'hovered' : ''}`}
         onClick={doPress}
         onMouseEnter={() => setHoverItem(text)}
@@ -270,9 +296,16 @@ const Sidebar = ({ activeMenu, setActiveMenu, handleToggleMenu, showOrHideSideBa
       {/* Navigation */}
       <nav className="sidebar-nav">
         {currentMenuGroups.map((group) => (
-          <div key={group.id} className="sidebar-group">
-            {renderGroupHeader(group)}
-            {renderGroupItems(group)}
+          <div key={group.id} className={`sidebar-group ${group.standalone ? 'sidebar-group--standalone' : ''}`}>
+            {/*
+              Standalone groups (single-item groups like Dashboard) skip the
+              collapsible header and render the item at the top level. Keeps
+              one-off entries from taking two rows in the rail.
+            */}
+            {!group.standalone && renderGroupHeader(group)}
+            {group.standalone
+              ? group.items.map((item) => renderItem(item.text, item.path, item.icon, false))
+              : renderGroupItems(group)}
           </div>
         ))}
         

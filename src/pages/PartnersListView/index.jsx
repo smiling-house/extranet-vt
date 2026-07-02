@@ -15,20 +15,24 @@
 //     its own; the round-trip added latency for no visible benefit.
 //   * debounced search input so we don't rebuild request params on every
 //     keystroke.
+//
+// Visual language matches theme-dashboard.css + DuplicatedListings.scss.
+// Note on "Sort by": the label is honest — /local/partners-by-source uses
+// the status param ONLY to pick a sort key, never to filter. See
+// getBySource() in VTHub api/controllers/users.js.
 // ---------------------------------------------------------------------------
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useHistory } from "react-router-dom";
 import axios from "axios";
-import { BsChevronDown } from "react-icons/bs";
-import addAdminIcon from "../../assets/icons/admin/menu/add.svg";
+import { IoIosSearch, IoMdClose } from "react-icons/io";
+import { FiUsers, FiChevronRight, FiChevronLeft } from "react-icons/fi";
 
 import Layout from "../../components/Layout/index.js";
-import LoadingBox from "../../components/LoadingBox";
 import Paging from "../../components/Paging";
 import { PATH_LISTINGS } from "../../Util/constants";
 import constants from "../../Util/constants";
-import "../PartnersRU/Admin.scss";
+import "./PartnersListView.scss";
 
 // ---------------------------------------------------------------------------
 // Module-scope caches — survive component unmount/mount and cross-page
@@ -68,12 +72,45 @@ async function ensureExchangeRates() {
   return exchangeRatesCache;
 }
 
+// Sort-by options — labels match the count columns.
+const SORT_OPTIONS = [
+  { key: "", label: "Total" },
+  { key: "Approved", label: "Approved" },
+  { key: "Pending", label: "Pending" },
+  { key: "Declined", label: "Declined" },
+  { key: "Unmapped", label: "Unmapped" },
+];
+
+// Small helper — pill for a count with variant + zero styling.
+function CountPill({ variant, value, onClick }) {
+  const isZero = !value || Number(value) === 0;
+  return (
+    <span
+      className={`status-pill ${variant} ${isZero ? "is-zero" : ""}`}
+      onClick={(e) => {
+        if (isZero) return;
+        e.stopPropagation();
+        onClick?.();
+      }}
+    >
+      {isZero ? "—" : value}
+    </span>
+  );
+}
+
 const PartnersListView = (props) => {
   const {
     title,
+    subhead,
     apiParams,
-    connectPartnerLabel,
     statusFilterKey,
+    // Backend endpoint (defaults to the RU/DH source-partitioned aggregation).
+    // Legacy channel pages point at their own routes (e.g. 'local/partners',
+    // 'local/partners-bookingpal') via the wrapper — the shell code is the same.
+    endpoint = "local/partners-by-source",
+    // Route to drill down to when a row is clicked. Defaults to /listings, but
+    // e.g. BookingPal has its own listings page (PATH_LISTINGS_BOOKINGPAL).
+    drilldownPath = PATH_LISTINGS,
     // Layout props passed through from the route.
     token,
     agency,
@@ -86,12 +123,20 @@ const PartnersListView = (props) => {
 
   const history = useHistory();
 
+  // Stable key for apiParams so useCallback deps compare by value, not by
+  // reference — wrapper passes a fresh object literal every render. Reading
+  // apiParams inside the callback stays fine because React always closes over
+  // the latest render's value on a re-render, and we only re-run the callback
+  // when the stringified key actually changes.
+  const apiParamsKey = JSON.stringify(apiParams || {});
+
   // -------------------------------------------------------------------------
   // Local state
   // -------------------------------------------------------------------------
   const [partners, setPartners] = useState([]);
   const [totalPartners, setTotalPartners] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+  const [isRefetching, setIsRefetching] = useState(false);
 
   const initialPage = (() => {
     const qs = new URLSearchParams(window.location.search);
@@ -109,9 +154,6 @@ const PartnersListView = (props) => {
   const [searchInput, setSearchInput] = useState("");
   const searchDebounceRef = useRef(null);
 
-  const extranetRole = localStorage.getItem("extranet-vt-logged-in-role");
-  const isAdmin = extranetRole === "admin";
-
   // -------------------------------------------------------------------------
   // Derived pagination display
   // -------------------------------------------------------------------------
@@ -121,33 +163,53 @@ const PartnersListView = (props) => {
     return totalPartners && cap > totalPartners ? totalPartners : cap;
   }, [partnersPagingFrom, totalPartners]);
 
+  const totalPages = useMemo(() => {
+    if (!totalPartners) return 1;
+    return Math.max(1, Math.ceil(totalPartners / constants.PAGING_PARTNERS_SIZE));
+  }, [totalPartners]);
+
   // -------------------------------------------------------------------------
   // Data fetch — single aggregation endpoint
   // -------------------------------------------------------------------------
-  const loadPartners = useCallback(async () => {
-    setIsLoading(true);
-    const params = {
-      ...apiParams,
-      limit: constants.PAGING_PARTNERS_SIZE,
-      skip: partnersPagingFrom - 1,
-      status: filterPropertyStatus || undefined,
-      pmName: searchInput || undefined,
-    };
-    try {
-      const res = await userRequest.get("local/partners-by-source", { params });
-      const data = res?.data || {};
-      const rows = Array.isArray(data.partners) ? data.partners : [];
-      const count = Number(data.count) || 0;
-      setPartners(rows);
-      setTotalPartners(count);
-      localStorage.setItem("partnerCount", String(count));
-    } catch (e) {
-      console.error("local/partners-by-source failed", e?.message || e);
-      setPartners([]);
-      setTotalPartners(0);
-    }
-    setIsLoading(false);
-  }, [apiParams, partnersPagingFrom, filterPropertyStatus, searchInput]);
+  const loadPartners = useCallback(
+    async (isFirstLoad = false) => {
+      if (isFirstLoad) setIsLoading(true);
+      else setIsRefetching(true);
+      // Whatever the wrapper hands us in apiParams (provider, source,
+      // channelSource, etc.) is passed straight through as query params.
+      // The shell only owns limit/skip/status/pmName.
+      const params = {
+        ...(apiParams || {}),
+        limit: constants.PAGING_PARTNERS_SIZE,
+        skip: partnersPagingFrom - 1,
+        status: filterPropertyStatus || undefined,
+        pmName: searchInput || undefined,
+      };
+      try {
+        const res = await userRequest.get(endpoint, { params });
+        const data = res?.data || {};
+        const rows = Array.isArray(data.partners) ? data.partners : [];
+        const count = Number(data.count) || 0;
+        setPartners(rows);
+        setTotalPartners(count);
+        localStorage.setItem("partnerCount", String(count));
+      } catch (e) {
+        console.error(`${endpoint} failed`, e?.message || e);
+        setPartners([]);
+        setTotalPartners(0);
+      }
+      setIsLoading(false);
+      setIsRefetching(false);
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [
+      endpoint,
+      apiParamsKey,
+      partnersPagingFrom,
+      filterPropertyStatus,
+      searchInput,
+    ]
+  );
 
   // Load reference data ONCE on mount (module-cached across pages).
   useEffect(() => {
@@ -155,9 +217,12 @@ const PartnersListView = (props) => {
     ensureExchangeRates();
   }, []);
 
-  // Reload partners when the effective query params change.
+  // First load flag — separates skeleton from top-bar refetch spinner.
+  const firstLoadDoneRef = useRef(false);
   useEffect(() => {
-    loadPartners();
+    const isFirst = !firstLoadDoneRef.current;
+    loadPartners(isFirst);
+    firstLoadDoneRef.current = true;
   }, [loadPartners]);
 
   // Debounce the search input — commit to the query ~300ms after last keystroke.
@@ -165,7 +230,6 @@ const PartnersListView = (props) => {
     if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
     searchDebounceRef.current = setTimeout(() => {
       setSearchInput(searchInputRaw);
-      // Any search-input change resets to the first page.
       setPageNumber(0);
     }, 300);
     return () => {
@@ -182,40 +246,41 @@ const PartnersListView = (props) => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const filterByPropertyStatus = (nextValue) => {
+  const setSort = (nextValue) => {
     if (statusFilterKey) localStorage.setItem(statusFilterKey, nextValue);
     setFilterPropertyStatus(nextValue);
     setPageNumber(0);
   };
 
+  const clearSearch = () => {
+    setSearchInputRaw("");
+    setSearchInput("");
+    setPageNumber(0);
+  };
+
+  const resetAllFilters = () => {
+    if (statusFilterKey) localStorage.setItem(statusFilterKey, "");
+    setFilterPropertyStatus("");
+    setSearchInputRaw("");
+    setSearchInput("");
+    setPageNumber(0);
+  };
+
   const goToPartnerListings = (partner, propertyStatus = "") => {
     localStorage.setItem("property_status_to_filter_listings", propertyStatus);
-    // Listings2 reads channelSource + accountId from location state; the
-    // legacy pre-drill-down POST to /local/partners/properties-unique-zipcodes
-    // is intentionally dropped — the destination page loads its own.
     localStorage.setItem("partner", JSON.stringify(partner));
-    history.push(PATH_LISTINGS, {
+    history.push(drilldownPath, {
       partner,
       accountId: partner.accountId,
-      source: apiParams.channelSource || partner.source || "SH",
+      // Prefer the wrapper-supplied channelSource; fall back to the partner
+      // document's own source field (legacy pages rely on this) and finally SH.
+      source: apiParams?.channelSource || partner.source || "SH",
+      status: propertyStatus || undefined,
     });
   };
 
-  // -------------------------------------------------------------------------
-  // Columns — kept in sync with the legacy pages' layout for parity.
-  // -------------------------------------------------------------------------
-  const columns = [
-    { name: "#", width: "50px" },
-    { name: "Partner Name", width: "300px" },
-    { name: "Account ID", width: "230px" },
-    { name: "Total", width: "80px" },
-    { name: "Approved", width: "100px" },
-    { name: "Pending", width: "100px" },
-    { name: "Declined", width: "100px" },
-    { name: "Unmapped", width: "100px" },
-    { name: "Onboarded", width: "120px" },
-  ];
-
+  const hasActiveFilters = !!(searchInput || filterPropertyStatus);
+  const showEmpty = !isLoading && partners.length === 0;
   const serialBase = pageNumber * constants.PAGING_PARTNERS_SIZE;
 
   return (
@@ -229,212 +294,253 @@ const PartnersListView = (props) => {
       handleToggleMenu={handleToggleMenu}
       setActiveMenu={setActiveMenu}
     >
-      <div className="agencies-container">
-        <LoadingBox visible={isLoading} />
-
-        <div className="agencies-main">
-          {isAdmin && (
-            <div className="search-container">
-              <div className="row">
-                <div
-                  className="col-lg-5 col-md-8 col-12"
-                  style={{ margin: 2 }}
-                >
-                  <input
-                    type="text"
-                    className="form-control"
-                    placeholder="Search by PM Name"
-                    value={searchInputRaw}
-                    onChange={(e) => setSearchInputRaw(e.target.value)}
-                  />
-                </div>
-              </div>
+      <div className="partners-view">
+        {/* Hero */}
+        <div className="page-hero">
+          <div className="page-hero-left">
+            <div className="page-hero-icon">
+              <FiUsers size={22} />
             </div>
-          )}
-
-          <div className="agencies-title">
-            <span>{title}</span>
-
-            {connectPartnerLabel && (
-              <button
-                type="button"
-                className="dropdown-item"
-                style={{
-                  whiteSpace: "unset",
-                  background: "none",
-                  border: "none",
-                  padding: 0,
-                  cursor: "pointer",
-                }}
-                onClick={() => {
-                  // Connect-partner modal is out of scope for the new pages;
-                  // for now, keep the affordance visible but no-op. Legacy
-                  // pages still have the fully wired modal.
-                }}
-              >
-                <img src={addAdminIcon} alt="" /> {connectPartnerLabel}
-              </button>
-            )}
-
-            <div className="agencies-main-subtitle">
-              Displaying PMs {partnersPagingFrom}-{partnersPagingTo} of{" "}
-              {totalPartners || "?"}
+            <div>
+              <h1 className="page-hero-title">{title}</h1>
+              {subhead && <p className="page-hero-subhead">{subhead}</p>}
             </div>
           </div>
-
-          {isAdmin && (
-            <div className="container-fluid px-0">
-              <div className="row mx-0">
-                <div className="col-12">
-                  <div className="filterbystatus-container">
-                    <div className="row align-items-end">
-                      <div className="col-12 col-sm-6 col-md-4 col-lg-3 col-xl-2 mb-3">
-                        <label className="form-label text-white mb-2">
-                          <strong>Filter by Status</strong>
-                        </label>
-                        <div className="dropdown w-100">
-                          <button
-                            className="btn btn-outline-secondary dropdown-toggle w-100 text-start"
-                            type="button"
-                            data-bs-toggle="dropdown"
-                            aria-expanded="false"
-                            style={{
-                              minWidth: "120px",
-                              fontSize: "14px",
-                              padding: "8px 12px",
-                              border: "1px solid #ced4da",
-                              borderRadius: "4px",
-                              backgroundColor: "#fff",
-                              color: "#333",
-                              display: "flex",
-                              justifyContent: "space-between",
-                              alignItems: "center",
-                            }}
-                          >
-                            <span>{filterPropertyStatus || "--All--"}</span>
-                          </button>
-                          <ul
-                            className="dropdown-menu w-100"
-                            style={{
-                              maxHeight: "200px",
-                              overflowY: "auto",
-                              fontSize: "14px",
-                            }}
-                          >
-                            {["", "Approved", "Pending", "Declined", "Unmapped"].map(
-                              (opt) => (
-                                <li key={opt || "all"}>
-                                  <button
-                                    className={`dropdown-item ${
-                                      filterPropertyStatus === opt
-                                        ? "active"
-                                        : ""
-                                    }`}
-                                    type="button"
-                                    onClick={() => filterByPropertyStatus(opt)}
-                                  >
-                                    {opt || "--All--"}
-                                  </button>
-                                </li>
-                              )
-                            )}
-                          </ul>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+          <div className="page-hero-meta">
+            <span className="page-hero-pill">
+              {totalPartners
+                ? `${totalPartners} partner${totalPartners === 1 ? "" : "s"}`
+                : "— partners"}
+            </span>
+            <div className="page-hero-pager" role="group" aria-label="Pagination">
+              <button
+                type="button"
+                className="page-hero-pager-btn"
+                onClick={() => onChangePage(Math.max(0, pageNumber - 1))}
+                disabled={pageNumber <= 0}
+                aria-label="Previous page"
+                title="Previous page"
+              >
+                <FiChevronLeft size={16} />
+              </button>
+              <span className="page-hero-pager-label">
+                Page {pageNumber + 1} of {totalPages}
+              </span>
+              <button
+                type="button"
+                className="page-hero-pager-btn"
+                onClick={() =>
+                  onChangePage(Math.min(totalPages - 1, pageNumber + 1))
+                }
+                disabled={pageNumber >= totalPages - 1}
+                aria-label="Next page"
+                title="Next page"
+              >
+                <FiChevronRight size={16} />
+              </button>
             </div>
-          )}
+          </div>
+        </div>
 
-          <Paging
-            perPage={constants.PAGING_PARTNERS_SIZE}
-            totalItems={totalPartners}
-            currentPage={pageNumber}
-            onChangePage={onChangePage}
-          />
+        {/* Toolbar */}
+        <div className="toolbar">
+          <div className="search-wrap">
+            <IoIosSearch className="search-icon" />
+            <input
+              type="text"
+              className="search-input"
+              placeholder="Search by PM name…"
+              value={searchInputRaw}
+              onChange={(e) => setSearchInputRaw(e.target.value)}
+              aria-label="Search partners by PM name"
+            />
+            {isRefetching && !searchInputRaw && (
+              <span className="search-spinner" aria-hidden="true" />
+            )}
+            {searchInputRaw && (
+              <button
+                type="button"
+                className="search-clear"
+                onClick={clearSearch}
+                aria-label="Clear search"
+                title="Clear search"
+              >
+                <IoMdClose size={16} />
+              </button>
+            )}
+          </div>
 
-          <div className="table-responsive px-3">
-            <table className="table">
-              <thead style={{ backgroundColor: "#f9f9f7" }}>
+          <div className="sort-wrap">
+            <span className="sort-wrap-label">Sort by</span>
+            <div className="sort-chips" role="tablist" aria-label="Sort partners by count">
+              {SORT_OPTIONS.map((opt) => (
+                <button
+                  key={opt.key || "total"}
+                  type="button"
+                  role="tab"
+                  aria-selected={filterPropertyStatus === opt.key}
+                  className={filterPropertyStatus === opt.key ? "active" : ""}
+                  onClick={() => setSort(opt.key)}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Table card */}
+        <div className="partners-card">
+          <div className="partners-table-scroll">
+            <table className="partners-table">
+              <thead>
                 <tr>
-                  {columns.map((c) => (
-                    <th
-                      key={c.name}
-                      scope="col"
-                      style={{ cursor: "pointer", width: c.width }}
-                    >
-                      {c.name} <BsChevronDown />
-                    </th>
-                  ))}
+                  <th style={{ width: 44 }}>#</th>
+                  <th>Partner Name</th>
+                  <th>Account ID</th>
+                  <th style={{ width: 90 }}>Total</th>
+                  <th style={{ width: 100 }}>Approved</th>
+                  <th style={{ width: 100 }}>Pending</th>
+                  <th style={{ width: 100 }}>Declined</th>
+                  <th style={{ width: 100 }}>Unmapped</th>
+                  <th style={{ width: 110 }}>Onboarded</th>
+                  <th style={{ width: 32 }} aria-label="Open" />
                 </tr>
               </thead>
               <tbody>
-                {partners.map((item, index) => (
-                  <tr key={item._id || `${item.accountId}-${index}`}>
-                    <td className="px-4 p-3 text-primary cst-cursor">
-                      <h4>{serialBase + index + 1}</h4>
-                    </td>
-                    <td className="pmName px-4 p-3 text-primary cst-cursor">
-                      <h4>{item.pmName || ""}</h4>
-                    </td>
-                    <td className="accountId px-4 p-3 text-primary text-decoration-underline cst-cursor">
-                      <h4>{item.accountId || ""}</h4>
-                    </td>
-                    <td className="px-4 p-3 text-primary text-decoration-underline cst-cursor">
-                      <h4 onClick={() => goToPartnerListings(item)}>
-                        {item.total_properties_count ?? 0}
-                      </h4>
-                    </td>
-                    <td className="px-4 p-3 text-primary cst-cursor">
-                      <h4
-                        onClick={() => goToPartnerListings(item, "Approved")}
-                      >
-                        {item.approved_properties_count ?? 0}
-                      </h4>
-                    </td>
-                    <td className="px-4 p-3 text-primary cst-cursor">
-                      <h4 onClick={() => goToPartnerListings(item, "Pending")}>
-                        {item.pending_properties_count ?? 0}
-                      </h4>
-                    </td>
-                    <td className="px-4 p-3 text-primary cst-cursor">
-                      <h4
-                        onClick={() => goToPartnerListings(item, "Declined")}
-                      >
-                        {item.declined_properties_count ?? 0}
-                      </h4>
-                    </td>
-                    <td className="px-4 p-3 text-primary cst-cursor">
-                      <h4
-                        onClick={() => goToPartnerListings(item, "unmapped")}
-                      >
-                        {item.unmapped_properties_count ?? 0}
-                      </h4>
-                    </td>
-                    <td className="px-4 p-3">
-                      <h4>
-                        {item.createdAt
-                          ? String(item.createdAt).slice(0, 10)
-                          : ""}
-                      </h4>
-                    </td>
-                  </tr>
-                ))}
-                {!isLoading && partners.length === 0 && (
-                  <tr>
-                    <td
-                      colSpan={columns.length}
-                      className="px-4 p-3 text-center"
+                {isLoading &&
+                  Array.from({ length: 6 }).map((_, i) => (
+                    <tr key={`skeleton-${i}`}>
+                      <td className="serial">
+                        <span className="skeleton-block" style={{ width: 22 }} />
+                      </td>
+                      <td>
+                        <span className="skeleton-block" style={{ width: 180 }} />
+                      </td>
+                      <td>
+                        <span className="skeleton-block" style={{ width: 220 }} />
+                      </td>
+                      {[0, 1, 2, 3, 4].map((k) => (
+                        <td key={k}>
+                          <span className="skeleton-pill" />
+                        </td>
+                      ))}
+                      <td>
+                        <span className="skeleton-block" style={{ width: 78 }} />
+                      </td>
+                      <td />
+                    </tr>
+                  ))}
+
+                {!isLoading &&
+                  partners.map((item, index) => (
+                    <tr
+                      key={item._id || `${item.accountId}-${index}`}
+                      onClick={() => goToPartnerListings(item)}
                     >
-                      <h4>No partners found.</h4>
+                      <td className="serial" data-label="#">
+                        {serialBase + index + 1}
+                      </td>
+                      <td className="pm-name" data-label="Partner Name" title={item.pmName || ""}>
+                        {item.pmName || "—"}
+                      </td>
+                      <td className="account-id" data-label="Account ID" title={item.accountId || ""}>
+                        {item.accountId || ""}
+                      </td>
+                      <td data-label="Total">
+                        <CountPill
+                          variant="total"
+                          value={item.total_properties_count}
+                          onClick={() => goToPartnerListings(item)}
+                        />
+                      </td>
+                      <td data-label="Approved">
+                        <CountPill
+                          variant="approved"
+                          value={item.approved_properties_count}
+                          onClick={() => goToPartnerListings(item, "Approved")}
+                        />
+                      </td>
+                      <td data-label="Pending">
+                        <CountPill
+                          variant="pending"
+                          value={item.pending_properties_count}
+                          onClick={() => goToPartnerListings(item, "Pending")}
+                        />
+                      </td>
+                      <td data-label="Declined">
+                        <CountPill
+                          variant="declined"
+                          value={item.declined_properties_count}
+                          onClick={() => goToPartnerListings(item, "Declined")}
+                        />
+                      </td>
+                      <td data-label="Unmapped">
+                        <CountPill
+                          variant="unmapped"
+                          value={item.unmapped_properties_count}
+                          onClick={() => goToPartnerListings(item, "unmapped")}
+                        />
+                      </td>
+                      <td className="onboarded" data-label="Onboarded">
+                        {item.createdAt ? String(item.createdAt).slice(0, 10) : "—"}
+                      </td>
+                      <td className="arrow-cell" aria-hidden="true">
+                        <FiChevronRight className="row-arrow" />
+                      </td>
+                    </tr>
+                  ))}
+
+                {showEmpty && (
+                  <tr>
+                    <td colSpan={10} style={{ padding: 0 }}>
+                      <div className="empty-state">
+                        <div className="empty-state-icon">
+                          <FiUsers />
+                        </div>
+                        <h3 className="empty-state-title">No partners found</h3>
+                        <p className="empty-state-hint">
+                          {hasActiveFilters
+                            ? "Try clearing your search or changing the sort."
+                            : "There are no partners in this cohort yet."}
+                        </p>
+                        {hasActiveFilters && (
+                          <button
+                            type="button"
+                            className="empty-state-action"
+                            onClick={resetAllFilters}
+                          >
+                            Clear filters
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 )}
               </tbody>
             </table>
           </div>
+
+          {totalPartners > 0 && (
+            <div className="partners-card-footer">
+              <Paging
+                perPage={constants.PAGING_PARTNERS_SIZE}
+                totalItems={totalPartners}
+                currentPage={pageNumber}
+                onChangePage={onChangePage}
+              />
+              <div
+                style={{
+                  textAlign: "right",
+                  fontSize: "0.78rem",
+                  color: "#6b7280",
+                  marginTop: 6,
+                }}
+              >
+                Displaying {partnersPagingFrom}–{partnersPagingTo} of {totalPartners}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </Layout>

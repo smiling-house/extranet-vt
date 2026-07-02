@@ -2,6 +2,9 @@ export const PATH_Welcome = '/welcome';
 export const PATH_SIGNUP = '/signup';
 export const PATH_SIGNOUT = 'signOut';
 export const PATH_HOME = '/home';
+// Admin landing page — read-only totals overview. Wired in pages/index.jsx
+// and the Sidebar's admin menu group.
+export const PATH_DASHBOARD = '/dashboard';
 export const PATH_QR = '/qr';
 export const PATH_LOGIN = '/login';
 export const PATH_ADMIN_LOGIN = '/adminlogin';
@@ -88,7 +91,7 @@ const constants = {
 	ENV: 'LOCAL',
 	BASE_URL: 'https://backend.villatracker.com',
 	//SHUB_URL: 'http://localhost:3331',
-	SHUB_URL: 'https://api.villatracker.ch',
+	SHUB_URL: 'https://api.villatracker.com',
 	//BASE_URL: 'http://localhost:8080',
 	BASE_URL2: 'https://vt-backend-8zwvrrlxf-smiling-house.vercel.app',
 	BASE_URL1: 'http://vtbackend-env.eba-b3vxhzrg.us-east-2.elasticbeanstalk.com',

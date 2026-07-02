@@ -40,7 +40,12 @@
   padding-top: 70px;
 }
 
-// Mobile hamburger — opens the full-screen modal menu
+// Hamburger visibility rules
+//   * mobile (< 768px): always shown — the sidebar is full-screen overlay
+//     and the burger is the only entry point.
+//   * desktop (≥ 768px): shown ONLY when the sidebar is closed. When the
+//     sidebar is open on desktop, its own `«` collapse control handles
+//     hiding; showing the burger too would be duplicate noise.
 .topbar-burger {
   background: rgba(255, 255, 255, 0.12);
   border: 1px solid rgba(255, 255, 255, 0.18);
@@ -56,6 +61,7 @@
   cursor: pointer;
   flex-shrink: 0;
   padding: 0;
+  transition: background 0.15s ease, opacity 0.2s ease, transform 0.2s ease;
 
   span {
     display: block;
@@ -66,4 +72,10 @@
   }
 
   &:hover { background: rgba(255, 255, 255, 0.22); }
+}
+
+@media (min-width: 768px) {
+  .topbar-burger.topbar-burger--sidebar-open {
+    display: none;
+  }
 }

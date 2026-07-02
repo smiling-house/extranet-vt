@@ -1,0 +1,194 @@
+// -------------------------------------------------------------------------
+// Hostaway-specific overlays on top of PartnersListView.scss.
+// Only what differs (purple hero accent, big H badge, row action buttons,
+// status pill/dot, actions-cell mobile stacking).
+// -------------------------------------------------------------------------
+
+.partners-hostaway {
+  // Purple hero icon (matches the "H" sidebar badge tint).
+  .page-hero-icon--purple {
+    background: rgba(168, 85, 247, 0.20);
+    color: #d8b4fe;
+  }
+
+  // The stylised "H" that replaces the FiUsers glyph in the hero.
+  .hostaway-h-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 800;
+    letter-spacing: 0;
+    background: rgba(168, 85, 247, 0.10);
+    color: #d8b4fe;
+
+    &.lg {
+      width: 44px;
+      height: 44px;
+      font-size: 1.4rem;
+      background: rgba(168, 85, 247, 0.12);
+      color: #a855f7;
+    }
+  }
+
+  // Header-right Connect CTA in the toolbar.
+  .hostaway-connect-btn {
+    appearance: none;
+    background: #192C3D;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 10px 16px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    box-shadow: 0 1px 3px rgba(25, 44, 61, 0.35);
+    transition: background 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+    font-family: inherit;
+    flex-shrink: 0;
+
+    &:hover {
+      background: #11202d;
+      transform: translateY(-1px);
+      box-shadow: 0 3px 8px rgba(25, 44, 61, 0.35);
+    }
+    &:active { transform: translateY(0); }
+    &:focus-visible {
+      outline: 2px solid #44C8F5;
+      outline-offset: 2px;
+    }
+
+    @media (max-width: 900px) {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+
+  // Clickable Account-ID cell — subtle underline hint on hover.
+  .hostaway-clickable {
+    cursor: pointer;
+    color: #192C3D;
+    font-weight: 600;
+    transition: color 0.12s ease;
+    &:hover { color: #0369a1; text-decoration: underline; }
+  }
+
+  // Muted cell placeholder.
+  .muted {
+    color: #cbd5e1;
+    font-size: 0.85rem;
+  }
+
+  // Row action buttons (Sync now, Booking demo, chevron).
+  .actions-cell {
+    white-space: nowrap;
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    justify-content: flex-end;
+  }
+
+  .hostaway-action-btn {
+    appearance: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    border-radius: 7px;
+    cursor: pointer;
+    transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease, transform 0.1s ease;
+    font-family: inherit;
+    white-space: nowrap;
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    &.primary {
+      background: #192C3D;
+      color: #fff;
+      border: 1px solid #192C3D;
+      &:hover:not(:disabled) { background: #11202d; }
+    }
+
+    &.outline {
+      background: #fff;
+      color: #192C3D;
+      border: 1px solid #d1d5db;
+      &:hover { border-color: #192C3D; background: #f9fafb; }
+    }
+
+    &.icon-only {
+      background: transparent;
+      color: #cbd5e1;
+      border: none;
+      padding: 4px;
+      &:hover { color: #192C3D; transform: translateX(2px); }
+    }
+
+    // Rotating refresh icon while a sync is running.
+    .spinning {
+      animation: hostaway-spin 0.9s linear infinite;
+    }
+  }
+
+  // Sync-status coloured pill.
+  .hostaway-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    border: 1px solid transparent;
+
+    .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: currentColor;
+      flex-shrink: 0;
+    }
+
+    &--ok       { background: rgba(16, 65, 9, 0.10);   color: #104109; border-color: rgba(16, 65, 9, 0.28); }
+    &--warn     { background: rgba(245, 158, 11, 0.10); color: #92400e; border-color: rgba(245, 158, 11, 0.28); }
+    &--never    { background: rgba(148, 163, 184, 0.14); color: #64748b; border-color: rgba(148, 163, 184, 0.30); }
+    &--unknown  { background: rgba(148, 163, 184, 0.10); color: #94a3b8; border-color: rgba(148, 163, 184, 0.24); }
+  }
+
+  // Mobile: the actions cell needs to break onto its own row and use the
+  // full width so the buttons don't get cramped.
+  @media (max-width: 768px) {
+    table.partners-table tbody tr td.actions-cell {
+      justify-content: flex-start;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 12px 0 4px;
+      &::before { display: none; }
+
+      .hostaway-action-btn {
+        flex: 1 1 auto;
+        justify-content: center;
+        min-height: 36px;
+      }
+      .hostaway-action-btn.icon-only {
+        flex: 0 0 40px;
+      }
+    }
+  }
+}
+
+@keyframes hostaway-spin {
+  to { transform: rotate(360deg); }
+}
