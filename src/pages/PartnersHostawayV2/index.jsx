@@ -18,7 +18,15 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useHistory } from "react-router-dom";
 import swal from "sweetalert";
 import { IoIosSearch, IoMdClose } from "react-icons/io";
-import { FiChevronRight, FiRefreshCw, FiPlus, FiPlayCircle } from "react-icons/fi";
+import {
+  FiChevronRight,
+  FiRefreshCw,
+  FiPlus,
+  FiPlayCircle,
+  FiList,
+  FiGrid,
+  FiColumns,
+} from "react-icons/fi";
 
 import Layout from "../../components/Layout";
 import AuthService from "../../services/auth.service";
@@ -27,6 +35,15 @@ import BookingDemo from "../PartnersHostaway/BookingDemo";
 import { PATH_LISTINGS } from "../../Util/constants";
 import "../PartnersListView/PartnersListView.scss";
 import "./PartnersHostawayV2.scss";
+
+// Same view modes + localStorage key as PartnersListView — switching between
+// Guesty PMs / RU PMs / Hostaway PMs remembers your last-chosen layout.
+const VIEW_MODES = [
+  { key: "rows",  label: "Rows",  Icon: FiList },
+  { key: "grid",  label: "Grid",  Icon: FiGrid },
+  { key: "table", label: "Table", Icon: FiColumns },
+];
+const VIEW_MODE_LS_KEY = "partners_view_mode";
 
 const PartnersHostawayV2 = (props) => {
   const {
@@ -46,6 +63,14 @@ const PartnersHostawayV2 = (props) => {
   const [showBookingDemo, setShowBookingDemo] = useState(null);
   const [syncingId, setSyncingId] = useState(null);
   const [searchRaw, setSearchRaw] = useState("");
+  const [viewMode, setViewMode] = useState(() => {
+    const saved = (typeof window !== "undefined") && localStorage.getItem(VIEW_MODE_LS_KEY);
+    return VIEW_MODES.some((m) => m.key === saved) ? saved : "rows";
+  });
+  const changeViewMode = (next) => {
+    setViewMode(next);
+    try { localStorage.setItem(VIEW_MODE_LS_KEY, next); } catch (_) {}
+  };
 
   const loadPartners = async () => {
     setIsLoading(true);
@@ -215,12 +240,137 @@ const PartnersHostawayV2 = (props) => {
             <FiPlus size={16} />
             <span>Connect Hostaway partner</span>
           </button>
+
+          {/* View switcher — same 3 modes as PartnersListView, shared storage key */}
+          <div className="view-switcher" role="tablist" aria-label="View mode">
+            {VIEW_MODES.map((m) => (
+              <button
+                key={m.key}
+                type="button"
+                role="tab"
+                aria-selected={viewMode === m.key}
+                className={viewMode === m.key ? "active" : ""}
+                onClick={() => changeViewMode(m.key)}
+                title={m.label}
+              >
+                <m.Icon size={14} />
+                <span>{m.label}</span>
+              </button>
+            ))}
+          </div>
         </div>
 
-        {/* Table card */}
-        <div className="partners-card">
+        {/* Body — switches by viewMode */}
+        <div className={`partners-card partners-card--${viewMode}`}>
+          {viewMode === "grid" ? (
+            <div className="partners-grid hostaway-grid">
+              {isLoading &&
+                Array.from({ length: 4 }).map((_, i) => (
+                  <div className="partner-card is-skeleton" key={`skel-card-${i}`}>
+                    <span className="skeleton-block" style={{ width: 140, height: 18 }} />
+                    <span className="skeleton-block" style={{ width: 180, height: 12, marginTop: 8 }} />
+                    <span className="skeleton-block" style={{ width: 100, height: 12, marginTop: 6 }} />
+                  </div>
+                ))}
+
+              {!isLoading &&
+                filteredPartners.map((p, idx) => (
+                  <div
+                    className="partner-card hostaway-card"
+                    key={p.accountId}
+                    onClick={() => onViewListings(p)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        onViewListings(p);
+                      }
+                    }}
+                  >
+                    <div className="partner-card-header">
+                      <span className="partner-card-serial">#{idx + 1}</span>
+                      <FiChevronRight className="row-arrow" />
+                    </div>
+                    <h3 className="partner-card-name">{p.accountId}</h3>
+                    <div className="partner-card-accountid">
+                      {p.vtAccountId ? `VT: ${p.vtAccountId}` : "— no VT partner —"}
+                    </div>
+                    <div className="hostaway-card-meta">
+                      <div>
+                        <span className="hostaway-card-meta-label">Timezone</span>
+                        <span className="hostaway-card-meta-value">{p.timezone || "—"}</span>
+                      </div>
+                      <div>
+                        <span className="hostaway-card-meta-label">Webhook</span>
+                        <span className="hostaway-card-meta-value">{p.webhookId ? "Yes" : "—"}</span>
+                      </div>
+                      <div>
+                        <span className="hostaway-card-meta-label">Last Sync</span>
+                        <span className="hostaway-card-meta-value">
+                          {p.lastSyncAt ? new Date(p.lastSyncAt).toLocaleDateString() : "Never"}
+                        </span>
+                      </div>
+                    </div>
+                    <div>
+                      <SyncStatus status={p.lastSyncStatus} lastSyncAt={p.lastSyncAt} />
+                    </div>
+                    <div
+                      className="hostaway-card-actions"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <button
+                        className="hostaway-action-btn primary"
+                        disabled={syncingId === p.accountId}
+                        onClick={() => onSyncNow(p.accountId)}
+                      >
+                        <FiRefreshCw
+                          size={13}
+                          className={syncingId === p.accountId ? "spinning" : ""}
+                        />
+                        {syncingId === p.accountId ? "Syncing…" : "Sync now"}
+                      </button>
+                      <button
+                        className="hostaway-action-btn outline"
+                        onClick={() => setShowBookingDemo(p)}
+                      >
+                        <FiPlayCircle size={13} />
+                        Booking demo
+                      </button>
+                    </div>
+                  </div>
+                ))}
+
+              {!isLoading && filteredPartners.length === 0 && (
+                <div className="empty-state partners-grid-empty">
+                  <div className="empty-state-icon">
+                    <span className="hostaway-h-badge lg">H</span>
+                  </div>
+                  <h3 className="empty-state-title">
+                    {searchRaw
+                      ? "No partners match your search"
+                      : "No Hostaway partners onboarded yet"}
+                  </h3>
+                  <p className="empty-state-hint">
+                    {searchRaw
+                      ? "Try clearing the search to see everyone."
+                      : "Click Connect Hostaway partner above to onboard one."}
+                  </p>
+                  {searchRaw && (
+                    <button
+                      type="button"
+                      className="empty-state-action"
+                      onClick={() => setSearchRaw("")}
+                    >
+                      Clear search
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          ) : (
           <div className="partners-table-scroll">
-            <table className="partners-table hostaway-table">
+            <table className={`partners-table hostaway-table ${viewMode === "table" ? "partners-table--compact" : ""}`}>
               <thead>
                 <tr>
                   <th style={{ width: 44 }}>#</th>
@@ -376,6 +526,7 @@ const PartnersHostawayV2 = (props) => {
               </tbody>
             </table>
           </div>
+          )}
         </div>
       </div>
 

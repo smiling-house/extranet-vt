@@ -26,7 +26,14 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useHistory } from "react-router-dom";
 import axios from "axios";
 import { IoIosSearch, IoMdClose } from "react-icons/io";
-import { FiUsers, FiChevronRight, FiChevronLeft } from "react-icons/fi";
+import {
+  FiUsers,
+  FiChevronRight,
+  FiChevronLeft,
+  FiList,
+  FiGrid,
+  FiColumns,
+} from "react-icons/fi";
 
 import Layout from "../../components/Layout/index.js";
 import Paging from "../../components/Paging";
@@ -80,6 +87,15 @@ const SORT_OPTIONS = [
   { key: "Declined", label: "Declined" },
   { key: "Unmapped", label: "Unmapped" },
 ];
+
+// View-switcher modes. Same key names Listings2 uses so the icons + concept
+// carry over: rows (default), grid, table (compact).
+const VIEW_MODES = [
+  { key: "rows",  label: "Rows",  Icon: FiList },
+  { key: "grid",  label: "Grid",  Icon: FiGrid },
+  { key: "table", label: "Table", Icon: FiColumns },
+];
+const VIEW_MODE_LS_KEY = "partners_view_mode";
 
 // Small helper — pill for a count with variant + zero styling.
 function CountPill({ variant, value, onClick }) {
@@ -137,6 +153,18 @@ const PartnersListView = (props) => {
   const [totalPartners, setTotalPartners] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [isRefetching, setIsRefetching] = useState(false);
+
+  // View mode — persisted across page navigation so switching between
+  // Guesty PMs → RU PMs etc. remembers your last choice. Mirrors the pattern
+  // Listings2 uses (single shared key).
+  const [viewMode, setViewMode] = useState(() => {
+    const saved = (typeof window !== "undefined") && localStorage.getItem(VIEW_MODE_LS_KEY);
+    return VIEW_MODES.some((m) => m.key === saved) ? saved : "rows";
+  });
+  const changeViewMode = (next) => {
+    setViewMode(next);
+    try { localStorage.setItem(VIEW_MODE_LS_KEY, next); } catch (_) {}
+  };
 
   const initialPage = (() => {
     const qs = new URLSearchParams(window.location.search);
@@ -395,139 +423,263 @@ const PartnersListView = (props) => {
               ))}
             </div>
           </div>
+
+          {/* View switcher — mirrors the Rows/Grid/Table toggle on /listings */}
+          <div className="view-switcher" role="tablist" aria-label="View mode">
+            {VIEW_MODES.map((m) => (
+              <button
+                key={m.key}
+                type="button"
+                role="tab"
+                aria-selected={viewMode === m.key}
+                className={viewMode === m.key ? "active" : ""}
+                onClick={() => changeViewMode(m.key)}
+                title={m.label}
+              >
+                <m.Icon size={14} />
+                <span>{m.label}</span>
+              </button>
+            ))}
+          </div>
         </div>
 
-        {/* Table card */}
-        <div className="partners-card">
-          <div className="partners-table-scroll">
-            <table className="partners-table">
-              <thead>
-                <tr>
-                  <th style={{ width: 44 }}>#</th>
-                  <th>Partner Name</th>
-                  <th>Account ID</th>
-                  <th style={{ width: 90 }}>Total</th>
-                  <th style={{ width: 100 }}>Approved</th>
-                  <th style={{ width: 100 }}>Pending</th>
-                  <th style={{ width: 100 }}>Declined</th>
-                  <th style={{ width: 100 }}>Unmapped</th>
-                  <th style={{ width: 110 }}>Onboarded</th>
-                  <th style={{ width: 32 }} aria-label="Open" />
-                </tr>
-              </thead>
-              <tbody>
-                {isLoading &&
-                  Array.from({ length: 6 }).map((_, i) => (
-                    <tr key={`skeleton-${i}`}>
-                      <td className="serial">
-                        <span className="skeleton-block" style={{ width: 22 }} />
-                      </td>
-                      <td>
-                        <span className="skeleton-block" style={{ width: 180 }} />
-                      </td>
-                      <td>
-                        <span className="skeleton-block" style={{ width: 220 }} />
-                      </td>
+        {/* Body — switches by viewMode. Card wrapper unchanged (same border,
+            shadow, radius) so paging + hero visuals stay consistent. */}
+        <div className={`partners-card partners-card--${viewMode}`}>
+          {viewMode === "grid" ? (
+            /* -------- GRID -------- */
+            <div className="partners-grid">
+              {isLoading &&
+                Array.from({ length: 6 }).map((_, i) => (
+                  <div className="partner-card is-skeleton" key={`skel-card-${i}`}>
+                    <span className="skeleton-block" style={{ width: 160, height: 18 }} />
+                    <span className="skeleton-block" style={{ width: 200, height: 12, marginTop: 8 }} />
+                    <div className="partner-card-pills">
                       {[0, 1, 2, 3, 4].map((k) => (
-                        <td key={k}>
-                          <span className="skeleton-pill" />
-                        </td>
+                        <span key={k} className="skeleton-pill" />
                       ))}
-                      <td>
-                        <span className="skeleton-block" style={{ width: 78 }} />
-                      </td>
-                      <td />
-                    </tr>
-                  ))}
+                    </div>
+                  </div>
+                ))}
 
-                {!isLoading &&
-                  partners.map((item, index) => (
-                    <tr
-                      key={item._id || `${item.accountId}-${index}`}
-                      onClick={() => goToPartnerListings(item)}
+              {!isLoading &&
+                partners.map((item, index) => (
+                  <div
+                    className="partner-card"
+                    key={item._id || `${item.accountId}-${index}`}
+                    onClick={() => goToPartnerListings(item)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        goToPartnerListings(item);
+                      }
+                    }}
+                  >
+                    <div className="partner-card-header">
+                      <span className="partner-card-serial">#{serialBase + index + 1}</span>
+                      <FiChevronRight className="row-arrow" />
+                    </div>
+                    <h3 className="partner-card-name" title={item.pmName || ""}>
+                      {item.pmName || "—"}
+                    </h3>
+                    <div className="partner-card-accountid" title={item.accountId || ""}>
+                      {item.accountId || ""}
+                    </div>
+                    <div className="partner-card-pills">
+                      <CountPill
+                        variant="total"
+                        value={item.total_properties_count}
+                        onClick={() => goToPartnerListings(item)}
+                      />
+                      <CountPill
+                        variant="approved"
+                        value={item.approved_properties_count}
+                        onClick={() => goToPartnerListings(item, "Approved")}
+                      />
+                      <CountPill
+                        variant="pending"
+                        value={item.pending_properties_count}
+                        onClick={() => goToPartnerListings(item, "Pending")}
+                      />
+                      <CountPill
+                        variant="declined"
+                        value={item.declined_properties_count}
+                        onClick={() => goToPartnerListings(item, "Declined")}
+                      />
+                      <CountPill
+                        variant="unmapped"
+                        value={item.unmapped_properties_count}
+                        onClick={() => goToPartnerListings(item, "unmapped")}
+                      />
+                    </div>
+                    <div className="partner-card-footer">
+                      Onboarded {item.createdAt ? String(item.createdAt).slice(0, 10) : "—"}
+                    </div>
+                  </div>
+                ))}
+
+              {showEmpty && (
+                <div className="empty-state partners-grid-empty">
+                  <div className="empty-state-icon">
+                    <FiUsers />
+                  </div>
+                  <h3 className="empty-state-title">No partners found</h3>
+                  <p className="empty-state-hint">
+                    {hasActiveFilters
+                      ? "Try clearing your search or changing the sort."
+                      : "There are no partners in this cohort yet."}
+                  </p>
+                  {hasActiveFilters && (
+                    <button
+                      type="button"
+                      className="empty-state-action"
+                      onClick={resetAllFilters}
                     >
-                      <td className="serial" data-label="#">
-                        {serialBase + index + 1}
-                      </td>
-                      <td className="pm-name" data-label="Partner Name" title={item.pmName || ""}>
-                        {item.pmName || "—"}
-                      </td>
-                      <td className="account-id" data-label="Account ID" title={item.accountId || ""}>
-                        {item.accountId || ""}
-                      </td>
-                      <td data-label="Total">
-                        <CountPill
-                          variant="total"
-                          value={item.total_properties_count}
-                          onClick={() => goToPartnerListings(item)}
-                        />
-                      </td>
-                      <td data-label="Approved">
-                        <CountPill
-                          variant="approved"
-                          value={item.approved_properties_count}
-                          onClick={() => goToPartnerListings(item, "Approved")}
-                        />
-                      </td>
-                      <td data-label="Pending">
-                        <CountPill
-                          variant="pending"
-                          value={item.pending_properties_count}
-                          onClick={() => goToPartnerListings(item, "Pending")}
-                        />
-                      </td>
-                      <td data-label="Declined">
-                        <CountPill
-                          variant="declined"
-                          value={item.declined_properties_count}
-                          onClick={() => goToPartnerListings(item, "Declined")}
-                        />
-                      </td>
-                      <td data-label="Unmapped">
-                        <CountPill
-                          variant="unmapped"
-                          value={item.unmapped_properties_count}
-                          onClick={() => goToPartnerListings(item, "unmapped")}
-                        />
-                      </td>
-                      <td className="onboarded" data-label="Onboarded">
-                        {item.createdAt ? String(item.createdAt).slice(0, 10) : "—"}
-                      </td>
-                      <td className="arrow-cell" aria-hidden="true">
-                        <FiChevronRight className="row-arrow" />
+                      Clear filters
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          ) : (
+            /* -------- ROWS (default) and TABLE (compact) share the table markup;
+                 SCSS uses .partners-table--compact to tighten TABLE mode. -------- */
+            <div className="partners-table-scroll">
+              <table className={`partners-table ${viewMode === "table" ? "partners-table--compact" : ""}`}>
+                <thead>
+                  <tr>
+                    <th style={{ width: 44 }}>#</th>
+                    <th>Partner Name</th>
+                    <th>Account ID</th>
+                    <th style={{ width: 90 }}>Total</th>
+                    <th style={{ width: 100 }}>Approved</th>
+                    <th style={{ width: 100 }}>Pending</th>
+                    <th style={{ width: 100 }}>Declined</th>
+                    <th style={{ width: 100 }}>Unmapped</th>
+                    <th style={{ width: 110 }}>Onboarded</th>
+                    {viewMode !== "table" && (
+                      <th style={{ width: 32 }} aria-label="Open" />
+                    )}
+                  </tr>
+                </thead>
+                <tbody>
+                  {isLoading &&
+                    Array.from({ length: 6 }).map((_, i) => (
+                      <tr key={`skeleton-${i}`}>
+                        <td className="serial">
+                          <span className="skeleton-block" style={{ width: 22 }} />
+                        </td>
+                        <td>
+                          <span className="skeleton-block" style={{ width: 180 }} />
+                        </td>
+                        <td>
+                          <span className="skeleton-block" style={{ width: 220 }} />
+                        </td>
+                        {[0, 1, 2, 3, 4].map((k) => (
+                          <td key={k}>
+                            <span className="skeleton-pill" />
+                          </td>
+                        ))}
+                        <td>
+                          <span className="skeleton-block" style={{ width: 78 }} />
+                        </td>
+                        {viewMode !== "table" && <td />}
+                      </tr>
+                    ))}
+
+                  {!isLoading &&
+                    partners.map((item, index) => (
+                      <tr
+                        key={item._id || `${item.accountId}-${index}`}
+                        onClick={() => goToPartnerListings(item)}
+                      >
+                        <td className="serial" data-label="#">
+                          {serialBase + index + 1}
+                        </td>
+                        <td className="pm-name" data-label="Partner Name" title={item.pmName || ""}>
+                          {item.pmName || "—"}
+                        </td>
+                        <td className="account-id" data-label="Account ID" title={item.accountId || ""}>
+                          {item.accountId || ""}
+                        </td>
+                        <td data-label="Total">
+                          <CountPill
+                            variant="total"
+                            value={item.total_properties_count}
+                            onClick={() => goToPartnerListings(item)}
+                          />
+                        </td>
+                        <td data-label="Approved">
+                          <CountPill
+                            variant="approved"
+                            value={item.approved_properties_count}
+                            onClick={() => goToPartnerListings(item, "Approved")}
+                          />
+                        </td>
+                        <td data-label="Pending">
+                          <CountPill
+                            variant="pending"
+                            value={item.pending_properties_count}
+                            onClick={() => goToPartnerListings(item, "Pending")}
+                          />
+                        </td>
+                        <td data-label="Declined">
+                          <CountPill
+                            variant="declined"
+                            value={item.declined_properties_count}
+                            onClick={() => goToPartnerListings(item, "Declined")}
+                          />
+                        </td>
+                        <td data-label="Unmapped">
+                          <CountPill
+                            variant="unmapped"
+                            value={item.unmapped_properties_count}
+                            onClick={() => goToPartnerListings(item, "unmapped")}
+                          />
+                        </td>
+                        <td className="onboarded" data-label="Onboarded">
+                          {item.createdAt ? String(item.createdAt).slice(0, 10) : "—"}
+                        </td>
+                        {viewMode !== "table" && (
+                          <td className="arrow-cell" aria-hidden="true">
+                            <FiChevronRight className="row-arrow" />
+                          </td>
+                        )}
+                      </tr>
+                    ))}
+
+                  {showEmpty && (
+                    <tr>
+                      <td colSpan={viewMode === "table" ? 9 : 10} style={{ padding: 0 }}>
+                        <div className="empty-state">
+                          <div className="empty-state-icon">
+                            <FiUsers />
+                          </div>
+                          <h3 className="empty-state-title">No partners found</h3>
+                          <p className="empty-state-hint">
+                            {hasActiveFilters
+                              ? "Try clearing your search or changing the sort."
+                              : "There are no partners in this cohort yet."}
+                          </p>
+                          {hasActiveFilters && (
+                            <button
+                              type="button"
+                              className="empty-state-action"
+                              onClick={resetAllFilters}
+                            >
+                              Clear filters
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
-                  ))}
-
-                {showEmpty && (
-                  <tr>
-                    <td colSpan={10} style={{ padding: 0 }}>
-                      <div className="empty-state">
-                        <div className="empty-state-icon">
-                          <FiUsers />
-                        </div>
-                        <h3 className="empty-state-title">No partners found</h3>
-                        <p className="empty-state-hint">
-                          {hasActiveFilters
-                            ? "Try clearing your search or changing the sort."
-                            : "There are no partners in this cohort yet."}
-                        </p>
-                        {hasActiveFilters && (
-                          <button
-                            type="button"
-                            className="empty-state-action"
-                            onClick={resetAllFilters}
-                          >
-                            Clear filters
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
 
           {totalPartners > 0 && (
             <div className="partners-card-footer">

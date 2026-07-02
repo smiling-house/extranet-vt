@@ -344,6 +344,57 @@
   }
 
   // ---------------------------------------------------------------------
+  // View switcher (Rows / Grid / Table) — mirrors /listings pattern
+  // ---------------------------------------------------------------------
+  .view-switcher {
+    display: inline-flex;
+    background: #f3f4f6;
+    border-radius: 10px;
+    padding: 3px;
+    gap: 2px;
+    flex-shrink: 0;
+
+    button {
+      appearance: none;
+      border: none;
+      background: transparent;
+      color: #4b5563;
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+      font-family: inherit;
+      white-space: nowrap;
+
+      &:hover {
+        color: #111827;
+        background: rgba(255, 255, 255, 0.7);
+      }
+
+      &.active {
+        background: #192C3D;
+        color: #fff;
+        box-shadow: 0 1px 3px rgba(25, 44, 61, 0.35);
+
+        &:hover {
+          background: #11202d;
+          color: #fff;
+        }
+      }
+    }
+
+    // Hide the label at narrow widths — icons alone suffice.
+    @media (max-width: 640px) {
+      button span { display: none; }
+    }
+  }
+
+  // ---------------------------------------------------------------------
   // Table card
   // ---------------------------------------------------------------------
   .partners-card {
@@ -509,6 +560,159 @@
         box-shadow: none;
       }
     }
+  }
+
+  // ---------------------------------------------------------------------
+  // TABLE mode (compact) — dense rows, plain numbers instead of pills,
+  // no arrow column. Same markup as Rows but tighter.
+  // ---------------------------------------------------------------------
+  table.partners-table--compact {
+    tbody tr {
+      td {
+        padding: 8px 12px;
+        font-size: 0.82rem;
+      }
+      td.pm-name { font-weight: 600; }
+      td.account-id { font-size: 0.72rem; }
+      td.onboarded { font-size: 0.78rem; }
+
+      // In compact mode, pills become plain numeric cells — less visual
+      // noise so you can scan many rows at once.
+      .status-pill {
+        background: transparent;
+        border-color: transparent;
+        padding: 0;
+        min-width: 0;
+        color: #111827;
+        font-weight: 700;
+        font-size: 0.85rem;
+        border-radius: 0;
+
+        &.is-zero { color: #cbd5e1; font-weight: 500; }
+        &:hover { transform: none; box-shadow: none; }
+      }
+    }
+  }
+
+  // ---------------------------------------------------------------------
+  // GRID mode — card grid, one card per PM. Whole card clickable.
+  // Undo the outer .partners-card chrome when in grid mode; each card
+  // brings its own border + shadow.
+  // ---------------------------------------------------------------------
+  .partners-card--grid {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    overflow: visible;
+  }
+
+  .partners-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    padding: 0;
+
+    @media (max-width: 1100px) { grid-template-columns: repeat(2, 1fr); }
+    @media (max-width: 640px)  { grid-template-columns: 1fr; }
+  }
+
+  .partner-card {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    padding: 16px 18px;
+    cursor: pointer;
+    transition: box-shadow 0.15s ease, transform 0.15s ease, border-color 0.15s ease;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    outline: none;
+
+    &:hover {
+      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.08);
+      transform: translateY(-2px);
+      border-color: #cbd5e1;
+
+      .row-arrow {
+        color: #192C3D;
+        transform: translateX(2px);
+      }
+    }
+
+    &:focus-visible {
+      border-color: #44C8F5;
+      box-shadow: 0 0 0 3px rgba(68, 200, 245, 0.20);
+    }
+
+    &.is-skeleton {
+      cursor: default;
+      &:hover { transform: none; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04); }
+    }
+  }
+
+  .partner-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: -4px;
+  }
+
+  .partner-card-serial {
+    font-size: 0.72rem;
+    color: #9ca3af;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .partner-card .row-arrow {
+    color: #cbd5e1;
+    font-size: 1.1rem;
+    transition: color 0.15s ease, transform 0.15s ease;
+  }
+
+  .partner-card-name {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #111827;
+    margin: 0;
+    letter-spacing: -0.01em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+
+  .partner-card-accountid {
+    font-family: 'JetBrains Mono', 'Menlo', 'Consolas', monospace;
+    font-size: 0.72rem;
+    color: #6b7280;
+    word-break: break-all;
+    line-height: 1.35;
+  }
+
+  .partner-card-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 4px;
+
+    .status-pill { min-width: 40px; font-size: 0.75rem; }
+  }
+
+  .partner-card-footer {
+    font-size: 0.75rem;
+    color: #9ca3af;
+    padding-top: 8px;
+    margin-top: auto;
+    border-top: 1px solid #f0f4f7;
+    font-weight: 500;
+  }
+
+  .partners-grid-empty {
+    grid-column: 1 / -1;
   }
 
   // ---------------------------------------------------------------------
