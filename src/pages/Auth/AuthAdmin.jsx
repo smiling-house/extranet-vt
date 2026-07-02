@@ -2,8 +2,8 @@ import React, { useEffect, useState } from "react";
 import { validateEmail, } from "../../Util/ValidationUtil.js";
 import Logo from "../../components/Icons/Logo/Logo";
 import brandLogo from "../../assets/logos/vt-extranet-logo.svg";
-import "./Auth.css";
 import "./auth-redesign.css";
+import "./Auth.css";
 import styles from "./Auth.module.scss";
 import { useDispatch } from "react-redux";
 import * as userActions from '../../store/redux/User/actions';
@@ -18,26 +18,26 @@ import NameInput from "../../components/Forms/Fields/NameInput/NameInput";
 import { toast } from "react-toastify";
 import { getStorageValue } from "../../Util/general.js";
 
-import {PATH_PARTNERS} from '../../Util/constants.js'
-
-const Auth = (props) => {
+const AuthAdmin = (props) => {
 
 	return (
 		<>
-			<SignIn />
+			<AdminSignIn />
 		</>
 	);
 };
-export default Auth;
+export default AuthAdmin;
 
 
 
-export const SignIn = () => {
-
-	const partnerLoginEmail = localStorage.getItem('partnerLoginEmail');
-	const partnerLoginAccountId = localStorage.getItem('partnerLoginAccountId');	
+export const AdminSignIn = () => {
 
 	const dispatch = useDispatch();
+
+
+localStorage.removeItem("partnerLogin");
+localStorage.removeItem("partnerName");
+
 
 	const history = useHistory();
 	const [smallScreen, setSmallScreen] = useState(false);
@@ -48,13 +48,6 @@ export const SignIn = () => {
 	const [password, setPassword] = useState('');
 	const [twoFA, setTwoFA] = useState("");
   	const [codeSent, setCodeSent] = useState(false);
-
-
-	const setQrCredentials = () => {
-		setEmail(partnerLoginEmail);
-		setPassword(partnerLoginAccountId);		
-	}
-
 
 	const partnerLogin = getStorageValue('partnerLogin')
 	const [state, setState] = useState({
@@ -73,14 +66,6 @@ export const SignIn = () => {
 		if (result === 'ok') {
 			window.open("/", "_self")
 			console.log('partnerLogin', partnerLogin)
-		}
-	};
-
-	const signupExCallback_CheckPartner = result => {
-		console.log("EX result", result)
-		if (result === 'ok') {
-			window.open(PATH_PARTNERS, "_self")
-			console.log('partnerLogin===', partnerLogin)
 		}
 	};
 
@@ -161,8 +146,9 @@ export const SignIn = () => {
 			dispatch(userActions.signIn(user, chkRememberMe, signupCallback));
 		}
 	};
+
+    
 	const handleSubmitEx = async event => {
-		
 		event.preventDefault();
 		setState({
 			...state,
@@ -226,7 +212,6 @@ export const SignIn = () => {
 			});
 		} else {
 			if(!codeSent) {
-				
 				const user = {
 					email: email,
 					password: password
@@ -234,7 +219,6 @@ export const SignIn = () => {
 				// console.log(user, "user")
 				dispatch(userActions.sendtwoFAcode(user, chkRememberMe, twoFACallback));
 			} else {
-			
 				const user = {
 					email: email,
 					password: password,
@@ -247,79 +231,11 @@ export const SignIn = () => {
 		}
 	};
 
-
-	
-	const handleSubmitEx_CheckPartner = async event => {
-		
-		event.preventDefault();
-		setState({
-			...state,
-			loading: false,
-			error: {}
-		});
-
-		if (email.length === 0) {
-			setState({
-				...state,
-				error: {
-					msg: "Please enter an email",
-					placement: "email",
-				},
-				loading: false,
-			});
-		} else if (!validateEmail(email)) {
-			setState({
-				...state,
-				error: {
-					msg: "Looks like you forgot something",
-					placement: "email",
-				},
-				loading: false,
-			});
-		} else if (password.length === 0) {
-			setState({
-				...state,
-				error: {
-					msg: "Please enter a password/accountId for EXTRANET",
-					placement: "password",
-				},
-				loading: false,
-			});
-		} else if (password.length < 6) {
-			setState({
-				...state,
-				error: {
-					msg: "Password/accountID must be at least 6 characters long",
-					placement: "password",
-				},
-				loading: false,
-			});
-		} 
-		
- 			else {
-			
-				const user = {
-					email: email,
-					password: password,
-				};
-				// console.log(user, "user")
-				//dispatch(userActions.signInEx(user, chkRememberMe, signupExCallback));
-				dispatch(userActions.signInEx_CheckPartner(user, chkRememberMe, signupExCallback_CheckPartner));
-			}		
-
-	};
-
-
 	useEffect(() => {
-
-		setQrCredentials();
-
 		const handleResize = () => setScreenSize(window.innerWidth);
 		window.addEventListener("resize", handleResize);
 		handleResize();
 		return () => window.removeEventListener("resize", handleResize);
-
-
 	}, []);
 
 	useEffect(() => {
@@ -330,8 +246,7 @@ export const SignIn = () => {
 		}
 	}, [screenSize]);
 
-
-
+    
 	return (
 		<div className="auth-split">
 			<div className="auth-left">
@@ -346,14 +261,14 @@ export const SignIn = () => {
 			</div>
 
 			<div className="auth-right">
-				<form className="auth-form" onSubmit={(e) => { e.preventDefault(); setState({ ...state, error: undefined }); handleSubmitEx_CheckPartner(e); }}>
-					<div className="auth-eyebrow">VT Extranet</div>
-					<h2 className="auth-title">Sign in to your account</h2>
-					<p className="auth-desc">Enter your credentials below to continue.</p>
+				<form className="auth-form" onSubmit={(e) => { e.preventDefault(); setState({ ...state, error: undefined }); handleSubmit(e); }}>
+					<div className="auth-eyebrow">VT Extranet · Admin</div>
+					<h2 className="auth-title">Admin sign in</h2>
+					<p className="auth-desc">Enter your admin credentials below to continue.</p>
 
 					{state?.error?.msg && <div className="auth-error">{state.error.msg}</div>}
 
-					<label className="auth-label" htmlFor="auth-email">E-Mail</label>
+					<label className="auth-label" htmlFor="auth-email">Admin E-Mail</label>
 					<input
 						id="auth-email"
 						className="auth-input"
@@ -364,10 +279,7 @@ export const SignIn = () => {
 						autoComplete="username"
 					/>
 
-					<div className="auth-label-row">
-						<label className="auth-label" htmlFor="auth-pw">Password</label>
-						<span className="auth-link" onClick={() => history.push("/forgotPassword")}>Resend access details</span>
-					</div>
+					<label className="auth-label" htmlFor="auth-pw">Admin Password</label>
 					<input
 						id="auth-pw"
 						className="auth-input pw"
@@ -378,20 +290,6 @@ export const SignIn = () => {
 						autoComplete="current-password"
 					/>
 
-					{codeSent && (
-						<>
-							<label className="auth-label" htmlFor="auth-2fa">2FA Code</label>
-							<input
-								id="auth-2fa"
-								className="auth-input pw"
-								type="text"
-								value={twoFA}
-								onChange={(e) => setTwoFA(e.target.value)}
-								placeholder="2FA Code"
-							/>
-						</>
-					)}
-
 					<label className="auth-remember">
 						<input type="checkbox" checked={chkRememberMe} onChange={(e) => setChkRememberMe(e.target.checked)} />
 						Remember me
@@ -400,10 +298,9 @@ export const SignIn = () => {
 					<button type="submit" className="auth-btn" disabled={state.loading}>
 						Log in to Extranet
 					</button>
-
-					<p className="auth-cta">Don't have an account yet? <span onClick={() => history.push("/signup")}>Join us</span></p>
 				</form>
 			</div>
 		</div>
 	);
 }
+
