@@ -95,14 +95,13 @@ const Sidebar = ({ activeMenu, setActiveMenu, handleToggleMenu, showOrHideSideBa
         title: 'Partner Management',
         icon: <FiUsers size={20} />,
         items: [
+          { text: "Guesty PMs", path: PATH_PARTNERS_GUESTY_DH, icon: <MdBusiness size={18} /> },
+          { text: "RU PMs", path: PATH_PARTNERS_RU_DH, icon: <MdBusiness size={18} /> },
           { text: "Guesty SH PMs", path: PATH_PARTNERS_SH, icon: <MdBusiness size={18} /> },
           { text: "Guesty VT PMs", path: PATH_PARTNERS_VT, icon: <MdBusiness size={18} /> },
           { text: "Hostaway PMs", path: PATH_PARTNERS_HOSTAWAY, icon: <MdBusiness size={18} /> },
           { text: "BP PMs (SH)", path: PATH_PARTNERS_BP, icon: <MdBusiness size={18} /> },
           { text: "RU PMs (SH)", path: PATH_PARTNERS_RU, icon: <MdBusiness size={18} /> },
-          { text: "RU/DH source", section: true },
-          { text: "Guesty PMs", path: PATH_PARTNERS_GUESTY_DH, icon: <MdBusiness size={18} /> },
-          { text: "RU PMs", path: PATH_PARTNERS_RU_DH, icon: <MdBusiness size={18} /> },
           { text: "BART PMs", path: PATH_PARTNERS_BART, icon: <MdBusiness size={18} /> },
           { text: "INVENIO PMs", path: PATH_PARTNERS_INVENIO, icon: <MdBusiness size={18} /> },
           { text: "BP PMs", path: PATH_PARTNERS_BOOKINGPAL, icon: <MdBusiness size={18} /> },
@@ -188,28 +187,7 @@ const Sidebar = ({ activeMenu, setActiveMenu, handleToggleMenu, showOrHideSideBa
     
     return (
       <div className={`sidebar-group-items ${isExpanded || hasActiveItem ? 'expanded' : ''}`}>
-        {group.items.map((item, idx) => (
-          item.section
-            ? (
-              <div
-                key={`section-${idx}-${item.text}`}
-                className="sidebar-item sub-item"
-                style={{
-                  opacity: 0.6,
-                  fontSize: '0.72rem',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.05em',
-                  cursor: 'default',
-                  paddingTop: '10px',
-                  paddingBottom: '2px',
-                }}
-              >
-                <div className="sidebar-item-icon" />
-                <span className="sidebar-item-text">— {item.text} —</span>
-              </div>
-            )
-            : renderItem(item.text, item.path, item.icon, true)
-        ))}
+        {group.items.map((item) => renderItem(item.text, item.path, item.icon, true))}
       </div>
     );
   };
