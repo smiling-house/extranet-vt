@@ -303,6 +303,87 @@ localStorage.setItem('extranet-vt-logged-in-role', 'partner');
 	}
 };
 
+// Unified login: a single form decides the role.
+// 1) Try the external-partner flow (the "password" field is a Shub accountId).
+//    If a partner matches, sign in via the shared service account -> role 'partner'.
+// 2) Otherwise fall back to the agent/admin credential login (/agent/login) -> role 'admin'.
+// Callback receives 'partner' | 'admin' | 'failed'. NOTE: the partner half depends on the
+// Shub token in constants.SHUB_TOKEN; if the backend rejects it the partner attempt is
+// caught and we fall through to admin, so admin login keeps working regardless.
+export const signInUnified = (user, chkRememberMe, callback) => {
+	return async (dispatch) => {
+		log.debug("UserActions -> signInUnified -> Enter");
+		if (!user || !user.email || !user.password) {
+			callback('failed');
+			return;
+		}
+
+		// --- Attempt 1: external partner (password treated as accountId) ---
+		try {
+			const shubRequest = axios.create({
+				baseURL: constants.SHUB_URL,
+				headers: {
+					Authorization: constants.SHUB_TOKEN,
+				},
+			});
+			const partnerRes = await shubRequest.get(`local/partners?accountId=${user.password}`,
+				{ accountId: user.password, limit: 200, skip: 0 },
+			);
+			if (partnerRes.data?.success) {
+				const matches = partnerRes.data.partners.filter(
+					(partner) => (partner.accountId === user.password) && (partner.email === user.email)
+				);
+				if (matches.length) {
+					const partner = matches[0];
+					console.log('PARTNER is :', partner);
+					localStorage.setItem("partnerLogin", partner.accountId);
+					localStorage.setItem("partnerName", partner.pmName);
+					localStorage.setItem('extranet-vt-logged-in-role', 'partner');
+
+					const result = await userService.signIn({
+						"email": "tech.smilinghouse@gmail.com",
+						"password": "VT2026",
+					});
+					if (result != null) {
+						localStorage.setItem("agent", JSON.stringify(result.agent));
+						localStorage.setItem("jToken", result.token);
+						localStorage.setItem("id", result.agent._id);
+						localStorage.setItem("agent_id", result.agent.agent_id);
+						localStorage.setItem("agency_id", result.agent.agency_id);
+						await dispatch({
+							type: actionTypes.USER_LOGGED_IN,
+							data: user
+						});
+						callback('partner');
+						return;
+					}
+					localStorage.removeItem('extranet-vt-logged-in-role');
+				}
+			}
+		} catch (e) {
+			console.log('Partner lookup failed, falling back to admin login', e);
+		}
+
+		// --- Attempt 2: agent / admin credential login ---
+		const result = await userService.signIn(user);
+		if (result == null) {
+			callback('failed');
+			return;
+		}
+		localStorage.setItem("agent", JSON.stringify(result.agent));
+		localStorage.setItem("jToken", result.token);
+		localStorage.setItem("id", result.agent._id);
+		localStorage.setItem("agent_id", result.agent.agent_id);
+		localStorage.setItem("agency_id", result.agent.agency_id);
+		localStorage.setItem('extranet-vt-logged-in-role', 'admin');
+		await dispatch({
+			type: actionTypes.USER_LOGGED_IN,
+			data: user
+		});
+		callback('admin');
+	}
+};
+
 export const signUp = (agent, callback) => {
 	return async (dispatch) => {
 		log.debug("UserActions -> signUp -> Enter");

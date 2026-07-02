@@ -43,7 +43,6 @@ export const PATH_LISTINGS_BOOKINGPAL = '/listings-bookingpal';
 export const PATH_PARTNERS_HOSTAWAY = '/partners-hostaway';
 export const PATH_EPARTNERS = '/external-partners';
 
-export const PATH_ADMIN_LOGIN = '/adminlogin';
 
 export const PATH_LISTINGS_BP = '/listings-bp';
 export const PATH_LISTINGS_RU = '/listings-ru';

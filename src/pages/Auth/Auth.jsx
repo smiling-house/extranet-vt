@@ -18,7 +18,7 @@ import NameInput from "../../components/Forms/Fields/NameInput/NameInput";
 import { toast } from "react-toastify";
 import { getStorageValue } from "../../Util/general.js";
 
-import {PATH_PARTNERS} from '../../Util/constants.js'
+import {PATH_PARTNERS, PATH_HOME} from '../../Util/constants.js'
 
 const Auth = (props) => {
 
@@ -77,10 +77,20 @@ export const SignIn = () => {
 	};
 
 	const signupExCallback_CheckPartner = result => {
-		console.log("EX result", result)
-		if (result === 'ok') {
+		console.log("unified login result", result)
+		if (result === 'partner') {
 			window.open(PATH_PARTNERS, "_self")
-			console.log('partnerLogin===', partnerLogin)
+		} else if (result === 'admin') {
+			window.open(PATH_HOME, "_self")
+		} else {
+			setState({
+				...state,
+				error: {
+					msg: "That email and password combination is incorrect.",
+					placement: "email",
+				},
+				loading: false,
+			});
 		}
 	};
 
@@ -304,7 +314,7 @@ export const SignIn = () => {
 				};
 				// console.log(user, "user")
 				//dispatch(userActions.signInEx(user, chkRememberMe, signupExCallback));
-				dispatch(userActions.signInEx_CheckPartner(user, chkRememberMe, signupExCallback_CheckPartner));
+				dispatch(userActions.signInUnified(user, chkRememberMe, signupExCallback_CheckPartner));
 			}		
 
 	};

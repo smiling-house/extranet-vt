@@ -4,7 +4,6 @@ import * as userActions from "../store/redux/User/actions";
 import Auth from "./Auth/Auth";
 import Qr from "./Auth/Qr";
 
-import AuthAdmin from "./Auth/AuthAdmin";
 
 import ResetPasswordPage from "./ResetPasswordPage/ResetPasswordPage";
 import SignupThanks from "./SignupThanks";
@@ -57,7 +56,6 @@ import {
   PATH_PARTNERS_RU,
   PATH_EPARTNERS,
   PATH_ADMIN,
-  PATH_ADMIN_LOGIN,
   PATH_LISTINGS,
   PATH_DUPLICATED_LISTINGS,
   PATH_TASKS,
@@ -255,9 +253,7 @@ if(partnerAccountId) {
 
 
   useEffect(() => {
-    if(location.pathname !== PATH_ADMIN_LOGIN) { //For extranet /adminlogin page to load
-      getProfile();
-    }
+    getProfile();
   }, []);
 
   useEffect(() => {
@@ -307,9 +303,6 @@ if(partnerAccountId) {
         </Route>
         <Route exact path={[PATH_QR]}>
           <Qr />
-        </Route>        
-        <Route exact path={[PATH_ADMIN_LOGIN]}>
-          <AuthAdmin stage="login" signup={false} setToken={setToken} />
         </Route>        
         <Route exact path={"/verifycode/:id"}>
           <VerifyCodePage />
