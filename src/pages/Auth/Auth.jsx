@@ -18,7 +18,7 @@ import NameInput from "../../components/Forms/Fields/NameInput/NameInput";
 import { toast } from "react-toastify";
 import { getStorageValue } from "../../Util/general.js";
 
-import {PATH_PARTNERS, PATH_HOME} from '../../Util/constants.js'
+import {PATH_PARTNERS, PATH_HOME, PATH_DASHBOARD} from '../../Util/constants.js'
 
 const Auth = (props) => {
 
@@ -81,7 +81,9 @@ export const SignIn = () => {
 		if (result === 'partner') {
 			window.open(PATH_PARTNERS, "_self")
 		} else if (result === 'admin') {
-			window.open(PATH_HOME, "_self")
+			// Admin landing is the dashboard. Legacy PATH_HOME still routes to
+			// AdminDashboard as a safety net for any surviving redirects.
+			window.open(PATH_DASHBOARD, "_self")
 		} else {
 			setState({
 				...state,
@@ -115,7 +117,8 @@ export const SignIn = () => {
 			});
 		}
 		else {
-			history.push("/home");
+			// Admin dashboard is the canonical landing route.
+			history.push(PATH_DASHBOARD);
 		}
 	};
 	const handleSubmit = async event => {

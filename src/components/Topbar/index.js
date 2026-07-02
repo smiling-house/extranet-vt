@@ -34,10 +34,20 @@ const Topbar = ({
           {/* Left Section - Menu & Title */}
           <div className="col-lg-8 col-md-7 col-sm-8 col-6" style={{ paddingLeft: 0 }}>
             <div className="d-flex align-items-center">
+              {/*
+                Hamburger visibility:
+                  * mobile (< 768px): always show — sidebar is fully overlay.
+                  * desktop (≥ 768px): only when the sidebar is CLOSED — when
+                    it's open the sidebar has its own `«` collapse control, and
+                    a second hamburger next to it is noise. When closed on
+                    desktop the hamburger is the ONLY way to reopen it, so
+                    keeping the old `d-md-none` (hide on desktop) left the user
+                    stranded with no way back — hence adding the conditional.
+              */}
               <button
                 type="button"
-                className="topbar-burger d-md-none"
-                aria-label="Open menu"
+                className={`topbar-burger${showSideBarMenu ? " topbar-burger--sidebar-open" : ""}`}
+                aria-label={showSideBarMenu ? "Close menu" : "Open menu"}
                 onClick={showOrHideSideBarMenu}
               >
                 <span /><span /><span />

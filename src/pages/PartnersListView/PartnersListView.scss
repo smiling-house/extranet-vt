@@ -1,0 +1,746 @@
+// -----------------------------------------------------------------------
+// PartnersListView — modern partner-list styling.
+// Uses design tokens from theme-dashboard.css. Cribbed pill / card / hero
+// values from src/pages/DuplicatedListings/DuplicatedListings.scss.
+// -----------------------------------------------------------------------
+
+.partners-view {
+  padding: 20px 28px 40px;
+  background: #f8fafc;
+  min-height: calc(100vh - 64px);
+  font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+
+  @media (max-width: 768px) {
+    padding: 14px 12px 32px;
+  }
+
+  // ---------------------------------------------------------------------
+  // Hero
+  // ---------------------------------------------------------------------
+  .page-hero {
+    background: linear-gradient(135deg, #1d3145 0%, #11202d 100%);
+    color: #fff;
+    border-radius: 14px;
+    padding: 22px 26px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    box-shadow: 0 4px 16px rgba(17, 32, 45, 0.18);
+
+    &-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      min-width: 0;
+    }
+
+    &-icon {
+      width: 48px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(68, 200, 245, 0.16);
+      color: #44C8F5;
+      border-radius: 12px;
+      flex-shrink: 0;
+    }
+
+    &-title {
+      font-size: 1.5rem;
+      font-weight: 800;
+      line-height: 1.15;
+      letter-spacing: -0.02em;
+      margin: 0 0 4px;
+    }
+
+    &-subhead {
+      font-size: 0.85rem;
+      color: rgba(255, 255, 255, 0.72);
+      margin: 0;
+      font-weight: 400;
+    }
+
+    &-meta {
+      display: flex;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    &-pill {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 999px;
+      padding: 6px 14px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.88);
+      letter-spacing: 0.02em;
+      white-space: nowrap;
+    }
+
+    // Prev / page-of-total / Next pager (right side of the hero).
+    &-pager {
+      display: inline-flex;
+      align-items: stretch;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 999px;
+      overflow: hidden;
+
+      &-btn {
+        appearance: none;
+        background: transparent;
+        border: none;
+        color: rgba(255, 255, 255, 0.85);
+        padding: 6px 10px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: background 0.15s ease, color 0.15s ease;
+        font-family: inherit;
+
+        &:hover:not(:disabled) {
+          background: rgba(255, 255, 255, 0.12);
+          color: #fff;
+        }
+        &:focus-visible {
+          outline: 2px solid #44C8F5;
+          outline-offset: -2px;
+        }
+        &:disabled {
+          color: rgba(255, 255, 255, 0.28);
+          cursor: not-allowed;
+        }
+      }
+
+      &-label {
+        padding: 6px 12px;
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.88);
+        letter-spacing: 0.02em;
+        white-space: nowrap;
+        border-left: 1px solid rgba(255, 255, 255, 0.14);
+        border-right: 1px solid rgba(255, 255, 255, 0.14);
+        display: inline-flex;
+        align-items: center;
+      }
+    }
+
+    @media (max-width: 768px) {
+      flex-direction: column;
+      align-items: flex-start;
+      padding: 18px 20px;
+
+      &-meta {
+        width: 100%;
+        flex-wrap: wrap;
+      }
+
+      &-title {
+        font-size: 1.25rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      &-icon { display: none; }
+      &-title { font-size: 1.15rem; }
+      &-subhead { font-size: 0.78rem; }
+    }
+  }
+
+  // ---------------------------------------------------------------------
+  // Toolbar (search + sort chips)
+  // ---------------------------------------------------------------------
+  .toolbar {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    padding: 14px 18px;
+    margin-bottom: 16px;
+    display: flex;
+    gap: 18px;
+    align-items: center;
+    flex-wrap: wrap;
+
+    @media (max-width: 900px) {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 12px;
+    }
+  }
+
+  // Search input
+  .search-wrap {
+    position: relative;
+    flex: 1 1 320px;
+    min-width: 240px;
+    display: flex;
+    align-items: center;
+
+    // In flex-direction:column (mobile), flex-grow:1 stretches the wrap
+    // VERTICALLY to fill available height — producing the empty-space band
+    // between the input and the SORT BY row. Pin it to intrinsic height.
+    @media (max-width: 900px) {
+      flex: 0 0 auto;
+      width: 100%;
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #6b7280;
+      pointer-events: none;
+      // Explicit size so react-icons doesn't fall back to inherited font-size
+      // and shrink to the placeholder text's size.
+      width: 18px;
+      height: 18px;
+    }
+
+    .search-input {
+      // !important overrides theme-dashboard.css:56 which applies
+      // `padding: 8px 12px !important` globally to every input and would
+      // otherwise squash the icon into the placeholder text.
+      width: 100%;
+      height: 42px !important;
+      min-height: 42px !important;
+      padding: 0 44px 0 42px !important;
+      border: 1px solid #d1d5db !important;
+      border-radius: 10px !important;
+      font-size: 0.9rem !important;
+      background: #f9fafb;
+      color: #111827;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+      font-family: inherit;
+      box-sizing: border-box;
+
+      &::placeholder {
+        color: #9ca3af;
+      }
+
+      &:hover {
+        background: #fff;
+        border-color: #cbd5e1 !important;
+      }
+
+      &:focus {
+        // Beat theme-dashboard's `outline: 2px solid var(--brand)` on :focus.
+        outline: none !important;
+        background: #fff;
+        border-color: #44C8F5 !important;
+        box-shadow: 0 0 0 3px rgba(68, 200, 245, 0.18);
+      }
+    }
+
+    .search-clear {
+      position: absolute;
+      right: 10px;
+      width: 26px;
+      height: 26px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #e5e7eb;
+      border: none;
+      border-radius: 50%;
+      color: #4b5563;
+      cursor: pointer;
+      transition: background 0.15s ease, color 0.15s ease;
+
+      &:hover {
+        background: #d1d5db;
+        color: #111827;
+      }
+    }
+
+    .search-spinner {
+      position: absolute;
+      right: 14px;
+      width: 16px;
+      height: 16px;
+      border: 2px solid #e5e7eb;
+      border-top-color: #192C3D;
+      border-radius: 50%;
+      animation: partners-spin 0.8s linear infinite;
+    }
+  }
+
+  // Sort by chips
+  .sort-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: nowrap;
+    min-width: 0;
+
+    &-label {
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #6b7280;
+      flex-shrink: 0;
+    }
+
+    @media (max-width: 900px) {
+      width: 100%;
+    }
+  }
+
+  .sort-chips {
+    display: inline-flex;
+    background: #f3f4f6;
+    border-radius: 10px;
+    padding: 3px;
+    gap: 2px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    &::-webkit-scrollbar { display: none; }
+
+    button {
+      appearance: none;
+      border: none;
+      background: transparent;
+      color: #4b5563;
+      font-size: 0.82rem;
+      font-weight: 600;
+      padding: 7px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+      font-family: inherit;
+      letter-spacing: 0.01em;
+      white-space: nowrap;
+      flex-shrink: 0;
+
+      &:hover {
+        color: #111827;
+        background: rgba(255, 255, 255, 0.7);
+      }
+
+      &.active {
+        background: #192C3D;
+        color: #fff;
+        box-shadow: 0 1px 3px rgba(25, 44, 61, 0.35);
+
+        &:hover {
+          background: #11202d;
+          color: #fff;
+        }
+      }
+    }
+
+    @media (max-width: 900px) {
+      flex: 1;
+    }
+  }
+
+  // ---------------------------------------------------------------------
+  // Table card
+  // ---------------------------------------------------------------------
+  .partners-card {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    overflow: hidden;
+  }
+
+  .partners-table-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+
+    // Give the table a minimum width on narrow viewports so columns don't
+    // collapse into an unreadable stack — horizontal scroll instead.
+    table { min-width: 900px; }
+
+    @media (max-width: 768px) {
+      table { min-width: 780px; }
+
+      // Hide the least-important columns on small screens to reduce scroll
+      // distance while keeping the essential ones visible without scrolling.
+      th:nth-child(9), td.onboarded { display: none; }
+    }
+
+    @media (max-width: 480px) {
+      table { min-width: 620px; }
+      // Also hide the account-id monospace column — it's long and secondary.
+      th:nth-child(3), td.account-id { display: none; }
+    }
+  }
+
+  table.partners-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0;
+
+    thead {
+      background: #f7fafc;
+
+      th {
+        text-align: left;
+        padding: 12px 14px;
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: #4b5563;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        border-bottom: 1px solid #e5e7eb;
+        white-space: nowrap;
+        user-select: none;
+      }
+    }
+
+    tbody {
+      tr {
+        border-bottom: 1px solid #f0f4f7;
+        transition: background 0.12s ease;
+        cursor: pointer;
+
+        &:last-child {
+          border-bottom: none;
+        }
+
+        &:hover {
+          background: #fafcfe;
+
+          .row-arrow {
+            color: #192C3D;
+            transform: translateX(3px);
+          }
+        }
+
+        td {
+          padding: 14px;
+          font-size: 0.88rem;
+          color: #111827;
+          vertical-align: middle;
+        }
+
+        td.serial {
+          color: #6b7280;
+          font-weight: 600;
+          width: 44px;
+        }
+
+        td.pm-name {
+          font-weight: 600;
+          color: #111827;
+          max-width: 260px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        td.account-id {
+          font-family: 'JetBrains Mono', 'Menlo', 'Consolas', monospace;
+          font-size: 0.78rem;
+          color: #374151;
+          max-width: 240px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        td.onboarded {
+          color: #6b7280;
+          font-size: 0.82rem;
+          white-space: nowrap;
+        }
+
+        td.arrow-cell {
+          width: 32px;
+          text-align: right;
+          padding-right: 18px;
+
+          .row-arrow {
+            color: #cbd5e1;
+            transition: color 0.15s ease, transform 0.15s ease;
+            display: inline-flex;
+            font-size: 1.05rem;
+          }
+        }
+      }
+    }
+  }
+
+  // Status pill counts
+  .status-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 42px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    line-height: 1.2;
+    border: 1px solid transparent;
+    letter-spacing: 0.01em;
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
+
+    &:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    }
+
+    &.total    { background: rgba(25, 44, 61, 0.06); color: #192C3D; border-color: rgba(25, 44, 61, 0.20); }
+    &.approved { background: rgba(16, 65, 9, 0.10); color: #104109;  border-color: rgba(16, 65, 9, 0.28); }
+    &.pending  { background: rgba(245, 158, 11, 0.10); color: #92400e; border-color: rgba(245, 158, 11, 0.28); }
+    &.declined { background: rgba(185, 28, 28, 0.10); color: #b91c1c; border-color: rgba(185, 28, 28, 0.28); }
+    &.unmapped { background: #eef2ff; color: #4338ca; border-color: #c7d2fe; }
+
+    &.is-zero {
+      background: transparent;
+      color: #cbd5e1;
+      border-color: transparent;
+      font-weight: 500;
+      pointer-events: none;
+      cursor: default;
+
+      &:hover {
+        transform: none;
+        box-shadow: none;
+      }
+    }
+  }
+
+  // ---------------------------------------------------------------------
+  // Skeleton loader
+  // ---------------------------------------------------------------------
+  .skeleton-block {
+    display: inline-block;
+    height: 14px;
+    border-radius: 6px;
+    background: linear-gradient(90deg, #f0f4f7 0px, #e5eaef 40px, #f0f4f7 80px);
+    background-size: 500px 100%;
+    animation: partners-shimmer 1.4s infinite linear;
+  }
+
+  .skeleton-pill {
+    display: inline-block;
+    width: 42px;
+    height: 22px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #f0f4f7 0px, #e5eaef 40px, #f0f4f7 80px);
+    background-size: 500px 100%;
+    animation: partners-shimmer 1.4s infinite linear;
+  }
+
+  // ---------------------------------------------------------------------
+  // Empty state
+  // ---------------------------------------------------------------------
+  .empty-state {
+    padding: 60px 24px;
+    text-align: center;
+    color: #6b7280;
+
+    &-icon {
+      width: 56px;
+      height: 56px;
+      margin: 0 auto 16px;
+      border-radius: 50%;
+      background: #f3f4f6;
+      color: #9ca3af;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.6rem;
+    }
+
+    &-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #374151;
+      margin: 0 0 6px;
+    }
+
+    &-hint {
+      font-size: 0.88rem;
+      color: #6b7280;
+      margin: 0 0 18px;
+    }
+
+    &-action {
+      appearance: none;
+      background: #192C3D;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 9px 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s ease;
+      font-family: inherit;
+
+      &:hover { background: #11202d; }
+    }
+  }
+
+  // ---------------------------------------------------------------------
+  // Card footer (paging)
+  // ---------------------------------------------------------------------
+  .partners-card-footer {
+    border-top: 1px solid #e5e7eb;
+    padding: 10px 14px;
+    background: #fbfcfd;
+  }
+
+  // ---------------------------------------------------------------------
+  // Mobile: swap the table for a stacked card-per-row layout.
+  //
+  // Uses the SAME JSX (no separate mobile markup) — CSS switches every
+  // <tr> into a card and every <td> into a "Label: Value" row using the
+  // data-label attributes set in the JSX. Column visibility rules from the
+  // desktop breakpoints do not apply here (we want every field visible).
+  // ---------------------------------------------------------------------
+  @media (max-width: 768px) {
+    // Undo the desktop card chrome — each row becomes its own card instead.
+    .partners-card {
+      background: transparent;
+      border: none;
+      box-shadow: none;
+      overflow: visible;
+    }
+
+    .partners-table-scroll {
+      overflow: visible;
+      table { min-width: 0; }
+
+      // Undo desktop column-hide rules — every field belongs on the card.
+      th:nth-child(9), td.onboarded { display: flex; }
+      th:nth-child(3), td.account-id { display: flex; }
+    }
+
+    table.partners-table {
+      display: block;
+      width: 100%;
+
+      thead { display: none; }
+      tbody { display: block; }
+
+      tr {
+        display: block;
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+        padding: 14px 16px;
+        margin-bottom: 12px;
+        position: relative;
+
+        &:hover {
+          background: #fff;
+          border-color: #cbd5e1;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        }
+      }
+
+      td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 6px 0;
+        border-bottom: 1px solid #f3f4f6;
+        font-size: 0.85rem;
+        white-space: normal;
+        max-width: none;
+        overflow: visible;
+        text-overflow: clip;
+
+        &:last-of-type { border-bottom: none; }
+
+        // Left-side label from the data-label attribute on each td.
+        &::before {
+          content: attr(data-label);
+          font-size: 0.7rem;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.06em;
+          color: #6b7280;
+          flex-shrink: 0;
+          margin-right: 12px;
+        }
+
+        // Special-case cells:
+        &.serial {
+          // Serial number sits at the top-right of the card as a corner badge.
+          position: absolute;
+          top: 12px;
+          right: 40px;
+          padding: 0;
+          border-bottom: none;
+          font-size: 0.72rem;
+          font-weight: 700;
+          color: #9ca3af;
+          background: transparent;
+          &::before { display: none; }
+        }
+
+        &.pm-name {
+          // PM name is the row heading — bigger, no label, no border.
+          font-size: 1rem;
+          font-weight: 700;
+          color: #111827;
+          padding: 2px 0 10px;
+          border-bottom: 1px solid #eef1f5;
+          justify-content: flex-start;
+          &::before { display: none; }
+        }
+
+        &.account-id {
+          font-size: 0.72rem;
+          color: #6b7280;
+          padding: 8px 0;
+          border-bottom: 1px solid #f3f4f6;
+          // Force break for long IDs.
+          word-break: break-all;
+          text-align: right;
+        }
+
+        &.arrow-cell {
+          // Position the chevron at the top-right corner of the card.
+          position: absolute;
+          top: 14px;
+          right: 14px;
+          padding: 0;
+          border-bottom: none;
+          .row-arrow {
+            color: #cbd5e1;
+            font-size: 1.2rem;
+          }
+          &::before { display: none; }
+        }
+      }
+
+      // On mobile the whole row is tappable — active state feels like a card press.
+      tr:active {
+        transform: scale(0.995);
+        transition: transform 0.05s ease-out;
+      }
+    }
+
+    // Card footer: reduce padding on mobile.
+    .partners-card-footer {
+      background: transparent;
+      border-top: none;
+      padding: 12px 4px 0;
+    }
+  }
+}
+
+@keyframes partners-shimmer {
+  0%   { background-position: -300px 0; }
+  100% { background-position: 300px 0; }
+}
+
+@keyframes partners-spin {
+  to { transform: rotate(360deg); }
+}

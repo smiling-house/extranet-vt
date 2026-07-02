@@ -229,6 +229,50 @@
   justify-content: center;
   color: inherit;
   flex-shrink: 0;
+  // Keep this box a fixed size so mixed content (SVG icons + letter badges)
+  // aligns identically across every menu row.
+  width: 22px;
+  height: 22px;
+}
+
+// -----------------------------------------------------------------------
+// Letter-in-circle badges for partner menu items. Each PM cohort gets a
+// distinct hue so a glance at the collapsed rail is enough to tell them
+// apart. Legacy pages share a muted grey to signal deprecation.
+// -----------------------------------------------------------------------
+.sidebar-initial-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  line-height: 1;
+  text-align: center;
+  padding: 0;
+  flex-shrink: 0;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+
+  // Two-letter badges (legacy) fit a hair tighter.
+  &.tint-legacy { font-size: 0.6rem; letter-spacing: 0; }
+
+  &.tint-green   { background: rgba(34, 197, 94, 0.18);  color: #86efac; }
+  &.tint-cyan    { background: rgba(34, 211, 238, 0.18); color: #67e8f9; }
+  &.tint-purple  { background: rgba(168, 85, 247, 0.20); color: #d8b4fe; }
+  &.tint-amber   { background: rgba(245, 158, 11, 0.20); color: #fcd34d; }
+  &.tint-indigo  { background: rgba(99, 102, 241, 0.22); color: #a5b4fc; }
+  &.tint-pink    { background: rgba(236, 72, 153, 0.22); color: #f9a8d4; }
+  &.tint-legacy  { background: rgba(148, 163, 184, 0.16); color: #94a3b8; }
+}
+
+// Slight lift for whichever badge is on the currently-active item.
+.sidebar-item.active .sidebar-initial-badge {
+  transform: scale(1.05);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.10);
 }
 
 .sidebar-item-text {
@@ -414,5 +458,78 @@
     .sidebar-item { justify-content: flex-start; padding-left: 20px; padding-right: 20px; }
     .sidebar-group-icon,
     .sidebar-item-icon { margin-right: 12px; }
+  }
+}
+
+// -----------------------------------------------------------------------
+// Styled tooltip for sidebar items AND group headers.
+//
+// Only appears when the sidebar is collapsed — expanded state already
+// shows the label so a tooltip would be duplicate noise. Rendered via a
+// CSS ::after that reads the data-tooltip attribute set in JSX. Small
+// ::before renders an arrow pointing at the icon.
+// -----------------------------------------------------------------------
+.sidebar-container.collapsed {
+  .sidebar-item[data-tooltip],
+  .sidebar-group-header[data-tooltip] {
+    // The item itself is not `position: relative` by default; make it so
+    // that our absolutely-positioned tooltip anchors to the icon row.
+    position: relative;
+
+    &::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      left: calc(100% + 12px);
+      top: 50%;
+      transform: translate(-6px, -50%);
+      background: linear-gradient(135deg, #1d3145 0%, #0c1722 100%);
+      color: #fff;
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+      padding: 7px 12px;
+      border-radius: 8px;
+      white-space: nowrap;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35),
+                  0 0 0 1px rgba(255, 255, 255, 0.06);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.12s ease, transform 0.15s ease;
+      z-index: 1200;
+    }
+
+    // Small triangle arrow pointing back at the icon.
+    &::before {
+      content: '';
+      position: absolute;
+      left: calc(100% + 6px);
+      top: 50%;
+      transform: translateY(-50%);
+      border: 6px solid transparent;
+      border-right-color: #1d3145;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.12s ease;
+      z-index: 1200;
+    }
+
+    &:hover::after {
+      opacity: 1;
+      transform: translate(0, -50%);
+    }
+    &:hover::before {
+      opacity: 1;
+    }
+  }
+}
+
+// Never show CSS tooltips on touch devices — no hover intent, they'd
+// blink on tap.
+@media (hover: none) {
+  .sidebar-container.collapsed .sidebar-item[data-tooltip]::after,
+  .sidebar-container.collapsed .sidebar-item[data-tooltip]::before,
+  .sidebar-container.collapsed .sidebar-group-header[data-tooltip]::after,
+  .sidebar-container.collapsed .sidebar-group-header[data-tooltip]::before {
+    display: none;
   }
 }

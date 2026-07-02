@@ -19,9 +19,18 @@ import Reservations from "./Reservations";
 import Partners from "./Partners";
 import PartnersBP from "./PartnersBP";
 import PartnersRU from "./PartnersRU";
+// Legacy channel-page components kept in the tree only so their source stays
+// in-repo if we ever need to reference them; they're not wired to any active
+// route below. The BART / INVENIO / BP paths render the V2 wrappers now.
+// eslint-disable-next-line no-unused-vars
 import PartnersBART from "./PartnersBART";
+// eslint-disable-next-line no-unused-vars
 import PartnersINVENIO from "./PartnersINVENIO";
+// eslint-disable-next-line no-unused-vars
 import PartnersBookingpal from "./PartnersBookingpal";
+import PartnersBartV2 from "./PartnersBartV2";
+import PartnersInvenioV2 from "./PartnersInvenioV2";
+import PartnersBookingpalV2 from "./PartnersBookingpalV2";
 import ListingsBookingpal from "./ListingsBookingpal";
 import EPartners from "./EPartners";
 // material ui
@@ -43,9 +52,17 @@ import PropertyReservePage from "./PropertyReserve";
 import VerifyNewPMs from './VerifyNewPMs';
 import Admin from "./Admin";
 
+import AdminDashboard from "./AdminDashboard";
 import PartnersSH from "./PartnersSH";
 import PartnersVT from "./PartnersVT";
+// Legacy Hostaway page kept for reference — the V2 redesign is what routes
+// to PATH_PARTNERS_HOSTAWAY. eslint-disable so the unused import doesn't fail
+// under CI-style strictness.
+// eslint-disable-next-line no-unused-vars
 import PartnersHostaway from "./PartnersHostaway";
+import PartnersHostawayV2 from "./PartnersHostawayV2";
+import PartnersGuestyDH from "./PartnersGuestyDH";
+import PartnersRuDH from "./PartnersRuDH";
 import SearchListings from "./SearchListings";
 
 import PropertiesNeedsAttention from "./PropertiesNeedsAttention";
@@ -64,6 +81,7 @@ import {
   PATH_FAVORITES,
   PATH_FORGOT_PASSWORD,
   PATH_HOME,
+  PATH_DASHBOARD,
   PATH_HOT_DESTINATIONS,
   PATH_LOGIN,
   PATH_QR,
@@ -106,6 +124,8 @@ import {
   PATH_LISTINGS_SH_BP_DECLINED_BUT_LISTED_ON_BP,
   PATH_PARTNERS_SH,
   PATH_PARTNERS_VT,
+  PATH_PARTNERS_GUESTY_DH,
+  PATH_PARTNERS_RU_DH,
   PATH_PARTNERS_HOSTAWAY,
   PATH_SEARCH_LISTINGS,
   PATH_PROPERTIES_NEEDS_ATTENTION
@@ -479,6 +499,24 @@ if(partnerAccountId) {
             token={token}
           />
         </Route>
+        {/*
+          Both /dashboard (canonical) and /home (legacy — Auth.jsx used to push
+          admins here) render the AdminDashboard. Keep both so any surviving
+          window.open('/home') / bookmark keeps working during the transition.
+        */}
+        <Route exact path={[PATH_DASHBOARD, PATH_HOME]}>
+          <AdminDashboard
+            agency={agency}
+            agent={agent}
+            token={token}
+            setProfile={setProfile}
+            screenSize={screenSize}
+            setScreenSize={setScreenSize}
+            activeMenu={activeMenu}
+            handleToggleMenu={handleToggleMenu}
+            setActiveMenu={setActiveMenu}
+          />
+        </Route>
         <Route exact path={[PATH_RESERVE]}>
           <PropertyReservePage
             agency={agency}
@@ -529,7 +567,7 @@ if(partnerAccountId) {
         </Route>
 
         <Route exact path={[PATH_PARTNERS_HOSTAWAY]}>
-          <PartnersHostaway
+          <PartnersHostawayV2
             agency={agency}
             agent={agent}
             token={token}
@@ -569,8 +607,8 @@ if(partnerAccountId) {
             setActiveMenu={setActiveMenu}
           />
         </Route>
-        <Route exact path={[PATH_PARTNERS_BART]}>
-          <PartnersBART
+        <Route exact path={[PATH_PARTNERS_GUESTY_DH]}>
+          <PartnersGuestyDH
             agency={agency}
             agent={agent}
             token={token}
@@ -581,9 +619,35 @@ if(partnerAccountId) {
             handleToggleMenu={handleToggleMenu}
             setActiveMenu={setActiveMenu}
           />
-        </Route>    
+        </Route>
+        <Route exact path={[PATH_PARTNERS_RU_DH]}>
+          <PartnersRuDH
+            agency={agency}
+            agent={agent}
+            token={token}
+            setProfile={setProfile}
+            screenSize={screenSize}
+            setScreenSize={setScreenSize}
+            activeMenu={activeMenu}
+            handleToggleMenu={handleToggleMenu}
+            setActiveMenu={setActiveMenu}
+          />
+        </Route>
+        <Route exact path={[PATH_PARTNERS_BART]}>
+          <PartnersBartV2
+            agency={agency}
+            agent={agent}
+            token={token}
+            setProfile={setProfile}
+            screenSize={screenSize}
+            setScreenSize={setScreenSize}
+            activeMenu={activeMenu}
+            handleToggleMenu={handleToggleMenu}
+            setActiveMenu={setActiveMenu}
+          />
+        </Route>
         <Route exact path={[PATH_PARTNERS_INVENIO]}>
-          <PartnersINVENIO
+          <PartnersInvenioV2
             agency={agency}
             agent={agent}
             token={token}
@@ -596,7 +660,7 @@ if(partnerAccountId) {
           />
         </Route>
         <Route exact path={[PATH_PARTNERS_BOOKINGPAL]}>
-          <PartnersBookingpal
+          <PartnersBookingpalV2
             agency={agency}
             agent={agent}
             token={token}
