@@ -37,7 +37,8 @@ import { IoIosSearch } from "react-icons/io"
 import { BiCalendarCheck } from "react-icons/bi"
 import AuthService from "../../services/auth.service"
 import swal from "sweetalert"
-import LoadingBox from "../../components/LoadingBox"
+// LoadingBox intentionally removed — the page now uses inline .lr-skel
+// skeleton rows (see ListingsViewport + the classic view body below).
 import CollectionIcon from "../../components/CollectionIcon"
 import * as propertyActions from "../../store/redux/Property/actions";
 import Sidebar from "../../components/Sidebar";
@@ -860,7 +861,12 @@ return (
             <div className="listings-container"
                 style={{ backgroundImage: `url(${pageBg})` }}
             >
-                <LoadingBox visible={isLoading} />
+                {/*
+                  LoadingBox full-page spinner removed — ListingsViewport
+                  already renders in-place shimmer skeletons (.lr-skel) for
+                  the grid/table/expanded modes, and the classic view below
+                  now has its own inline skeleton rows during isLoading.
+                */}
                 <div>
                     {/* <PageHeader 
                     PageHeader={true} 
@@ -934,6 +940,15 @@ return (
                                         </tr>
                                     </thead>
                                     <tbody>
+                                        {isLoading && listings.length === 0 && Array.from({ length: 6 }).map((_, i) => (
+                                            <tr key={`lr-skel-${i}`}>
+                                                {columns.map((c, j) => (
+                                                    <td key={j} className="p-4">
+                                                        <div className="lr-skel" style={{ height: 40, borderRadius: 8 }} />
+                                                    </td>
+                                                ))}
+                                            </tr>
+                                        ))}
                                         {listings.map((iteam, index) => {
 
 const countryZipKey = iteam.listing.address.country + '_' + iteam.listing.address.zipcode;

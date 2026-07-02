@@ -267,14 +267,22 @@ const PartnersListView = (props) => {
   };
 
   const goToPartnerListings = (partner, propertyStatus = "") => {
+    // IMPORTANT: override partner.source with the effective channelSource
+    // before handing it to Listings2. Guesty-via-DH partners have
+    // `source: 'G'` in the users collection (from detectProvider) but the
+    // corresponding rows in the listings collection are written with
+    // channelSource: 'VT' (see rusync.js:2547 — VTHub) or channelSource: 'SH'
+    // depending on the hub. Listings2 reads partner.source out of localStorage
+    // to decide which channelSource to filter on — so we MUST rewrite it here
+    // or the drill-down finds zero listings even though data exists.
+    const effectiveSource = apiParams?.channelSource || partner.source || "SH";
+    const partnerForListings = { ...partner, source: effectiveSource };
     localStorage.setItem("property_status_to_filter_listings", propertyStatus);
-    localStorage.setItem("partner", JSON.stringify(partner));
+    localStorage.setItem("partner", JSON.stringify(partnerForListings));
     history.push(drilldownPath, {
-      partner,
-      accountId: partner.accountId,
-      // Prefer the wrapper-supplied channelSource; fall back to the partner
-      // document's own source field (legacy pages rely on this) and finally SH.
-      source: apiParams?.channelSource || partner.source || "SH",
+      partner: partnerForListings,
+      accountId: partnerForListings.accountId,
+      source: effectiveSource,
       status: propertyStatus || undefined,
     });
   };
