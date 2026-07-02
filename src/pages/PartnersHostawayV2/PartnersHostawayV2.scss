@@ -187,6 +187,66 @@
       }
     }
   }
+
+  // ---------------------------------------------------------------------
+  // Grid mode — Hostaway-specific card content on top of the shared
+  // .partner-card / .partners-grid scaffolding from PartnersListView.scss.
+  // ---------------------------------------------------------------------
+  .hostaway-grid {
+    // Wider cards than the PMs grid — Hostaway cards carry more info
+    // (Timezone, Webhook, Last Sync, plus 2 action buttons).
+    grid-template-columns: repeat(2, 1fr);
+
+    @media (max-width: 900px) { grid-template-columns: 1fr; }
+  }
+
+  .hostaway-card {
+    // Slightly more padding — cards are info-dense.
+    padding: 18px 20px;
+  }
+
+  .hostaway-card-meta {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    padding: 10px 0;
+    border-top: 1px solid #f0f4f7;
+    border-bottom: 1px solid #f0f4f7;
+
+    > div {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      min-width: 0;
+    }
+  }
+  .hostaway-card-meta-label {
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: #9ca3af;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .hostaway-card-meta-value {
+    font-size: 0.82rem;
+    color: #111827;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .hostaway-card-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: auto;
+    padding-top: 6px;
+
+    .hostaway-action-btn {
+      flex: 1 1 auto;
+      justify-content: center;
+    }
+  }
 }
 
 @keyframes hostaway-spin {
