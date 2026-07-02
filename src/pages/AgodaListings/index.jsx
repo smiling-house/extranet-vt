@@ -131,7 +131,7 @@ const AgodaListings = (props) => {
                     <div className="listings-main">
                         <div style={note}>
                             Enable + map each listing to its Agoda codes. Writes use the per-listing config
-                            endpoints in VTHub (require the api.villatracker.ch deploy to take effect).
+                            endpoints in VTHub (require the api.villatracker.com deploy to take effect).
                         </div>
 
                         <div className="row" style={{ margin: "10px 0", gap: 8, display: "flex", flexWrap: "wrap" }}>

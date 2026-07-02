@@ -63,7 +63,7 @@ async function ensureAllZipcodes() {
 async function ensureExchangeRates() {
   if (exchangeRatesCache) return exchangeRatesCache;
   try {
-    const res = await axios.get("https://api.villatracker.ch/xchange");
+    const res = await axios.get("https://api.villatracker.com/xchange");
     exchangeRatesCache = res.data || {};
   } catch (e) {
     console.error("ensureExchangeRates failed", e?.message || e);

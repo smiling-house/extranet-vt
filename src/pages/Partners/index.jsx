@@ -362,7 +362,7 @@ async function allZipcodes() {
 const fetchCurrenciesExchangeRates = async () => {
 	try {
 		//axios.defaults.headers.common["Authorization"] = `Bearer ${jToken}`;
-		const response = await userRequest.get("https://api.villatracker.ch/xchange");
+		const response = await userRequest.get("https://api.villatracker.com/xchange");
 		const exchangeRates = response.data;
 
 		const exchangeRatesData = {}
