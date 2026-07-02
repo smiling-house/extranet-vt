@@ -22,7 +22,6 @@ import "./sidebar.scss";
 import {
   PATH_LOGIN,
   PATH_ADMIN,
-  PATH_ADMIN_LOGIN,
   PATH_LISTINGS,
   PATH_TASKS,
   PATH_PARTNERS,
