@@ -189,7 +189,7 @@ const Property = (props) => {
     const fetchCurrencies = async () => {
       try {
         axios.defaults.headers.common["Authorization"] = `Bearer ${jToken}`;
-        const response = await axios.get("https://api.villatracker.ch/xchange");
+        const response = await axios.get("https://api.villatracker.com/xchange");
         const data = response.data;
         localStorage.setItem("exchange", JSON.stringify(data));
         setCurrencies(data);
@@ -260,7 +260,7 @@ const Property = (props) => {
     const fetchCurrencies = async () => {
       try {
         axios.defaults.headers.common["Authorization"] = `Bearer ${jToken}`;
-        const response = await axios.get("https://api.villatracker.ch/xchange");
+        const response = await axios.get("https://api.villatracker.com/xchange");
         const data = response.data;
         localStorage.setItem("exchange", JSON.stringify(data));
         setCurrencies(data);
