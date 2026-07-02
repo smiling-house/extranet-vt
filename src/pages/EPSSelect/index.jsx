@@ -283,7 +283,7 @@ const Listings = (props) => {
             limit: constants.PAGING_LISTING_SIZE, 
             skip: skip,
             sortBy: 'data.nickname:1',
-            source: 'guesty_channel_api' //need only guesty properties for external partners now
+            source: ['G'] //need only guesty properties from new RU DH for external partners now
         } 
         const queryString = Object.keys(params).map(key => key + '=' + params[key]).join("&")
         console.log(queryString)
@@ -352,7 +352,7 @@ const Listings = (props) => {
             limit: constants.PAGING_LISTING_SIZE, 
             skip: 0,
             sortBy: 'data.nickname:1' ,
-            source: 'guesty_channel_api' //need only guesty properties for external partners now          
+            source: ['G'] //need only guesty properties from new RU DH for external partners now          
     }
     
     console.log('getting from /listings:',params)
