@@ -29,6 +29,7 @@ import {
   FiClock,
   FiUsers,
   FiRefreshCw,
+  FiDownload,
 } from "react-icons/fi";
 
 import Layout from "../../components/Layout/index.js";
@@ -107,12 +108,16 @@ const AdminSettings = (props) => {
 
   // Job form state
   const [delaySec, setDelaySec] = useState(3);
+  // Force-resend defaults OFF so cancel+restart doesn't re-mail
+  // already-sent partners. Admin explicitly opts in.
+  const [force, setForce] = useState(false);
 
   // Server-owned job state
   const [job, setJob] = useState(null);
   const [loading, setLoading] = useState(true);
   const [starting, setStarting] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+  const [downloadingCsv, setDownloadingCsv] = useState(false);
 
   const pollRef = useRef(null);
   const isRunning = job?.status === "running";
@@ -171,15 +176,16 @@ const AdminSettings = (props) => {
 
   const handleStart = useCallback(async () => {
     const delayMs = Math.max(1000, Math.min(10000, Number(delaySec) * 1000 || 3000));
-    // Rough count preview — reuse partner count from a lightweight endpoint if
-    // we had one; otherwise the server tells us the total after start.
-    const confirmMsg = `This will send the redesigned welcome email to every partner with an email address, at ${delaySec}s intervals. The server will show a live progress tracker below. Continue?`;
+    const cohortNote = force
+      ? "Force resend is ON — every eligible partner will be mailed, even those already flagged as sent."
+      : "Force resend is OFF — partners already flagged as sent (emailSent=true) will be skipped.";
+    const confirmMsg = `This will send the redesigned welcome email at ${delaySec}s intervals. ${cohortNote} The server will show a live progress tracker below. Continue?`;
     const ok = await swal({
       title: "Start bulk welcome-email backfill?",
       text: confirmMsg,
       icon: "warning",
       buttons: ["Cancel", "Start"],
-      dangerMode: false,
+      dangerMode: force,
     });
     if (!ok) return;
 
@@ -187,7 +193,7 @@ const AdminSettings = (props) => {
     try {
       const res = await userRequest.post("local/bulk-welcome-emails/start", {
         cohort: "all-with-email",
-        force: true,
+        force,
         delayMs,
         triggeredByAgent: agentData?.email || agentData?.firstName || null,
       });
@@ -229,7 +235,7 @@ const AdminSettings = (props) => {
     } finally {
       setStarting(false);
     }
-  }, [agentData, delaySec, fetchJob, startPolling]);
+  }, [agentData, delaySec, force, fetchJob, startPolling]);
 
   const handleCancel = useCallback(async () => {
     if (!job?.runId) return;
@@ -256,6 +262,36 @@ const AdminSettings = (props) => {
     const fresh = await fetchJob(job.runId);
     if (fresh) setJob(fresh);
   }, [fetchJob, job]);
+
+  // Download the CSV for the current job. Fetches as blob (so we can send
+  // the bearer token in the header) and triggers a hidden <a download>.
+  const handleDownloadCsv = useCallback(async () => {
+    if (!job?.runId) return;
+    setDownloadingCsv(true);
+    try {
+      const res = await userRequest.get(
+        `local/bulk-welcome-emails/${job.runId}/results.csv`,
+        { responseType: "blob" }
+      );
+      const blob = new Blob([res.data], { type: "text/csv;charset=utf-8" });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `bulk-welcome-emails-${job.runId}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } catch (e) {
+      swal({
+        title: "Download failed",
+        text: e?.response?.data?.error || e?.message || String(e),
+        icon: "error",
+      });
+    } finally {
+      setDownloadingCsv(false);
+    }
+  }, [job]);
 
   // --- Derived progress metrics ---
   const total = job?.total || 0;
@@ -349,13 +385,26 @@ const AdminSettings = (props) => {
               </div>
 
               <div className="as-form-field">
-                <label className="as-label">Force resend</label>
+                <label className="as-label" htmlFor="force-toggle">Force resend</label>
                 <div className="as-toggle-row">
-                  <span className="as-toggle-pill on">ON</span>
-                  <span className="as-hint as-inline-hint">
-                    Ignores welcomeEmailSent / emailSent flags — locked ON this round.
-                  </span>
+                  <button
+                    id="force-toggle"
+                    type="button"
+                    role="switch"
+                    aria-checked={force}
+                    disabled={isRunning || starting}
+                    onClick={() => setForce((f) => !f)}
+                    className={`as-toggle-pill ${force ? "on" : "off"}`}
+                    title={force ? "Turn force resend off" : "Turn force resend on"}
+                  >
+                    {force ? "ON" : "OFF"}
+                  </button>
                 </div>
+                <p className="as-hint">
+                  {force
+                    ? "Ignores emailSent flags — sends to everyone in the cohort, including partners already mailed."
+                    : "Skips partners already flagged as sent (emailSent=true)."}
+                </p>
               </div>
 
               <div className="as-form-actions">
@@ -483,16 +532,28 @@ const AdminSettings = (props) => {
             {/* Recent results */}
             {job && recentResults.length > 0 && (
               <div className="as-results">
-                <h3 className="as-results-title">
-                  Recent sends
-                  <span className="as-results-count">
-                    ({recentResults.length}
-                    {job.results?.length > recentResults.length
-                      ? ` of ${job.results.length}`
-                      : ""}
-                    )
-                  </span>
-                </h3>
+                <div className="as-results-header">
+                  <h3 className="as-results-title">
+                    Recent sends
+                    <span className="as-results-count">
+                      ({recentResults.length}
+                      {job.results?.length > recentResults.length
+                        ? ` of ${job.results.length}`
+                        : ""}
+                      )
+                    </span>
+                  </h3>
+                  <button
+                    type="button"
+                    className="as-btn as-btn--ghost"
+                    onClick={handleDownloadCsv}
+                    disabled={downloadingCsv}
+                    title={`Download the full results (${job.results?.length || 0} rows) as CSV`}
+                  >
+                    <FiDownload size={13} />
+                    <span>{downloadingCsv ? "Downloading…" : "Download CSV"}</span>
+                  </button>
+                </div>
                 <div className="as-results-table-wrap">
                   <table className="as-results-table">
                     <thead>
