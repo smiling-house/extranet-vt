@@ -25,6 +25,7 @@ import VTChannelLabel from "../../../assets/channels/icons/label-VTChannel.svg"
 import SHChannelIcon from "../../../assets/channels/icons/SHChannel.svg"
 import SHChannelIconOn from "../../../assets/channels/icons/SHChannel-on.svg"
 import SHChannelIconOnBlue from "../../../assets/channels/icons/SHChannel-on-blue.svg"
+import { partnerStatusReason } from "../../../Util/statusReason"
 import SHChannelLabel from "../../../assets/channels/icons/label-SHChannel.svg"
 
 import TLChannelIcon from "../../../assets/channels/icons/TLChannel.svg"
@@ -825,6 +826,12 @@ console.log('NEW REGION:::', response)
 
         { (extranet_vt_logged_in_role==='admin' && xdata.status==='Declined' &&  xdata.declineReason !== '') &&
           <p><i>({xdata.declineReason})</i></p>
+        }
+
+        { (extranet_vt_logged_in_role!=='admin' && partnerStatusReason(xdata.status, xdata) !== '') &&
+          <p style={{ fontSize: "13px", fontWeight: "normal", color: "#667085" }}>
+            <i>{partnerStatusReason(xdata.status, xdata)}</i>
+          </p>
         }
 
         {(extranet_vt_logged_in_role==='admin' && xdata?.statusUpdatedBy != null) &&

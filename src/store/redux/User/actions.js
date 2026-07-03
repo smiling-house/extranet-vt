@@ -245,7 +245,13 @@ export const signInEx_CheckPartner = (user, chkRememberMe, callback) => {
 				localStorage.setItem("partnerLogin", partner[0].accountId);
 				localStorage.setItem("partnerName", partner[0].pmName);
 
-localStorage.setItem('extranet-vt-logged-in-role', 'partner');		
+				// Fire-and-forget: stamp lastExtranetLogin on the partner record.
+				// Without this there is no server-side trace of WHICH partner logged
+				// in (the session below uses a shared internal agent account).
+				userRequest.post(`local/partners/extranet-login/${partner[0].accountId}`)
+					.catch((e) => console.log('extranet-login stamp failed', e?.message));
+
+localStorage.setItem('extranet-vt-logged-in-role', 'partner');
 
 		const result = await userService.signIn({
 			"email": "tech.smilinghouse@gmail.com",
