@@ -53,6 +53,7 @@ import VerifyNewPMs from './VerifyNewPMs';
 import Admin from "./Admin";
 
 import AdminDashboard from "./AdminDashboard";
+import AdminSettings from "./AdminSettings";
 import PartnersSH from "./PartnersSH";
 import PartnersVT from "./PartnersVT";
 // Legacy Hostaway page kept for reference — the V2 redesign is what routes
@@ -82,6 +83,7 @@ import {
   PATH_FORGOT_PASSWORD,
   PATH_HOME,
   PATH_DASHBOARD,
+  PATH_ADMIN_SETTINGS,
   PATH_HOT_DESTINATIONS,
   PATH_LOGIN,
   PATH_QR,
@@ -506,6 +508,19 @@ if(partnerAccountId) {
         */}
         <Route exact path={[PATH_DASHBOARD, PATH_HOME]}>
           <AdminDashboard
+            agency={agency}
+            agent={agent}
+            token={token}
+            setProfile={setProfile}
+            screenSize={screenSize}
+            setScreenSize={setScreenSize}
+            activeMenu={activeMenu}
+            handleToggleMenu={handleToggleMenu}
+            setActiveMenu={setActiveMenu}
+          />
+        </Route>
+        <Route exact path={[PATH_ADMIN_SETTINGS]}>
+          <AdminSettings
             agency={agency}
             agent={agent}
             token={token}
