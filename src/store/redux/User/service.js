@@ -40,6 +40,24 @@ console.log("UserService -> signIn -> Enter");
 })
 };
 
+// Silent probe for the unified /login flow: no toasts. The unified flow tries
+// the agent login first and falls back to the partner lookup, so toasting the
+// probe's "agent Email not found" would flash an error at every partner login.
+// A 200 without token+agent (unapproved / collaborator / partner-manager) is
+// not a usable session, so it is reported as a failure with the message.
+export const signInSilent = async user => {
+	try {
+		const res = (await axios.post(`${constants.BASE_URL}/agent/login`, user)).data;
+		if (res?.token && res?.agent) {
+			return { ok: true, agent: res.agent, token: res.token, message: res.message };
+		}
+		return { ok: false, status: 200, message: res?.message };
+	} catch (err) {
+		log.debug(err);
+		return { ok: false, status: err?.response?.status, message: err?.response?.data?.message };
+	}
+};
+
 export const signInEx = async user => {
 	log.debug("UserService -> signInEx -> Enter");
 

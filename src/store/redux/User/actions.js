@@ -318,9 +318,16 @@ export const signInUnified = (user, chkRememberMe, callback) => {
 			return;
 		}
 
-		// --- Attempt 1: agent / admin credential login (no Shub call) ---
-		const adminResult = await userService.signIn(user);
-		if (adminResult != null) {
+		// --- Attempt 1: agent / admin credential login (silent probe, no Shub call) ---
+		// signInSilent (not signIn): this probe fails for every partner login,
+		// and signIn would toast the backend's "agent Email not found" at them.
+		const adminResult = await userService.signInSilent(user);
+		if (adminResult.ok) {
+			// A leftover partner session must not survive an admin login:
+			// getProfile() redirects to the partner pages whenever partnerLogin
+			// is set (the old /adminlogin page cleared these on mount too).
+			localStorage.removeItem("partnerLogin");
+			localStorage.removeItem("partnerName");
 			localStorage.setItem("agent", JSON.stringify(adminResult.agent));
 			localStorage.setItem("jToken", adminResult.token);
 			localStorage.setItem("id", adminResult.agent._id);
@@ -331,11 +338,18 @@ export const signInUnified = (user, chkRememberMe, callback) => {
 				type: actionTypes.USER_LOGGED_IN,
 				data: user
 			});
+			toast.success(adminResult.message || 'Logged in successfully', {
+				position: 'top-right',
+				toastClassName: 'custom-toast',
+			});
 			callback('admin');
 			return;
 		}
 
 		// --- Attempt 2: external partner (password treated as accountId) ---
+		// Runs on ANY failed admin probe, including 401: a partner's email can
+		// also exist as an agent account (e.g. internal/dual-identity emails),
+		// so a wrong-agent-password response must not block the partner path.
 		try {
 			const shubRequest = axios.create({
 				baseURL: constants.SHUB_URL,
@@ -357,11 +371,17 @@ export const signInUnified = (user, chkRememberMe, callback) => {
 					localStorage.setItem("partnerName", partner.pmName);
 					localStorage.setItem('extranet-vt-logged-in-role', 'partner');
 
-					const result = await userService.signIn({
+					// Fire-and-forget: stamp lastExtranetLogin on the partner record.
+					// Without this there is no server-side trace of WHICH partner
+					// logged in (the session below uses a shared internal account).
+					shubRequest.post(`local/partners/extranet-login/${partner.accountId}`)
+						.catch((e) => console.log('extranet-login stamp failed', e?.message));
+
+					const result = await userService.signInSilent({
 						"email": "tech.smilinghouse@gmail.com",
 						"password": "VT2026",
 					});
-					if (result != null) {
+					if (result.ok) {
 						localStorage.setItem("agent", JSON.stringify(result.agent));
 						localStorage.setItem("jToken", result.token);
 						localStorage.setItem("id", result.agent._id);
@@ -371,9 +391,15 @@ export const signInUnified = (user, chkRememberMe, callback) => {
 							type: actionTypes.USER_LOGGED_IN,
 							data: user
 						});
+						toast.success('Logged in successfully', {
+							position: 'top-right',
+							toastClassName: 'custom-toast',
+						});
 						callback('partner');
 						return;
 					}
+					localStorage.removeItem("partnerLogin");
+					localStorage.removeItem("partnerName");
 					localStorage.removeItem('extranet-vt-logged-in-role');
 				}
 			}
@@ -381,6 +407,16 @@ export const signInUnified = (user, chkRememberMe, callback) => {
 			console.log('Partner lookup failed', e);
 		}
 
+		// Both attempts failed. When the email IS a real agent (401 wrong
+		// password / 200 approval-pending etc.) surface that specific error;
+		// otherwise stay generic — "agent Email not found" would only confuse
+		// a partner who mistyped their accountId.
+		const agentError = (adminResult.status === 401 || adminResult.status === 200)
+			? adminResult.message : null;
+		toast.error(agentError || 'Login attempt failed', {
+			position: 'top-right',
+			toastClassName: 'custom-toast',
+		});
 		callback('failed');
 	}
 };
