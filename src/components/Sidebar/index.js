@@ -39,6 +39,7 @@ import {
   PATH_SHUB,
   PATH_HOME,
   PATH_DASHBOARD,
+  PATH_ADMIN_SETTINGS,
   PATH_SEARCH,
   PATH_MAP,
   PATH_RESERVATIONS,
@@ -145,6 +146,7 @@ const Sidebar = ({ activeMenu, setActiveMenu, handleToggleMenu, showOrHideSideBa
           { text: "VT Reservations", path: PATH_RESERVATIONS, icon: <FiCalendar size={18} /> },
           { text: "Verify New PMs", path: PATH_VERIFY_COMPARE_NEW_PMS, icon: <MdVerifiedUser size={18} /> },
           { text: "Mapping unmapped listings - Zipcodes & Regions", path: PATH_ZIPS_REGIONS_MAPPING, icon: <MdVerifiedUser size={18} /> },
+          { text: "Admin Settings", path: PATH_ADMIN_SETTINGS, icon: <FiSettings size={18} /> },
         ]
       },
       {

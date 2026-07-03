@@ -1,0 +1,369 @@
+// ---------------------------------------------------------------------------
+// AdminSettings — styling for the /admin-settings page.
+//
+// Extends the visual language of AdminDashboard (dash-card, dash-hero,
+// page-hero-*) with tool-specific pieces: form grid, progress bar, status
+// pills, results table.
+// ---------------------------------------------------------------------------
+
+.admin-settings {
+  padding: 24px 32px 40px;
+  max-width: 1280px;
+  margin: 0 auto;
+
+  .as-card {
+    margin-top: 20px;
+  }
+
+  .as-tool-body {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  // ---- Form ----
+
+  .as-form-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
+    gap: 20px 28px;
+    align-items: start;
+    padding: 4px 0 4px;
+
+    @media (max-width: 900px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .as-form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+  }
+
+  .as-label {
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #6b7280;
+  }
+
+  .as-hint {
+    margin: 0;
+    font-size: 0.78rem;
+    color: #9ca3af;
+    line-height: 1.5;
+  }
+  .as-inline-hint {
+    margin-left: 4px;
+  }
+
+  .as-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: rgba(68, 200, 245, 0.14);
+    color: #0369a1;
+    font-size: 0.85rem;
+    font-weight: 600;
+
+    &.locked {
+      opacity: 0.9;
+      cursor: not-allowed;
+    }
+  }
+
+  .as-slider-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .as-slider {
+    flex: 1;
+    accent-color: #44C8F5;
+  }
+  .as-slider-value {
+    min-width: 36px;
+    font-family: "SFMono-Regular", ui-monospace, monospace;
+    font-weight: 700;
+    color: #192C3D;
+  }
+
+  .as-toggle-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .as-toggle-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    &.on {
+      background: rgba(34, 197, 94, 0.14);
+      color: #047857;
+    }
+  }
+
+  .as-form-actions {
+    display: flex;
+    align-items: flex-end;
+    justify-content: flex-end;
+    @media (max-width: 900px) {
+      justify-content: flex-start;
+    }
+  }
+
+  // ---- Buttons ----
+
+  .as-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 9px 16px;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+    font-family: inherit;
+    transition: background 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+    white-space: nowrap;
+
+    &:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    &--primary {
+      background: #192C3D;
+      color: #fff;
+      border-color: #192C3D;
+      &:hover:not(:disabled) { background: #11202d; }
+      &:active:not(:disabled) { transform: translateY(1px); }
+    }
+
+    &--danger {
+      background: #fff;
+      color: #b91c1c;
+      border-color: #fecaca;
+      &:hover:not(:disabled) {
+        background: #fef2f2;
+        border-color: #f87171;
+      }
+    }
+
+    &--ghost {
+      background: #fff;
+      color: #374151;
+      border-color: #e5e7eb;
+      &:hover:not(:disabled) {
+        background: #f9fafb;
+        border-color: #d1d5db;
+      }
+    }
+  }
+
+  // ---- Progress panel ----
+
+  .as-progress {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 20px;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+    background: #f9fafb;
+
+    &--running { border-color: #93c5fd; background: #eff6ff; }
+    &--completed { border-color: #86efac; background: #f0fdf4; }
+    &--cancelled { border-color: #d1d5db; background: #f9fafb; }
+    &--failed { border-color: #fecaca; background: #fef2f2; }
+  }
+
+  .as-progress-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .as-progress-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    min-width: 0;
+  }
+  .as-progress-actions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .as-run-id {
+    font-family: "SFMono-Regular", ui-monospace, monospace;
+    font-size: 0.72rem;
+    color: #6b7280;
+    background: rgba(148, 163, 184, 0.16);
+    padding: 3px 8px;
+    border-radius: 5px;
+  }
+
+  // ---- Status pills ----
+
+  .as-status-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    text-transform: capitalize;
+    border: 1px solid transparent;
+
+    &--running   { background: rgba(59, 130, 246, 0.14);  color: #1d4ed8; border-color: rgba(59, 130, 246, 0.30); }
+    &--completed { background: rgba(34, 197, 94, 0.14);   color: #047857; border-color: rgba(34, 197, 94, 0.30); }
+    &--cancelled { background: rgba(148, 163, 184, 0.14); color: #475569; border-color: rgba(148, 163, 184, 0.30); }
+    &--failed    { background: rgba(239, 68, 68, 0.12);   color: #b91c1c; border-color: rgba(239, 68, 68, 0.30); }
+    &--sent      { background: rgba(34, 197, 94, 0.14);   color: #047857; border-color: rgba(34, 197, 94, 0.24); }
+    &--skipped   { background: rgba(148, 163, 184, 0.14); color: #475569; border-color: rgba(148, 163, 184, 0.24); }
+  }
+
+  // ---- Progress bar ----
+
+  .as-progress-bar-wrap {
+    width: 100%;
+    height: 8px;
+    background: rgba(148, 163, 184, 0.18);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+  .as-progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #44C8F5 0%, #2563eb 100%);
+    transition: width 0.4s ease;
+  }
+
+  .as-progress-numeric {
+    font-size: 0.9rem;
+    color: #374151;
+    strong { color: #111827; }
+  }
+  .as-progress-split {
+    margin-left: 8px;
+    color: #6b7280;
+  }
+
+  .as-progress-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 20px;
+    font-size: 0.82rem;
+    color: #4b5563;
+    padding-top: 4px;
+
+    > div {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+  }
+  .as-meta-label {
+    color: #6b7280;
+  }
+  .as-meta-value {
+    color: #111827;
+    font-weight: 500;
+  }
+
+  .as-error-banner {
+    padding: 10px 14px;
+    background: rgba(239, 68, 68, 0.06);
+    border: 1px solid rgba(239, 68, 68, 0.24);
+    border-radius: 8px;
+    color: #b91c1c;
+    font-size: 0.85rem;
+  }
+
+  .as-loading,
+  .as-empty {
+    padding: 24px;
+    text-align: center;
+    color: #6b7280;
+    font-size: 0.9rem;
+    background: #f9fafb;
+    border-radius: 10px;
+    border: 1px dashed #e5e7eb;
+  }
+
+  // ---- Results table ----
+
+  .as-results {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .as-results-title {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #111827;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .as-results-count {
+    font-weight: 500;
+    color: #9ca3af;
+    font-size: 0.82rem;
+  }
+
+  .as-results-table-wrap {
+    overflow-x: auto;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+  }
+  .as-results-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+    font-size: 0.85rem;
+
+    th, td {
+      padding: 10px 14px;
+      text-align: left;
+      border-bottom: 1px solid #f3f4f6;
+    }
+    th {
+      background: #f9fafb;
+      font-weight: 700;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #6b7280;
+    }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover { background: #fafbfc; }
+  }
+  .as-mono {
+    font-family: "SFMono-Regular", ui-monospace, monospace;
+    font-size: 0.78rem;
+    color: #374151;
+  }
+  .as-reason {
+    color: #6b7280;
+    font-size: 0.78rem;
+    max-width: 260px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}

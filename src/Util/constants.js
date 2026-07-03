@@ -5,6 +5,9 @@ export const PATH_HOME = '/home';
 // Admin landing page — read-only totals overview. Wired in pages/index.jsx
 // and the Sidebar's admin menu group.
 export const PATH_DASHBOARD = '/dashboard';
+// Admin settings / operational tools (bulk welcome-email backfill, future
+// admin-only jobs). Wired in pages/index.jsx and Sidebar Operations group.
+export const PATH_ADMIN_SETTINGS = '/admin-settings';
 export const PATH_QR = '/qr';
 export const PATH_LOGIN = '/login';
 export const PATH_ADMIN_LOGIN = '/adminlogin';
