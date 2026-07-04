@@ -1033,7 +1033,10 @@ localStorage.setItem('partnerPropertiesUniqueZipcodes', JSON.stringify(partnerPr
 	}
 
 
-							{<Paging perPage={constants.PAGING_PARTNERS_SIZE} totalItems={localStorage.getItem("partnerCount")} currentPage={pageNumber} onChangePage={onChangePage} />}
+							{/* Only render the pager when there is more than one page — a lone "1"
+							    button above a one-row table is noise. Multi-page behaviour unchanged. */}
+							{Number(localStorage.getItem("partnerCount")) > constants.PAGING_PARTNERS_SIZE &&
+								<Paging perPage={constants.PAGING_PARTNERS_SIZE} totalItems={localStorage.getItem("partnerCount")} currentPage={pageNumber} onChangePage={onChangePage} />}
 							<div className="table-responsive px-3">
 								<table class="table">
 									<thead style={{ backgroundColor: "#f9f9f7" }} >
