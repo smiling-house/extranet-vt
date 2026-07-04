@@ -344,12 +344,38 @@ if(agent_role) {
 			},
 		);
 		console.log()
-		setIsLoading(false)
-		localStorage.setItem("partnerCount", partnersResponse.data.count);
-		setTotalPartners(parseInt(partnersResponse.data.count))
-		setPartners(partnersResponse.data.partners);
 
-		console.log('partners console by jaison:',partnersResponse.data.partners);		
+		let partnersToShow = partnersResponse.data.partners;
+		let countToShow = partnersResponse.data.count;
+
+		// Partner logins: a PM can have a legacy account AND a RUDH (G-) twin
+		// on the same email. Whichever accountId they logged in with, widen the
+		// lookup to their email so BOTH accounts appear, clearly labelled below.
+		if (extranet_vt_logged_in_role === 'partner' && partnersToShow?.length) {
+			const partnerEmail = partnersToShow[0].email;
+			if (partnerEmail) {
+				try {
+					const byEmail = await userRequest.get(`local/partners`, { params: { email: partnerEmail } });
+					if (byEmail.data?.success && byEmail.data.partners?.length) {
+						const seen = new Set();
+						partnersToShow = byEmail.data.partners.filter(pr => {
+							const key = `${pr.accountId}|${pr.source}`;
+							if (seen.has(key)) return false;
+							seen.add(key);
+							return true;
+						});
+						countToShow = partnersToShow.length;
+					}
+				} catch (e) { console.log('email-wide partner lookup failed', e?.message); }
+			}
+		}
+
+		setIsLoading(false)
+		localStorage.setItem("partnerCount", countToShow);
+		setTotalPartners(parseInt(countToShow))
+		setPartners(partnersToShow);
+
+		console.log('partners console by jaison:', partnersToShow);
 	};
 
 
@@ -541,6 +567,10 @@ localStorage.setItem('partnerPropertiesUniqueZipcodes', JSON.stringify(partnerPr
 			width: '250px'
 		},		
 		{
+			name: 'Account',
+			width: '130px'
+		},
+		{
 			name: 'Listings',
 			width: '100px'
 		}, {
@@ -557,7 +587,11 @@ localStorage.setItem('partnerPropertiesUniqueZipcodes', JSON.stringify(partnerPr
  {
 			name: 'UNMAPPED',
 			width: '150px'
-		},		
+		},
+		{
+			name: 'DISCONNECTED',
+			width: '160px'
+		},
 		{
 			name: 'Updated at',
 			width: '300px'
@@ -917,6 +951,15 @@ localStorage.setItem('partnerPropertiesUniqueZipcodes', JSON.stringify(partnerPr
 	)}
 
 
+							{extranet_vt_logged_in_role === 'partner' && partners?.some(pr => !/^G-/.test(pr.accountId || '')) && partners?.some(pr => /^G-/.test(pr.accountId || '')) && (
+								<div className="migration-infobox">
+									<div className="migration-infobox-title">You have two accounts while we upgrade our system</div>
+									<div className="migration-infobox-body">
+										<span className="acct-pill acct-pill--new">New system</span> is your current account — new bookings and updates sync here.&nbsp;
+										<span className="acct-pill acct-pill--legacy">Legacy</span> is the old connection. Properties listed under <b>Disconnected</b> on the legacy account need to be <b>reconnected in Guesty</b>; once reconnected they move to your new account and sync automatically.
+									</div>
+								</div>
+							)}
 							<div className="agencies-title">
 	{extranet_vt_logged_in_role==='admin' && <span>Guesty PM List</span> }
 	{extranet_vt_logged_in_role==='partner' && <span>Guesty PM Home</span> }
@@ -1060,7 +1103,15 @@ localStorage.setItem('partnerPropertiesUniqueZipcodes', JSON.stringify(partnerPr
 													<td className="pmName px-4 p-3  text-primary  cst-cursor text-decoration-underline" ><h4 onClick={() => GoToPartnerListings(item, item.accountId)}>{item.pmName != null ? item.pmName : ""}</h4></td>
 													<td className="accountId px-4 p-3 text-primary text-decoration-underline cst-cursor"><h4 onClick={() => onEditPartner(item.accountId, item)}>{item.accountId !== null ? item.accountId : ""}</h4></td>
 
-	<td className="accountId px-4 p-3 text-primary cst-cursor"><h4>{item.source}</h4></td>												
+	<td className="accountId px-4 p-3 text-primary cst-cursor"><h4>{item.source}</h4></td>
+
+	<td className="acctType px-4 p-3">
+		{/^G-/.test(item.accountId || '') ? (
+			<span className="acct-pill acct-pill--new" title="Your current account on our new distribution system. New bookings and updates sync here.">New system</span>
+		) : (
+			<span className="acct-pill acct-pill--legacy" title="Old connection. If properties here show as disconnected, reconnect them in Guesty — once reconnected they migrate to your new account automatically.">Legacy</span>
+		)}
+	</td>												
 
 	{/*<td className="Listings px-4 p-3 text-primary text-decoration-underline cst-cursor"><h4 onClick={() => GoToPartnerListings(item, item.accountId)}>{item.offsetRead ? item.offsetRead : "No listings"}/({item.count ? item.count : ""})</h4></td>*/}
 
@@ -1080,7 +1131,11 @@ localStorage.setItem('partnerPropertiesUniqueZipcodes', JSON.stringify(partnerPr
 	*/}
 	<td className="SH provider px-4 p-3 text-primary  cst-cursor"><h4 onClick={() => GoToPartnerListings(item, item.accountId, 'Declined')}>{item.declined_properties_count}</h4></td>
 
-	<td className="SH provider px-4 p-3 text-primary  cst-cursor"><h4 onClick={() => GoToPartnerListings(item, item.accountId, 'unmapped')}>{item.unmapped_properties_count}</h4></td>	
+	<td className="SH provider px-4 p-3 text-primary  cst-cursor"><h4 onClick={() => GoToPartnerListings(item, item.accountId, 'unmapped')}>{item.unmapped_properties_count}</h4></td>
+
+	<td className="disconnected px-4 p-3" title={item.disconnected_properties_count > 0 ? 'These properties lost their connection. Reconnect them in Guesty so they can migrate to the new system and stay bookable.' : 'All properties on this account are connected.'}>
+		<h4 className={item.disconnected_properties_count > 0 ? 'disc-pill disc-pill--warn' : 'disc-pill'}>{item.disconnected_properties_count ?? 0}</h4>
+	</td>	
 
 	<td className="Updated px-4 p-3"><h4>{item.updatedAt !== null && item.updatedAt !== "" ? item.updatedAt.slice(0, 10) : ""}</h4></td>
 												</tr >
