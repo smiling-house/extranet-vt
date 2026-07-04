@@ -1,0 +1,236 @@
+// -----------------------------------------------------------------------
+// Legacy /partners page — visual overlay matching PartnersListView.scss
+// (navy hero, white toolbar cards, modern table). Pure CSS: the page's
+// legacy markup and logic are untouched; everything is scoped under
+// .partners-legacy-restyle so no other legacy page shifts.
+// -----------------------------------------------------------------------
+
+.partners-legacy-restyle {
+  background: #f8fafc;
+  min-height: calc(100vh - 64px);
+  padding: 20px 28px 40px;
+  font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+
+  @media (max-width: 768px) {
+    padding: 14px 12px 32px;
+  }
+
+  .agencies-main {
+    background: transparent;
+    box-shadow: none;
+    border: none;
+    padding: 0;
+  }
+
+  // ---------------------------------------------------------------------
+  // Title block → navy hero card (same gradient as .page-hero)
+  // ---------------------------------------------------------------------
+  .agencies-title {
+    background: linear-gradient(135deg, #1d3145 0%, #11202d 100%);
+    color: #fff;
+    border-radius: 14px;
+    padding: 22px 26px;
+    margin-bottom: 16px;
+    box-shadow: 0 4px 16px rgba(17, 32, 45, 0.18);
+    font-size: 1.5rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    border: none;
+
+    // Admin.scss paints the title span navy — invisible on the navy hero.
+    > span, span { color: #fff !important; }
+
+    .agencies-main-subtitle {
+      font-size: 0.85rem;
+      font-weight: 400;
+      color: rgba(255, 255, 255, 0.72);
+      margin-top: 4px;
+    }
+
+    .dropdown-item {
+      display: inline-block;
+      width: auto;
+      margin-top: 8px;
+      background: rgba(68, 200, 245, 0.16);
+      border: 1px solid rgba(68, 200, 245, 0.35);
+      border-radius: 999px;
+      padding: 6px 14px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #44C8F5;
+
+      &:hover {
+        background: rgba(68, 200, 245, 0.28);
+        color: #fff;
+      }
+
+      img { height: 16px; vertical-align: -3px; }
+    }
+  }
+
+  // ---------------------------------------------------------------------
+  // Admin search bar → white toolbar card
+  // ---------------------------------------------------------------------
+  .search-container {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    padding: 14px 18px;
+    margin-bottom: 16px;
+
+    input.form-control {
+      height: 42px !important;
+      min-height: 42px !important;
+      border: 1px solid #d1d5db !important;
+      border-radius: 10px !important;
+      background: #f9fafb;
+      font-size: 0.9rem !important;
+      color: #111827;
+
+      &:focus {
+        background: #fff;
+        border-color: #44C8F5 !important;
+        box-shadow: 0 0 0 3px rgba(68, 200, 245, 0.18);
+      }
+    }
+
+    button.btn.btn-primary {
+      height: 42px !important;
+      font-size: 0.9rem !important;
+      font-weight: 600 !important;
+      border-radius: 10px !important;
+      background: #192C3D;
+      border-color: #192C3D;
+
+      &:hover { background: #24405c; border-color: #24405c; }
+    }
+  }
+
+  // ---------------------------------------------------------------------
+  // Status filter strip → white toolbar card (was dark w/ white label)
+  // ---------------------------------------------------------------------
+  .filterbystatus-container {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    padding: 14px 18px;
+    margin-bottom: 16px;
+
+    .form-label,
+    .form-label.text-white {
+      color: #4b5563 !important;
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 6px !important;
+    }
+
+    .mb-3 { margin-bottom: 0 !important; }
+
+    .dropdown-toggle {
+      border-radius: 10px !important;
+      background: #f9fafb !important;
+      font-family: inherit;
+    }
+  }
+
+  // ---------------------------------------------------------------------
+  // Table → partners-table look
+  // ---------------------------------------------------------------------
+  .table-responsive {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    padding: 0 !important;
+    overflow-x: auto;
+  }
+
+  table.table {
+    margin: 0;
+    border-collapse: collapse;
+
+    thead {
+      background: #f7fafc !important;
+
+      tr th {
+        background: #f7fafc;
+        text-align: left;
+        padding: 12px 14px;
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: #4b5563;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        border-bottom: 1px solid #e5e7eb;
+        white-space: nowrap;
+        user-select: none;
+
+        svg { width: 11px; height: 11px; vertical-align: -1px; color: #9ca3af; }
+      }
+    }
+
+    tbody tr {
+      border-bottom: 1px solid #f0f4f7;
+      transition: background 0.12s ease;
+
+      &:last-child { border-bottom: none; }
+      &:hover { background: #fafcfe; }
+
+      td {
+        padding: 12px 14px !important;
+        vertical-align: middle;
+        border: none;
+
+        h4 {
+          font-size: 0.88rem;
+          font-weight: 500;
+          margin: 0;
+          line-height: 1.35;
+          color: #111827;
+        }
+
+        // clickable cells (PM name, account id, count drill-downs)
+        &.text-decoration-underline h4,
+        h4[onclick] {
+          text-decoration: none;
+        }
+      }
+
+      td.pmName h4 { font-weight: 700; color: #192C3D; }
+
+      td.accountId h4 {
+        font-family: 'SF Mono', SFMono-Regular, ui-monospace, Menlo, monospace;
+        font-size: 0.78rem;
+        color: #4b5563;
+      }
+
+      // status-count drill-down links → subtle pills
+      td.provider h4,
+      td.Listings h4 {
+        display: inline-block;
+        min-width: 34px;
+        text-align: center;
+        background: #eef6fb;
+        color: #1d5d80;
+        border-radius: 999px;
+        padding: 3px 10px;
+        font-size: 0.8rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: background 0.12s ease, color 0.12s ease;
+
+        &:hover { background: #44C8F5; color: #fff; }
+      }
+
+      td.Updated h4 { color: #6b7280; font-size: 0.8rem; }
+    }
+  }
+
+  // kill the legacy underline-blue link look inside the table
+  .text-primary { color: #192C3D !important; }
+  .text-decoration-underline { text-decoration: none !important; }
+}

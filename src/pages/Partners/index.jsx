@@ -51,6 +51,7 @@ import {
 
 import { data } from "./makeData.js";
 import "./Admin.scss";
+import "./PartnersRestyle.scss";
 import ApproveAgent from "./ApproveAgent";
 import DisApproveAgent from "./DisApproveAgent";
 import DeletePartner from "./DeleteAgency";
@@ -300,7 +301,9 @@ const [serialNumber, setSerialNumber] = useState(0);
 					limit: constants.PAGING_PARTNERS_SIZE,
 					skip: partnersPagingFrom - 1,
 					accountId: searchInputes.accountId,
-				provider:'guesty_channel_api',					
+				// no provider filter here: an accountId is already exact, and
+				// G- twin partners carry provider 'rentalsunited_api' — pinning
+				// guesty_channel_api made every G- partner login show 0 rows.
 				//source:'VT',
 				status:filterPropertyStatus
 				} :
@@ -753,7 +756,7 @@ localStorage.setItem('partnerPropertiesUniqueZipcodes', JSON.stringify(partnerPr
 					handleToggleMenu={handleToggleMenu}
 					setActiveMenu={setActiveMenu}
 				>
-					<div className="agencies-container" >
+					<div className="agencies-container partners-legacy-restyle" >
 						<LoadingBox visible={isLoading} />
 						{selectedRowToEdit &&
 							<>

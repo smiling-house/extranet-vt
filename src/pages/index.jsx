@@ -254,13 +254,15 @@ const showOrHideSideBarMenu=()=> {
 const partnerAccountId = localStorage.getItem('partnerLogin');
 
 if(partnerAccountId) {
-  let GO_TO = '';
-  if( /sh-ru/i.test(partnerAccountId) === true ) {
+  // Default to the Guesty PM home. AccountIds are not only 24-hex: G- twins
+  // (26 chars), RU-/BP- and other shapes exist, and an unmatched id used to
+  // leave GO_TO = '' — dumping the partner on an empty page right after a
+  // successful login, which reads as "my password doesn't work".
+  let GO_TO = PATH_PARTNERS;
+  if( /sh-ru|^RU-/i.test(partnerAccountId) === true ) {
     GO_TO = PATH_PARTNERS_RU
-  } else if (/sh-bp/i.test(partnerAccountId) === true) {
+  } else if (/sh-bp|^BP-/i.test(partnerAccountId) === true) {
     GO_TO = PATH_PARTNERS_BP
-  } else if(partnerAccountId.length === 24) {
-    GO_TO = PATH_PARTNERS; //DEFAULT PAGE
   }
 
   history.push(GO_TO);
