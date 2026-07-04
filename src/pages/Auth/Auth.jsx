@@ -364,7 +364,12 @@ export const SignIn = () => {
 					<h2 className="auth-title">Sign in to your account</h2>
 					<p className="auth-desc">Enter your credentials below to continue.</p>
 
-					{state?.error?.msg && <div className="auth-error">{state.error.msg}</div>}
+					{new URLSearchParams(window.location.search).get('expired') && !state?.error?.msg && (
+							<div className="auth-error">Your session expired — please sign in again.</div>
+						)}
+						{state?.error?.msg && <div className="auth-error">{state.error.msg}
+							<div className="auth-error-sub">Partner? Make sure the password is your Account ID, or <span className="auth-link" onClick={() => history.push("/forgotPassword")}>resend your access details</span>.</div>
+						</div>}
 
 					<label className="auth-label" htmlFor="auth-email">E-Mail</label>
 					<input
@@ -378,7 +383,7 @@ export const SignIn = () => {
 					/>
 
 					<div className="auth-label-row">
-						<label className="auth-label" htmlFor="auth-pw">Password</label>
+						<label className="auth-label" htmlFor="auth-pw">Password / Account ID</label>
 						<span className="auth-link" onClick={() => history.push("/forgotPassword")}>Resend access details</span>
 					</div>
 					<input
@@ -390,6 +395,7 @@ export const SignIn = () => {
 						placeholder="Password"
 						autoComplete="current-password"
 					/>
+						<div className="auth-hint">Partners: your password is the Account ID from your welcome email.</div>
 
 					{codeSent && (
 						<>

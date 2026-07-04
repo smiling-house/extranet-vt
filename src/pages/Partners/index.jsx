@@ -52,6 +52,7 @@ import {
 import { data } from "./makeData.js";
 import "./Admin.scss";
 import "./PartnersRestyle.scss";
+import { toast } from 'react-toastify';
 import ApproveAgent from "./ApproveAgent";
 import DisApproveAgent from "./DisApproveAgent";
 import DeletePartner from "./DeleteAgency";
@@ -149,6 +150,25 @@ const showOrHideSideBarMenu=()=> {
 	const [selectedPartnerToEdit, setSelectedPartnerToEdit] = useState(null);
 	const [selectedPartnerToDelete, setSelectedPartnerToDelete] = useState(null);
 	const [partnerToApprove, setPartnerToApprove] = useState(null);
+	// Reconnect drill-down modal: which legacy listings still lack a G- twin
+	const [reconnectFor, setReconnectFor] = useState(null);   // partner row
+	const [showInactiveAccounts, setShowInactiveAccounts] = useState(false);
+	const [reconnectList, setReconnectList] = useState(null); // fetched listings
+
+	const openReconnectList = async (item) => {
+		if (!(item.reconnect_properties_count > 0)) return;
+		setReconnectFor(item);
+		setReconnectList(null);
+		try {
+			const res = await userRequest.get(`local/partners/reconnect-listings/${item.accountId}`, {
+				params: { channelSource: item.source === 'G' ? 'VT' : item.source },
+			});
+			setReconnectList(res.data?.listings || []);
+		} catch (e) {
+			console.log('reconnect-listings fetch failed', e?.message);
+			setReconnectList([]);
+		}
+	};
 	const [partnerToDisApprove, setPartnerToDisApprove] = useState(null);
 	const [totalPartners, setTotalPartners] = useState(null);
 	const [partners, setPartners] = useState([]);
@@ -159,6 +179,14 @@ const showOrHideSideBarMenu=()=> {
 	const [searchPartners, setSearchPartners] = useState("");
 
 localStorage.setItem('partners_page','partners');
+	useEffect(() => {
+		const who = sessionStorage.getItem('extranet-welcome-toast');
+		if (who) {
+			sessionStorage.removeItem('extranet-welcome-toast');
+			toast.success(`Welcome back${who !== '1' ? ', ' + who : ''}!`, { position: 'top-right', toastClassName: 'custom-toast' });
+		}
+	}, []);
+
 let property_status_to_filter_gs = '';
 	//const [pageNumber, setPageNumber] = useState(page);
 		//added by jaison for Liron 2025-June 11
@@ -429,15 +457,19 @@ const fetchCurrenciesExchangeRates = async () => {
 	const GoToPartnerListings = async(partner, accountId, propertyStatusToFilter='') => {
 localStorage.setItem('property_status_to_filter_listings', propertyStatusToFilter);
 
+// G- twin listings live under channelSource 'VT', never 'G' — same twin
+// mapping as the hub count pipelines, otherwise every drill-down from a
+// G- row comes back empty.
+const drillChannelSource = partner.source === 'G' ? 'VT' : partner.source;
 const responseDataUniqueZips = await userRequest.post(`local/partners/properties-unique-zipcodes`,
-	{ accountId: accountId, channelSource: partner.source },
+	{ accountId: accountId, channelSource: drillChannelSource },
 );
 
 const partnerPropertiesUniqueZipcodes = responseDataUniqueZips.data;
 localStorage.setItem('partnerPropertiesUniqueZipcodes', JSON.stringify(partnerPropertiesUniqueZipcodes));
 
 		console.log("see listings for account:", accountId, partner.source);
-		localStorage.setItem("partner", JSON.stringify(partner))
+		localStorage.setItem("partner", JSON.stringify({ ...partner, source: drillChannelSource }))
 
 		/*if (!partner.offsetRead) {
 			swal({
@@ -447,7 +479,7 @@ localStorage.setItem('partnerPropertiesUniqueZipcodes', JSON.stringify(partnerPr
 				text: "No Data Found on Account ID :" + accountId + ' channel: ' + partner.source
 			})
 		} else {*/
-			history.push(PATH_LISTINGS, { partner, accountId, source: partner.source });
+			history.push(PATH_LISTINGS, { partner: { ...partner, source: drillChannelSource }, accountId, source: drillChannelSource });
 		//}
 
 	};
@@ -589,8 +621,8 @@ localStorage.setItem('partnerPropertiesUniqueZipcodes', JSON.stringify(partnerPr
 			width: '150px'
 		},
 		{
-			name: 'DISCONNECTED',
-			width: '160px'
+			name: 'RECONNECT',
+			width: '150px'
 		},
 		{
 			name: 'Updated at',
@@ -809,6 +841,50 @@ localStorage.setItem('partnerPropertiesUniqueZipcodes', JSON.stringify(partnerPr
 								<ApproveAgent partner={partnerToApprove} onClose={onClose} />
 							</Popup>
 						}
+
+						{reconnectFor &&
+							<Popup width={860} onClose={() => { setReconnectFor(null); setReconnectList(null); }}>
+								<div className="reconnect-modal">
+									<h3>Properties to reconnect — {reconnectFor.pmName} <span className="acct-pill acct-pill--legacy">Legacy</span></h3>
+									<p className="reconnect-modal-note">
+										These properties only exist on your legacy account. To migrate them, open your own
+										Guesty account and go to <b>Channel distribution settings</b>, then reconnect each
+										property to the <b>{reconnectFor.source === 'SH' ? 'Smiling House' : 'Villa Tracker'} channel</b> —
+										we can't do this from our side. Once reconnected, each property moves to your{' '}
+										<span className="acct-pill acct-pill--new">New system</span> account and syncs automatically.
+									</p>
+									{reconnectList?.length > 0 && (
+										<button type="button" className="reconnect-csv-btn" onClick={() => {
+											const rows = [['Title', 'Listing ID', 'Status', 'Channel'], ...reconnectList.map(l => [l.title, l.id, l.status, reconnectFor.source === 'SH' ? 'Smiling House' : 'Villa Tracker'])];
+											const csv = rows.map(r => r.map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(',')).join('\n');
+											const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+											const el = document.createElement('a');
+											el.href = url; el.download = `reconnect-${reconnectFor.accountId}.csv`; el.click();
+											URL.revokeObjectURL(url);
+										}}>Download CSV</button>
+									)}
+									{reconnectList === null && <div className="reconnect-modal-loading">Loading…</div>}
+									{reconnectList !== null && (
+										<div className="reconnect-modal-tablewrap">
+											<table>
+												<thead><tr><th>#</th><th>Property</th><th>Listing ID</th><th>Status</th></tr></thead>
+												<tbody>
+													{reconnectList.map((l, i) => (
+														<tr key={l.id}>
+															<td>{i + 1}</td>
+															<td className="rc-title">{l.title}</td>
+															<td className="rc-id">{l.id}</td>
+															<td><span className={`status-chip status-chip--${(l.status || '').toLowerCase()}`}>{l.status || '—'}</span></td>
+														</tr>
+													))}
+													{reconnectList.length === 0 && <tr><td colSpan={4}>Nothing to reconnect.</td></tr>}
+												</tbody>
+											</table>
+										</div>
+									)}
+								</div>
+							</Popup>
+						}
 						{partnerToDisApprove &&
 							<Popup width={820} onClose={onClose}>
 								<DisApproveAgent partner={partnerToDisApprove} onClose={onClose} />
@@ -956,7 +1032,7 @@ localStorage.setItem('partnerPropertiesUniqueZipcodes', JSON.stringify(partnerPr
 									<div className="migration-infobox-title">You have two accounts while we upgrade our system</div>
 									<div className="migration-infobox-body">
 										<span className="acct-pill acct-pill--new">New system</span> is your current account — new bookings and updates sync here.&nbsp;
-										<span className="acct-pill acct-pill--legacy">Legacy</span> is the old connection. Properties listed under <b>Disconnected</b> on the legacy account need to be <b>reconnected in Guesty</b>; once reconnected they move to your new account and sync automatically.
+										<span className="acct-pill acct-pill--legacy">Legacy</span> is the old connection. The <b>Reconnect</b> column shows properties that only exist on your legacy account — <b>you need to reconnect these yourself in your Guesty account &rarr; Channel distribution settings, for the relevant channel</b> (we can't do it from our side). Once reconnected, they move to your new account and sync automatically. Counts differ per row because each account only shows the properties shared with <b>that</b> connection.
 									</div>
 								</div>
 							)}
@@ -1093,23 +1169,47 @@ localStorage.setItem('partnerPropertiesUniqueZipcodes', JSON.stringify(partnerPr
 										</tr>
 									</thead>
 									<tbody>
-										{partners?.map((item, index) => {
+										{(extranet_vt_logged_in_role === 'partner' && !showInactiveAccounts
+											? partners?.filter(pr => (pr.total_properties_count || 0) + (pr.reconnect_properties_count || 0) + (pr.unmapped_properties_count || 0) > 0)
+											: partners)?.map((item, index) => {
+											// Partner view: the G- twin record often carries the person's
+											// name in pmName (no company). All rows belong to one PM there,
+											// so borrow the company name from a sibling legacy record and
+											// show the contact underneath.
+											const groupCompany = extranet_vt_logged_in_role === 'partner'
+												? partners.find(pr => !/^G-/.test(pr.accountId || '') && pr.pmName?.trim())?.pmName?.trim()
+												: null;
+											const bigName = (groupCompany || item.pmName || '').trim();
+											const subName = [item.contactName, item.pmName]
+												.map(n => (n || '').trim())
+												.find(n => n && n !== bigName) || '';
 											//console.log("item ", index, item)
 											return <>
 												<tr >
 													<td className="pmName px-4 p-3  text-primary  cst-cursor" ><h4>{/*totalPartners - partnersPagingFrom - index + 1*/}
 													{serialNumber+index+1}
 													</h4></td>
-													<td className="pmName px-4 p-3  text-primary  cst-cursor text-decoration-underline" ><h4 onClick={() => GoToPartnerListings(item, item.accountId)}>{item.pmName != null ? item.pmName : ""}</h4></td>
+													<td className="pmName px-4 p-3  text-primary  cst-cursor text-decoration-underline" onClick={() => GoToPartnerListings(item, item.accountId)}>
+													<h4 className="pm-name-main">{bigName}</h4>
+													{subName && <div className="pm-name-sub">{subName}</div>}
+												</td>
 													<td className="accountId px-4 p-3 text-primary text-decoration-underline cst-cursor"><h4 onClick={() => onEditPartner(item.accountId, item)}>{item.accountId !== null ? item.accountId : ""}</h4></td>
 
-	<td className="accountId px-4 p-3 text-primary cst-cursor"><h4>{item.source}</h4></td>
+	<td className="accountId px-4 p-3 text-primary cst-cursor"><h4>{extranet_vt_logged_in_role === 'partner' ? ({ G: 'New system', VT: 'Villa Tracker', SH: 'Smiling House' }[item.source] || item.source) : item.source}</h4></td>
 
 	<td className="acctType px-4 p-3">
 		{/^G-/.test(item.accountId || '') ? (
 			<span className="acct-pill acct-pill--new" title="Your current account on our new distribution system. New bookings and updates sync here.">New system</span>
 		) : (
-			<span className="acct-pill acct-pill--legacy" title="Old connection. If properties here show as disconnected, reconnect them in Guesty — once reconnected they migrate to your new account automatically.">Legacy</span>
+			<>
+				<span className="acct-pill acct-pill--legacy" title="Old connection. Reconnect its remaining properties in Guesty — once reconnected they migrate to your new account automatically.">Legacy</span>
+				{item.total_properties_count > 0 && item.reconnect_properties_count >= 0 && (
+					<div className="migration-progress" title={`${Math.max(item.total_properties_count - item.reconnect_properties_count, 0)} of ${item.total_properties_count} properties migrated to the new system`}>
+						<div className="migration-progress-bar"><span style={{ width: `${Math.min(100, Math.round(100 * Math.max(item.total_properties_count - item.reconnect_properties_count, 0) / item.total_properties_count))}%` }} /></div>
+						<div className="migration-progress-label">{Math.max(item.total_properties_count - item.reconnect_properties_count, 0)}/{item.total_properties_count} migrated</div>
+					</div>
+				)}
+			</>
 		)}
 	</td>												
 
@@ -1133,8 +1233,8 @@ localStorage.setItem('partnerPropertiesUniqueZipcodes', JSON.stringify(partnerPr
 
 	<td className="SH provider px-4 p-3 text-primary  cst-cursor"><h4 onClick={() => GoToPartnerListings(item, item.accountId, 'unmapped')}>{item.unmapped_properties_count}</h4></td>
 
-	<td className="disconnected px-4 p-3" title={item.disconnected_properties_count > 0 ? 'These properties lost their connection. Reconnect them in Guesty so they can migrate to the new system and stay bookable.' : 'All properties on this account are connected.'}>
-		<h4 className={item.disconnected_properties_count > 0 ? 'disc-pill disc-pill--warn' : 'disc-pill'}>{item.disconnected_properties_count ?? 0}</h4>
+	<td className="disconnected px-4 p-3" title={item.reconnect_properties_count > 0 ? `Click to see which ${item.reconnect_properties_count} propert${item.reconnect_properties_count === 1 ? 'y needs' : 'ies need'} reconnecting from YOUR Guesty account. We cannot do this from our side.` : 'Nothing to reconnect on this account.'}>
+		<h4 className={item.reconnect_properties_count > 0 ? 'disc-pill disc-pill--warn cst-cursor' : 'disc-pill'} onClick={() => openReconnectList(item)}>{item.reconnect_properties_count ?? 0}</h4>
 	</td>	
 
 	<td className="Updated px-4 p-3"><h4>{item.updatedAt !== null && item.updatedAt !== "" ? item.updatedAt.slice(0, 10) : ""}</h4></td>
@@ -1144,6 +1244,11 @@ localStorage.setItem('partnerPropertiesUniqueZipcodes', JSON.stringify(partnerPr
 									</tbody>
 								</table>
 							</div>
+							{extranet_vt_logged_in_role === 'partner' && partners?.some(pr => (pr.total_properties_count || 0) + (pr.reconnect_properties_count || 0) + (pr.unmapped_properties_count || 0) === 0) && (
+								<div className="inactive-accounts-toggle" onClick={() => setShowInactiveAccounts(v => !v)}>
+									{showInactiveAccounts ? 'Hide' : 'Show'} inactive accounts ({partners.filter(pr => (pr.total_properties_count || 0) + (pr.reconnect_properties_count || 0) + (pr.unmapped_properties_count || 0) === 0).length})
+								</div>
+							)}
 						</div>
 					</div >
 				</Layout>

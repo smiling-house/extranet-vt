@@ -283,3 +283,113 @@
     &-body .acct-pill { font-size: 0.7rem; padding: 2px 9px; vertical-align: 1px; }
   }
 }
+
+.reconnect-modal {
+  font-family: 'Manrope', -apple-system, system-ui, sans-serif;
+  padding: 6px 4px;
+
+  h3 { font-size: 1.15rem; font-weight: 800; margin: 0 0 10px; display: flex; align-items: center; gap: 10px; }
+  .reconnect-modal-note { font-size: 0.88rem; line-height: 1.55; color: #574410; background: #fffaf0; border: 1px solid #f0dcb2; border-radius: 10px; padding: 10px 14px; margin-bottom: 14px; }
+  .reconnect-modal-loading { color: #6b7280; padding: 14px 4px; }
+  .reconnect-modal-tablewrap { max-height: 420px; overflow: auto; border: 1px solid #e5e7eb; border-radius: 10px; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.86rem; }
+  thead th { position: sticky; top: 0; background: #f7fafc; text-align: left; padding: 9px 12px; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.06em; color: #4b5563; border-bottom: 1px solid #e5e7eb; }
+  tbody td { padding: 9px 12px; border-bottom: 1px solid #f0f4f7; }
+  tbody tr:last-child td { border-bottom: none; }
+  td.rc-title { font-weight: 600; color: #192C3D; }
+  td.rc-id { font-family: ui-monospace, Menlo, monospace; font-size: 0.76rem; color: #4b5563; }
+  .acct-pill { font-size: 0.68rem; padding: 2px 9px; }
+}
+
+.partners-legacy-restyle table.table tbody tr {
+  td.pmName .pm-name-main { font-weight: 700; color: #192C3D; }
+  td.pmName .pm-name-sub { font-size: 0.76rem; color: #6b7280; margin-top: 2px; font-weight: 500; }
+}
+
+// New-feature styles: toggle, chips, csv button, progress, auth hint
+.partners-legacy-restyle {
+  .inactive-accounts-toggle {
+    margin-top: 10px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #1d5d80;
+    cursor: pointer;
+    user-select: none;
+    &:hover { text-decoration: underline; }
+  }
+
+  .migration-progress {
+    margin-top: 7px;
+    min-width: 110px;
+    cursor: help;
+    &-bar {
+      height: 5px; border-radius: 999px; background: #f0dcb2; overflow: hidden;
+      span { display: block; height: 100%; background: #44C8F5; border-radius: 999px; }
+    }
+    &-label { font-size: 0.68rem; color: #8a5a10; margin-top: 3px; font-weight: 600; }
+  }
+}
+
+.reconnect-modal {
+  .reconnect-csv-btn {
+    appearance: none; border: 1px solid #d1d5db; background: #f9fafb; color: #192C3D;
+    border-radius: 8px; padding: 6px 14px; font-size: 0.8rem; font-weight: 700;
+    cursor: pointer; margin-bottom: 10px;
+    &:hover { background: #192C3D; color: #fff; border-color: #192C3D; }
+  }
+  .status-chip {
+    display: inline-block; border-radius: 999px; padding: 2px 10px; font-size: 0.74rem; font-weight: 700;
+    background: #f1f5f8; color: #4b5563;
+  }
+  .status-chip--approved { background: #e5f6ec; color: #17703c; }
+  .status-chip--pending { background: #fdf3e0; color: #8a5a10; }
+  .status-chip--declined { background: #fdecec; color: #a33a3a; }
+}
+
+// Auth page hint + error sub-line (scoped globally; auth page has its own css file
+// but these ride along to keep the change set in one place)
+.auth-hint { font-size: 12px; color: #8a97a5; margin: 6px 0 0; }
+.auth-error-sub { font-size: 12px; font-weight: 400; margin-top: 6px; }
+.auth-error-sub .auth-link { cursor: pointer; text-decoration: underline; }
+
+// Mobile: collapse the wide table into cards (mirrors PartnersListView behaviour)
+@media (max-width: 768px) {
+  .partners-legacy-restyle {
+    .table-responsive { overflow: visible; border: none; background: transparent; box-shadow: none; }
+    table.table {
+      display: block;
+      thead { display: none; }
+      tbody { display: block; }
+      tbody tr {
+        display: block;
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+        padding: 8px 14px;
+        margin-bottom: 12px;
+        td {
+          display: flex; justify-content: space-between; align-items: center; gap: 12px;
+          padding: 7px 0 !important; border: none;
+          &::before {
+            font-size: 0.68rem; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.06em; color: #9ca3af; white-space: nowrap;
+          }
+          &:nth-child(1) { display: none; }
+          &:nth-child(2)::before { content: 'Partner'; }
+          &:nth-child(3)::before { content: 'Account ID'; }
+          &:nth-child(4)::before { content: 'Channel'; }
+          &:nth-child(5)::before { content: 'Account'; }
+          &:nth-child(6)::before { content: 'Listings'; }
+          &:nth-child(7)::before { content: 'Approved'; }
+          &:nth-child(8)::before { content: 'Pending'; }
+          &:nth-child(9)::before { content: 'Declined'; }
+          &:nth-child(10)::before { content: 'Unmapped'; }
+          &:nth-child(11)::before { content: 'Reconnect'; }
+          &:nth-child(12)::before { content: 'Updated'; }
+        }
+        td.accountId h4 { word-break: break-all; text-align: right; }
+      }
+    }
+  }
+}
