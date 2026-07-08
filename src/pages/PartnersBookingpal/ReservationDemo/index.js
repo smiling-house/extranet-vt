@@ -69,6 +69,11 @@ const ReservationDemo = ({ listing, onClose }) => {
     wrap("Quote preview", () => AuthService.bpQuotePreview({ reservation_id: confirmationId, start_date: startDate, nights, number_of_guests: numberOfGuests }));
 
   const onCreate = async () => {
+    // BookingPal expects the guest name split into first/last (the hub maps
+    // guest_first_name/guest_last_name), and a credit_card block on create.
+    const parts = guestName.trim().split(/\s+/);
+    const guest_first_name = parts.shift() || "";
+    const guest_last_name = parts.join(" ");
     const body = await wrap("Create reservation", () =>
       AuthService.bpCreateReservation({
         listing_id: listingId,
@@ -77,7 +82,20 @@ const ReservationDemo = ({ listing, onClose }) => {
         number_of_guests: Number(numberOfGuests),
         total: Number(total),
         currency,
-        guest: { name: guestName, email: guestEmail, phone: guestPhone },
+        guest_first_name,
+        guest_last_name,
+        guest_email: guestEmail,
+        guest_phone_numbers: [guestPhone],
+        credit_card: {
+          card_number: "4111111111111111",
+          card_month: "10",
+          card_year: "28",
+          card_type: 1,
+          cc_security_code: "222",
+          cc_address: "test address",
+          cc_country: "sr",
+          cc_city: "NS",
+        },
       })
     );
     const r = body?.result;
