@@ -33,7 +33,7 @@
   overflow: hidden;
   color: #fff;
 }
-.auth-left-logo img { height: 38px; width: auto; display: block; }
+.auth-left-logo img { height: 64px; width: auto; display: block; }
 .auth-headline {
   font: 800 36px/1.15 "Manrope", sans-serif;
   letter-spacing: -0.02em;

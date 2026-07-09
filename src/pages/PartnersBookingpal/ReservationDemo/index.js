@@ -326,6 +326,8 @@ const ReservationDemo = ({ listing, onClose }) => {
     wrap("Quote preview", () => AuthService.bpQuotePreview({ reservation_id: confirmationId, start_date: startDate, nights, number_of_guests: numberOfGuests }));
 
   const onCreate = async () => {
+    // Raw operator create (no Flywire). Payment for real bookings goes through
+    // the "Book & Pay" flow above; this sends the quote NET to the channel.
     const body = await wrap("Create reservation", () =>
       AuthService.bpCreateReservation({
         listing_id: listingId,
