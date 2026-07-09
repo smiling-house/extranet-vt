@@ -94,6 +94,24 @@ const addReservation = async (payload) => {
         headers: { authorization: `Bearer ${userToken}` },
     })
 }
+// Currency exchange rates (for the BP reserve modal's USD conversion when the
+// charge portal is USD-only, e.g. the Flywire demo portal). Same hub endpoint
+// the Partners page uses; returns an array of { currency_code, conversion_rates }.
+const getExchangeRates = async () => {
+    return userRequest.get(constants.SHUB_URL + `/xchange`)
+}
+// Cancel/decline the reservation-of-record. Points at RESERVATION_API (VT-BE for
+// VT), whose updateReservationStatus runs the Flywire refund/hold-release side
+// effect and returns `flywireAction` — the refund behaves EXACTLY like VT-FE.
+const bpDeclineReservation = async (reservationID, status = 'declined', extraFields = undefined) => {
+    const body = { status, ...(extraFields && typeof extraFields === 'object' ? extraFields : {}) }
+    const response = await axios.put(`${constants.RESERVATION_API}/reservation/update-reservation`, body, {
+        params: { id: reservationID },
+        headers: { 'Content-Type': 'application/json', authorization: `Bearer ${userToken}` },
+    })
+    // Normalize for UI callers (mirrors VT-FE updateReservationStatus).
+    return { success: response?.status >= 200 && response?.status < 300, ...response.data }
+}
 
 
 const addNewPartner = async (payload) => {
@@ -639,6 +657,7 @@ const AuthService = {
     AgentSignup,
     GetReservation,
     addReservation,
+    getExchangeRates,
     updateProfileApi,
     AddNewClientApi,
     GetProfile,
@@ -672,6 +691,7 @@ const AuthService = {
     bpReservationDetails,
     bpModifyReservation,
     bpCancelReservation,
+    bpDeclineReservation,
 };
 
 export default AuthService;

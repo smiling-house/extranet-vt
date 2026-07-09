@@ -42,6 +42,11 @@ const errText = (e) =>
   e?.message ||
   String(e);
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+// Optional leading +, then 7–18 chars of digits/spaces/()-. Rejects junk like
+// a 26-digit string.
+const PHONE_RE = /^\+?[\d\s().-]{7,18}$/;
+
 const ReservationDemo = ({ listing, onClose }) => {
   // listing.id = "BP-<n>"; listing_id sent to BookingPal = numeric part.
   const initialListingId = listing?.id ? String(listing.id).replace(/^BP-/, "") : "";
@@ -70,8 +75,32 @@ const ReservationDemo = ({ listing, onClose }) => {
   const [priced, setPriced] = useState(false);
   const [paying, setPaying] = useState(false);
 
+  // Load currency rates once (into localStorage.exchangeRatesData) so the USD
+  // conversion for USD-only charge portals (e.g. the Flywire demo portal, or a
+  // non-USD/CHF/EUR currency) works even when the operator opened this page
+  // without first visiting a page that loads them.
+  const ensureExchangeRates = async () => {
+    try {
+      const existing = JSON.parse(localStorage.getItem("exchangeRatesData") || "null");
+      if (existing && Object.keys(existing).length > 0) return;
+      const res = await AuthService.getExchangeRates();
+      const arr = res?.data;
+      if (Array.isArray(arr) && arr.length) {
+        const map = {};
+        arr.forEach((item) => {
+          if (item?.currency_code) map[item.currency_code] = { conversion_rates: item.conversion_rates };
+        });
+        localStorage.setItem("exchangeRatesData", JSON.stringify(map));
+      }
+    } catch (e) {
+      console.error("exchange-rate load failed", e);
+    }
+  };
+
   useEffect(() => {
     loadFlywireSDK().catch((e) => console.error(e));
+    ensureExchangeRates();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Re-price whenever the stay inputs change (must re-quote before paying).
@@ -101,6 +130,20 @@ const ReservationDemo = ({ listing, onClose }) => {
       swal("Missing details", "Enter listing, dates, nights and guests first.", "warning");
       return;
     }
+    const n = Number(nights);
+    const g = Number(numberOfGuests);
+    if (!Number.isInteger(n) || n < 1 || n > 90) {
+      swal("Check nights", "Nights must be a whole number between 1 and 90.", "warning");
+      return;
+    }
+    if (!Number.isInteger(g) || g < 1 || g > 50) {
+      swal("Check guests", "Guests must be a whole number between 1 and 50.", "warning");
+      return;
+    }
+    if (startDate < new Date().toISOString().slice(0, 10)) {
+      swal("Check date", "The start date can't be in the past.", "warning");
+      return;
+    }
     setQuoting(true);
     try {
       const res = await AuthService.bpQuote({
@@ -122,7 +165,9 @@ const ReservationDemo = ({ listing, onClose }) => {
       }
       const up = bpUpsell(net);
       // Resolve the actual charge (native portal, else USD-converted) so the
-      // displayed + recorded amount/currency match what Flywire charges.
+      // displayed + recorded amount/currency match what Flywire charges. Make
+      // sure FX rates are loaded first (needed for the USD-conversion path).
+      await ensureExchangeRates();
       const charge = resolveFlywireCharge(up.sellingPrice, currency);
       if (charge.amount == null || !(charge.amount > 0)) {
         swal("Currency unavailable", `No conversion rate for ${currency}. Cannot take card payment for this currency.`, "error");
@@ -145,7 +190,7 @@ const ReservationDemo = ({ listing, onClose }) => {
   };
 
   // Take the Flywire INSTANT payment; the return leg finalizes the booking.
-  const bookAndPay = () => {
+  const bookAndPay = async () => {
     if (!priced || !(sellingPrice > 0)) {
       swal("Get a price first", "Click “Get price” before paying.", "warning");
       return;
@@ -154,8 +199,25 @@ const ReservationDemo = ({ listing, onClose }) => {
       swal("Guest details", "Enter the guest name and email.", "warning");
       return;
     }
+    if (!EMAIL_RE.test(guestEmail.trim())) {
+      swal("Check email", "Enter a valid guest email address.", "warning");
+      return;
+    }
+    if (guestPhone.trim() && !PHONE_RE.test(guestPhone.trim())) {
+      swal("Check phone", "Enter a valid phone number — 7 to 18 digits, with an optional leading +.", "warning");
+      return;
+    }
+    // The SDK loads async on mount; if it isn't ready yet (or a first load
+    // failed), try once more on-demand before giving up.
     if (!window.FlywirePayment) {
-      swal("Payment unavailable", "The payment SDK didn't load. Refresh and try again.", "error");
+      try { await loadFlywireSDK(); } catch (e) { /* handled below */ }
+    }
+    if (!window.FlywirePayment) {
+      swal(
+        "Payment unavailable",
+        "The Flywire payment SDK could not load — it may be blocked by an ad-blocker/privacy extension or your network. Open the browser console, check for a blocked request to payment.flywire.com, then try again.",
+        "error"
+      );
       return;
     }
 
@@ -293,15 +355,18 @@ const ReservationDemo = ({ listing, onClose }) => {
     <div
       className="modal fade show"
       role="dialog"
-      style={{ display: "block", backgroundColor: "rgba(0,0,0,0.5)", zIndex: 1060, position: "fixed", inset: 0 }}
+      style={{ display: "block", backgroundColor: "rgba(0,0,0,0.5)", zIndex: 1060, position: "fixed", inset: 0, overflowY: "auto", padding: "90px 0 24px" }}
     >
-      <div className="modal-dialog modal-lg" role="document">
-        <div className="modal-content">
-          <div className="modal-header">
-            <h4 className="modal-title" style={{ fontSize: 20, padding: "8px 12px" }}>
+      <div className="modal-dialog modal-lg" role="document" style={{ marginTop: 0 }}>
+        <div className="modal-content" style={{ maxHeight: "calc(100vh - 114px)", overflowY: "auto" }}>
+          <div
+            className="modal-header"
+            style={{ position: "sticky", top: 0, background: "#fff", zIndex: 1, borderBottom: "1px solid #e5e7eb", display: "flex", alignItems: "center", justifyContent: "space-between" }}
+          >
+            <h4 className="modal-title" style={{ fontSize: 20, padding: "8px 12px", margin: 0 }}>
               Reserve — {listing?.data?.title || listing?.id || ""}
             </h4>
-            <button type="button" className="close" aria-label="Close" onClick={onClose} style={{ fontSize: "1.8rem", fontWeight: 700 }}>
+            <button type="button" className="close" aria-label="Close" onClick={onClose} style={{ fontSize: "1.8rem", fontWeight: 700, padding: "0 12px", background: "none", border: "none", cursor: "pointer" }}>
               &times;
             </button>
           </div>
@@ -314,30 +379,30 @@ const ReservationDemo = ({ listing, onClose }) => {
               </div>
               <div className="col-md-3" style={{ marginBottom: 8 }}>
                 <label>Start date</label>
-                <input type="date" className="form-control" value={startDate} onChange={(e) => { setStartDate(e.target.value); invalidatePrice(); }} />
+                <input type="date" className="form-control" min={new Date().toISOString().slice(0, 10)} value={startDate} onChange={(e) => { setStartDate(e.target.value); invalidatePrice(); }} />
               </div>
               <div className="col-md-3" style={{ marginBottom: 8 }}>
                 <label>Nights</label>
-                <input type="number" className="form-control" value={nights} onChange={(e) => { setNights(e.target.value); invalidatePrice(); }} />
+                <input type="number" className="form-control" min={1} max={90} value={nights} onChange={(e) => { setNights(e.target.value); invalidatePrice(); }} />
               </div>
               <div className="col-md-3" style={{ marginBottom: 8 }}>
                 <label># Guests</label>
-                <input type="number" className="form-control" value={numberOfGuests} onChange={(e) => { setNumberOfGuests(e.target.value); invalidatePrice(); }} />
+                <input type="number" className="form-control" min={1} max={50} value={numberOfGuests} onChange={(e) => { setNumberOfGuests(e.target.value); invalidatePrice(); }} />
               </div>
             </div>
 
             <div className="row">
               <div className="col-md-4" style={{ marginBottom: 8 }}>
                 <label>Guest name *</label>
-                <input type="text" className="form-control" value={guestName} onChange={(e) => setGuestName(e.target.value)} />
+                <input type="text" className="form-control" maxLength={80} value={guestName} onChange={(e) => setGuestName(e.target.value)} />
               </div>
               <div className="col-md-4" style={{ marginBottom: 8 }}>
                 <label>Guest email *</label>
-                <input type="email" className="form-control" value={guestEmail} onChange={(e) => setGuestEmail(e.target.value)} />
+                <input type="email" className="form-control" maxLength={120} value={guestEmail} onChange={(e) => setGuestEmail(e.target.value)} />
               </div>
               <div className="col-md-4" style={{ marginBottom: 8 }}>
                 <label>Guest phone</label>
-                <input type="text" className="form-control" value={guestPhone} onChange={(e) => setGuestPhone(e.target.value)} />
+                <input type="tel" className="form-control" maxLength={18} placeholder="+41 79 123 45 67" value={guestPhone} onChange={(e) => setGuestPhone(e.target.value)} />
               </div>
             </div>
 

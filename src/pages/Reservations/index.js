@@ -16,6 +16,7 @@ import Datatable from "../../components/Datatable";
 import "./Reservations.scss";
 import Paging from "../../components/Paging";
 import AuthService from "../../services/auth.service";
+import axios from "axios";
 import moment from "moment/moment";
 import { BsChevronDown } from "react-icons/bs";
 import { BiCalendarCheck } from "react-icons/bi";
@@ -28,6 +29,7 @@ const Reservations = (props) => {
   const isLoading = useSelector((state) => state.property.isLoading);
   const reservations = useSelector((state) => state.property.reservations);
   const [data, setData] = useState([]);
+  const [cancelingId, setCancelingId] = useState(null);
   const doSearch = (pageNumber) => {
     //console.log("loading page ", pageNumber);
     dispatch(propertyActions.loadProperties(pageNumber));
@@ -176,7 +178,7 @@ const Reservations = (props) => {
   const handleReservationSearch = (name, value) => {
     setseachInpputes(value);
   };
-  const handlSearchClick = () => {
+  const refreshReservations = () => {
     AuthService.GetReservation(seachInpputes)
       .then((response) => {
         setData(response.reservations);
@@ -184,6 +186,181 @@ const Reservations = (props) => {
       .catch((e) => {
         console.log(e);
       });
+  };
+  const handlSearchClick = () => {
+    refreshReservations();
+  };
+
+  // What the backend did about the guest's money when cancelling — surfaced to
+  // the agent. Mirrors VT-FE's FLYWIRE_ACTION_MESSAGES so the extranet reports
+  // the refund/hold outcome exactly like VT-FE does.
+  const FLYWIRE_ACTION_MESSAGES = {
+    hold_released: "The guest's card authorization hold was released.",
+    cancel_failed:
+      "The pre-auth hold could NOT be released automatically — admins were emailed to release it in the Flywire dashboard (it auto-expires after 7 days regardless).",
+    refunded: "A full refund was issued to the guest's card automatically.",
+    refund_manual_required:
+      "REFUND REQUIRED: the guest's card was charged — admins were emailed to issue the refund in the Flywire dashboard.",
+    refund_failed:
+      "Automatic refund FAILED — admins were emailed to refund manually in the Flywire dashboard.",
+    error:
+      "Payment handling errored — check with the admins that the charge/hold was resolved.",
+  };
+
+  // Only offer Cancel for live reservations (not already declined/cancelled).
+  const isCancellable = (status) => {
+    const st = String(status || "").toLowerCase();
+    return st === "approved" || st === "pending" || st === "confirmed";
+  };
+
+  // Cancel a reservation of ANY PMS source, mirroring VT-FE's
+  // declineSingleReservation: cancel on the correct channel first (HW / BP /
+  // RU-G / legacy), THEN decline the reservation-of-record (which runs the
+  // Flywire refund/hold-release). A channel failure THROWS — never leave the
+  // record declined while the channel stays booked.
+  const onCancelReservation = async (iteam) => {
+    const r = iteam;
+    const reservationID = r?.reservationID;
+    if (!reservationID) return;
+
+    const pid = typeof r?.propertyId === "string" ? r.propertyId : "";
+    const isRUApiProperty = pid.startsWith("RU-") || pid.startsWith("G-");
+    const isHostawayApiProperty = pid.startsWith("HW-");
+    const isBookingpalProperty = pid.startsWith("BP-");
+    const isApproved = String(r?.status || "").toLowerCase() === "approved";
+    const wasCharged = r?.payment_type === "instant" && r?.flywireReference;
+
+    const confirmed = window.confirm(
+      wasCharged
+        ? "Cancel this reservation? The guest's card WAS CHARGED for this instant booking — cancelling triggers a full refund to the guest."
+        : "Cancel this reservation? It will be cancelled on the channel."
+    );
+    if (!confirmed) return;
+
+    setCancelingId(reservationID);
+    try {
+      // 1) Cancel/decline on channel when required.
+      if (isHostawayApiProperty) {
+        // Hostaway: only cancel on channel if the reservation was approved.
+        if (isApproved) {
+          const partnerReservationID = r?.partnerReservationID;
+          if (!partnerReservationID) {
+            throw new Error("Missing partnerReservationID for Hostaway cancellation.");
+          }
+          const cancelResp = await axios.put(
+            `${constants.SHUB_URL}/hostaway-cancel-reservation`,
+            {
+              propertyId: pid, // hub resolves accountId from this
+              reservationId: Number(partnerReservationID),
+              cancelledBy: "host",
+            },
+            { headers: { "x-api-key": constants.X_API_KEY } }
+          );
+          if (cancelResp?.data?.success !== true) {
+            throw new Error(cancelResp?.data?.error || "Failed to cancel reservation on Hostaway.");
+          }
+        }
+      } else if (isBookingpalProperty) {
+        // BookingPal: only cancel on channel if approved (the BP-side
+        // reservation + calendar block exist then). Same controller
+        // (cancelReservation) VT-FE's /bookingpal-cancel-reservation uses —
+        // cancels on channel, marks stored rows cancelled, frees the calendar.
+        if (isApproved) {
+          if (!r?.bpConfirmationCode) {
+            throw new Error("Missing BookingPal confirmation code for cancellation.");
+          }
+          const cancelResp = await AuthService.bpCancelReservation({
+            confirmation_code: String(r.bpConfirmationCode),
+            confirmation_id: r?.bpConfirmationId ? String(r.bpConfirmationId) : "",
+          });
+          const cancelData = cancelResp?.data;
+          if (cancelData && cancelData.success === false) {
+            throw new Error(cancelData?.error || "Failed to cancel reservation on BookingPal.");
+          }
+        }
+      } else if (isRUApiProperty) {
+        // RU / group: only cancel on channel if approved.
+        if (isApproved) {
+          const partnerReservationID = r?.partnerReservationID;
+          if (!partnerReservationID) {
+            throw new Error("Missing partnerReservationID for RU cancellation.");
+          }
+          const cancelResp = await axios.post(
+            `${constants.SHUB_URL}/ru-cancelreservation`,
+            {
+              partnerReservationID: String(partnerReservationID),
+              reservationId: String(partnerReservationID),
+            },
+            { headers: { "x-api-key": constants.X_API_KEY } }
+          );
+          const cancelData = cancelResp?.data;
+          const cancelOk = cancelData?.status === true || cancelData?.success === true;
+          if (!cancelOk) {
+            throw new Error(cancelData?.message || "Failed to cancel reservation on RU channel.");
+          }
+        }
+      } else {
+        // Legacy channel (Guesty / direct) — mirrors VT-FE's /reserve-cancel.
+        const data = JSON.stringify({
+          client: {
+            firstName: r?.guestFirstName,
+            lastName: r?.guestLastName,
+            phone: r?.guestPhoneNumbers,
+            email: r?.guestEmail,
+          },
+          dateFrom: moment(r?.startDate).format("MM.DD.YYYY"),
+          dateTo: moment(r?.endDate).format("MM.DD.YYYY"),
+          currency: r?.currency,
+          adults: r?.adults,
+          children: r?.children,
+          resChannel: "VT",
+          reservationId: "Villatracker_" + r?.reservationID,
+          ResStatus: "Cancel",
+        });
+        const channelResp = await axios.request({
+          method: "put",
+          maxBodyLength: Infinity,
+          url: constants.SHUB_URL + "/reserve-cancel/" + r?.propertyId,
+          headers: {
+            Authorization:
+              "bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2NvdW50X29iamVjdF9pZCI6Mzk5MTU4NzUsInVzZXJfaWQiOiI0MDY2NTAyMSIsInVzZXJfbmFtZSI6InN5c3RlbStsdW5hLTh5NXljIiwic2NvcGUiOlsiYnJpdm8uYXBpIl0sImlzc3VlZCI6IjE2NzUxMTI3NDYxMzYiLCJleHAiOjE2NzUxMTI4MDYsInNlcnZpY2VfdG9rZW4iOm51bGwsImF1dGhvcml0aWVzIjpbIlJPTEVfU1VQRVJfQURNSU4iLCJST0xFX0FETUlOIl0sImp0aSI6ImVmNzY1MDIyLTZhNzctNGZkMy04Njg1LTFhZTFhZmEzOTJhZSIsImNsaWVudF9pZCI6IjkzOTFlYjVkLWUwNmUtNDY4MS1iNTdhLWQwZTU3NDhhM2RlZSIsIndoaXRlX2xpc3RlZCI6ZmFsc2V9.N9MIeiLyrT3hBUtMJsTvwbYW5Z_o7ZSBuZmir2ytrb8DiE4MoXcmh8C6KriWhmnRqUnSMBRtuLcauVbqjFTorOcWMOd2RQGmisPgXBm1tHT30Hl0i57rQuLZHAVW201ot-TdQwW9oEZ3n2HTGu_A6tRhTizVmG6NRAd5KhOB2_c",
+            "Account-Id": "640625ea0620e40031b8597d",
+            "Content-Type": "application/json",
+          },
+          data,
+        });
+        if (!channelResp?.data?.success) {
+          throw new Error(channelResp?.data?.error || "Failed to cancel reservation on channel!");
+        }
+      }
+
+      // 2) Decline the reservation-of-record — the backend releases/refunds the
+      //    Flywire payment as part of this call and reports the outcome back.
+      const responseUpdate = await AuthService.bpDeclineReservation(
+        reservationID,
+        "declined"
+      );
+      if (!responseUpdate?.success) {
+        throw new Error("Failed to cancel reservation.");
+      }
+      const actionMsg = FLYWIRE_ACTION_MESSAGES[responseUpdate?.flywireAction];
+      window.alert(
+        actionMsg
+          ? `Reservation cancelled. ${actionMsg}`
+          : "Reservation cancelled."
+      );
+      refreshReservations();
+    } catch (err) {
+      console.log("cancel error:", err);
+      window.alert(
+        err?.response?.data?.message ||
+          err?.response?.data?.error ||
+          err?.message ||
+          "Failed to cancel reservation."
+      );
+    } finally {
+      setCancelingId(null);
+    }
   };
 
   const renderHeader = () => {
@@ -355,6 +532,9 @@ const Reservations = (props) => {
                         </>
                       );
                     })}
+                    <th scope="col" className="p-4 ">
+                      <h3>Action</h3>
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -408,6 +588,22 @@ const Reservations = (props) => {
                           </td>
                           <td className="px-4 p-3">
                             <h4>{iteam.total !== null ? iteam.total : "-"}</h4>
+                          </td>
+                          <td className="px-4 p-3">
+                            {isCancellable(iteam.status) ? (
+                              <button
+                                type="button"
+                                className="btn btn-danger btn-sm"
+                                disabled={cancelingId === iteam.reservationID}
+                                onClick={() => onCancelReservation(iteam)}
+                              >
+                                {cancelingId === iteam.reservationID
+                                  ? "Cancelling…"
+                                  : "Cancel"}
+                              </button>
+                            ) : (
+                              <h4>-</h4>
+                            )}
                           </td>
                         </tr>
                       </>
