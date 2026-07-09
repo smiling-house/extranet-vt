@@ -54,6 +54,7 @@ import {
   PATH_PROPERTIES_NEEDS_ATTENTION,
   PATH_AGODA_LISTINGS,
   PATH_AGODA_SYNC,
+  PATH_AGODA_INQUIRIES,
   PATH_AGODA_ACCOUNT
 } from "../../Util/constants";
 
@@ -135,6 +136,7 @@ const Sidebar = ({ activeMenu, setActiveMenu, handleToggleMenu, showOrHideSideBa
         items: [
           { text: "Agoda — Properties", path: PATH_AGODA_LISTINGS, icon: <MdBusiness size={18} /> },
           { text: "Agoda — Sync Status", path: PATH_AGODA_SYNC, icon: <FiSettings size={18} /> },
+          { text: "Agoda — Inquiries", path: PATH_AGODA_INQUIRIES, icon: <FiCalendar size={18} /> },
           { text: "Agoda — Account", path: PATH_AGODA_ACCOUNT, icon: <MdVerifiedUser size={18} /> },
         ]
       }

@@ -13,15 +13,46 @@ import { ShubAuth } from '../core/index.js'
 const api = axios.create({ headers: { Authorization: `Bearer ${ShubAuth}` } })
 const base = constants.SHUB_URL
 
-// ---- Listings feed (existing) --------------------------------------------
-// Reuses the general listings endpoint. Guesty-only, paged.
-export async function fetchAgodaListings ({ accountId = '', skip = 0, limit = 100, q = '', sortBy = 'data.nickname:1' } = {}) {
-  let filters = '[]'
-  const params = { filters, limit, skip, sortBy, source: 'guesty_channel_api' }
-  let qs = Object.keys(params).map(k => `${k}=${params[k]}`).join('&')
-  if (accountId) qs += `&accountId=${accountId}`
-  if (q) qs += `&q=${encodeURIComponent(q.toLowerCase())}`
-  const res = await api.get(`${base}/local/listings?${qs}`)
+// ---- Listings feed --------------------------------------------------------
+// Dedicated picker feed: GET /services/agoda/listings — returns per listing
+// the current xdata.agoda, mirror count, eligibility verdict + blockers, and
+// last push outcome. status: enabled|disabled|ready|blocked (omit for all).
+export async function fetchAgodaListings ({ accountId = '', skip = 0, limit = 50, q = '', status = '' } = {}) {
+  const params = new URLSearchParams()
+  params.set('skip', skip); params.set('limit', limit)
+  if (q) params.set('q', q)
+  if (status) params.set('status', status)
+  if (accountId) params.set('accountId', accountId)
+  const res = await api.get(`${base}/services/agoda/listings?${params}`)
+  return res.data
+}
+
+// ---- Image mirror ----------------------------------------------------------
+// POST /services/agoda/mirror-images/:listingId — copies the listing's photos
+// to our S3/CDN (images.villatracker.com); required before CPAPI pushes.
+export async function mirrorImages (listingId, force = false) {
+  const res = await api.post(`${base}/services/agoda/mirror-images/${listingId}${force ? '?force=1' : ''}`)
+  return res.data
+}
+
+// ---- CPAPI onboarding chain ------------------------------------------------
+// Creates the property/room/rateplan/product on Agoda's side; hotel/room/rate
+// codes are stored on xdata.agoda by the backend as each step returns its id.
+// NOTE: Agoda needs ~5 minutes after property creation before rooms/rateplans.
+export async function cpapiCreateProperty (listingId) {
+  const res = await api.post(`${base}/services/agoda/cpapi/property/${listingId}`)
+  return res.data
+}
+export async function cpapiCreateRoom (listingId) {
+  const res = await api.post(`${base}/services/agoda/cpapi/room/${listingId}`)
+  return res.data
+}
+export async function cpapiCreateRatePlan (listingId) {
+  const res = await api.post(`${base}/services/agoda/cpapi/rateplan/${listingId}`)
+  return res.data
+}
+export async function cpapiCreateProduct (listingId) {
+  const res = await api.post(`${base}/services/agoda/cpapi/product/${listingId}`)
   return res.data
 }
 
@@ -75,12 +106,18 @@ export async function registerAccount (payload) {
 }
 
 export async function testAuth (accountId = '') {
-  // v1 self-verify endpoint (no billable upstream call beyond token exchange)
-  const res = await api.get(`${base}/v1/agoda/auth/test${accountId ? '?accountId=' + accountId : ''}`)
+  // staff-JWT auth probe (the /v1 twin needs a consumer X-API-Key we don't hold)
+  const res = await api.get(`${base}/services/agoda/auth-test${accountId ? '?accountId=' + accountId : ''}`)
+  return res.data
+}
+
+export async function updateInquiryStatus (id, status, notes = '') {
+  const res = await api.patch(`${base}/services/agoda/inquiries/${id}/status`, { status, notes })
   return res.data
 }
 
 export default {
   fetchAgodaListings, saveAgodaConfig, setAgodaEnabled, bulkAgodaConfig,
-  pushListing, pushAllEnabled, fetchSyncLedger, fetchInquiries, registerAccount, testAuth,
+  mirrorImages, cpapiCreateProperty, cpapiCreateRoom, cpapiCreateRatePlan, cpapiCreateProduct,
+  pushListing, pushAllEnabled, fetchSyncLedger, fetchInquiries, updateInquiryStatus, registerAccount, testAuth,
 }
