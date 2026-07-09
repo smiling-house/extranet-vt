@@ -453,9 +453,16 @@ if(partnerAccountId) {
         </Route>
         <Route exact path={[PATH_RESERVATIONS]}>
           <Reservations
-            token={token}
+            agency={agency}
             agent={agent}
-            agency={agency} />
+            token={token}
+            setProfile={setProfile}
+            screenSize={screenSize}
+            setScreenSize={setScreenSize}
+            activeMenu={activeMenu}
+            handleToggleMenu={handleToggleMenu}
+            setActiveMenu={setActiveMenu}
+          />
         </Route>
         <Route exact path={[PATH_REPORTS]}>
           <Reports />

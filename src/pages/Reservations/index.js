@@ -1,216 +1,178 @@
-import React, { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import DatePickerArrival from "../../components/Forms/Fields/DatePickerArrival/DatePickerArrival";
-import DatePickerDeparture from "../../components/Forms/Fields/DatePickerDeparture/DatePickerDeparture";
-import pageBg from "../../assets/bk_pool.png";
-import pagingLine from "../../assets/icons/paging-line.png";
-import searchLogo from "../../assets/icons/search.png";
-import Button from "../../components/Buttons/Button/Button";
-import PageHeader from "../../components/PageHeader";
-import * as propertyActions from "../../store/redux/Property/actions";
-import constants from "../../Util/constants";
-import LoadingBox from "../../components/LoadingBox";
-import Datatable from "../../components/Datatable";
-// import { data } from "./data";
-
-import "./Reservations.scss";
-import Paging from "../../components/Paging";
+import React, { useEffect, useMemo, useState } from "react";
 import AuthService from "../../services/auth.service";
 import axios from "axios";
 import moment from "moment/moment";
-import { BsChevronDown } from "react-icons/bs";
-import { BiCalendarCheck } from "react-icons/bi";
-import { IoIosSearch } from "react-icons/io";
+import {
+  FiCalendar,
+  FiChevronLeft,
+  FiChevronRight,
+  FiList,
+  FiGrid,
+  FiColumns,
+} from "react-icons/fi";
+import { IoIosSearch, IoMdClose } from "react-icons/io";
+
+import Layout from "../../components/Layout/index.js";
+import Paging from "../../components/Paging";
+import constants from "../../Util/constants";
+// Reuse the PMS pages' design system (hero / toolbar / view-switcher / table /
+// grid / pills / paging), then a few reservation-specific overrides.
+import "../PartnersListView/PartnersListView.scss";
+import "./Reservations.scss";
+
+// What the backend did about the guest's money when cancelling — surfaced to
+// the agent. Mirrors VT-FE's FLYWIRE_ACTION_MESSAGES so the extranet reports
+// the refund/hold outcome exactly like VT-FE does.
+const FLYWIRE_ACTION_MESSAGES = {
+  hold_released: "The guest's card authorization hold was released.",
+  cancel_failed:
+    "The pre-auth hold could NOT be released automatically — admins were emailed to release it in the Flywire dashboard (it auto-expires after 7 days regardless).",
+  refunded: "A full refund was issued to the guest's card automatically.",
+  refund_manual_required:
+    "REFUND REQUIRED: the guest's card was charged — admins were emailed to issue the refund in the Flywire dashboard.",
+  refund_failed:
+    "Automatic refund FAILED — admins were emailed to refund manually in the Flywire dashboard.",
+  error:
+    "Payment handling errored — check with the admins that the charge/hold was resolved.",
+};
+
+// Map a reservation status onto a status-pill color variant.
+const statusVariant = (status) => {
+  const s = String(status || "").toLowerCase();
+  if (s === "approved" || s === "confirmed") return "approved";
+  if (s === "pending") return "pending";
+  if (["declined", "cancelled", "canceled_by_agent", "failed", "expired"].includes(s)) {
+    return "declined";
+  }
+  return "total";
+};
+
+// Only offer Cancel for live reservations (not already declined/cancelled).
+const isCancellable = (status) => {
+  const st = String(status || "").toLowerCase();
+  return st === "approved" || st === "pending" || st === "confirmed";
+};
+
+// ISO strings → YYYY-MM-DD; leave short forms (DD.MM.YYYY) as-is.
+const fmtDate = (v) => {
+  if (!v) return "-";
+  const s = String(v);
+  return s.includes("T") ? s.slice(0, 10) : s;
+};
+
+// Status filter chips — the reservations analog of the PMS "Sort by" row. Keys
+// are statusVariant() values so filtering is a single equality check.
+const STATUS_FILTERS = [
+  { key: "", label: "All" },
+  { key: "approved", label: "Approved" },
+  { key: "pending", label: "Pending" },
+  { key: "declined", label: "Declined" },
+];
+
+// View modes — same keys/icons as /listings and the PMS pages.
+const VIEW_MODES = [
+  { key: "rows", label: "Rows", Icon: FiList },
+  { key: "grid", label: "Grid", Icon: FiGrid },
+  { key: "table", label: "Table", Icon: FiColumns },
+];
+const VIEW_MODE_LS_KEY = "reservations_view_mode";
+const RES_PAGE_SIZE = 12;
+
+const clientName = (r) =>
+  r?.name ||
+  [r?.guestFirstName, r?.guestLastName].filter(Boolean).join(" ") ||
+  (r?.client_id != null ? String(r.client_id) : "-");
 
 const Reservations = (props) => {
-  const [seachInpputes, setseachInpputes] = useState("");
-  const [pageNumber, setPageNumber] = useState(0);
-  const dispatch = useDispatch();
-  const isLoading = useSelector((state) => state.property.isLoading);
-  const reservations = useSelector((state) => state.property.reservations);
+  const {
+    token,
+    agency,
+    agent,
+    screenSize,
+    activeMenu,
+    handleToggleMenu,
+    setActiveMenu,
+  } = props;
+
   const [data, setData] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [pageNumber, setPageNumber] = useState(0);
   const [cancelingId, setCancelingId] = useState(null);
-  const doSearch = (pageNumber) => {
-    //console.log("loading page ", pageNumber);
-    dispatch(propertyActions.loadProperties(pageNumber));
-  };
+  const [viewMode, setViewMode] = useState(() => {
+    const saved =
+      typeof window !== "undefined" && localStorage.getItem(VIEW_MODE_LS_KEY);
+    return VIEW_MODES.some((m) => m.key === saved) ? saved : "rows";
+  });
 
-  const onPrevPage = () => {
-    const pn = pageNumber - 1;
-    setPageNumber(pn);
-    doSearch(pn);
-  };
-
-  const onNextPage = () => {
-    const pn = pageNumber + 1;
-    setPageNumber(pn);
-    doSearch(pn);
-  };
-
-  const onGotoPage = (page) => {
-    setPageNumber(page);
-    doSearch(page);
-  };
-
-  let clientPagingFrom = 1 + pageNumber * constants.PAGING_CLIENT_SIZE;
-  let clientPagingTo = (pageNumber + 1) * constants.PAGING_CLIENT_SIZE;
-
-  const onChangePage = (pageNumber) => {
-    console.log("page=", pageNumber);
-    setPageNumber(pageNumber);
-    clientPagingFrom = 1 + pageNumber * constants.PAGING_CLIENT_SIZE;
-    clientPagingTo = (pageNumber + 1) * constants.PAGING_CLIENT_SIZE;
-    doSearch(pageNumber);
+  const loadReservations = () => {
+    setIsLoading(true);
+    AuthService.GetReservation("")
+      .then((response) => {
+        setData(Array.isArray(response?.reservations) ? response.reservations : []);
+      })
+      .catch((e) => {
+        console.log(e);
+        setData([]);
+      })
+      .finally(() => setIsLoading(false));
   };
 
   useEffect(() => {
-    AuthService.GetReservation(seachInpputes)
-      .then((response) => {
-        setData(response.reservations);
-      })
-      .catch((e) => {
-        console.log(e);
-      });
+    loadReservations();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const generatePaginationLinks = (currentPage, totalPages) => {
-    let links = [];
-
-    // Link to previous page
-    if (currentPage > 1) {
-      links.push(
-        <div
-          key={-1}
-          className="reservations-paging-prev-next"
-          onClick={onPrevPage}
-        >
-          Prev
-        </div>
-      );
-    }
-
-    // Link to previous page
-    if (currentPage > 3) {
-      links.push(
-        <div
-          key={-2}
-          className="reservations-paging-prev-next"
-          onClick={() => onGotoPage(0)}
-        >
-          1
-        </div>
-      );
-      links.push(<div key={-3}>. . .</div>);
-    }
-
-    // Links to plus/minus 3 pages from current page
-    for (
-      let i = Math.max(1, currentPage - 2);
-      i <= Math.min(totalPages, currentPage + 2);
-      i++
-    ) {
-      if (i === currentPage) {
-        links.push(
-          <div key={i} className="reservations-paging-number-selected">
-            {i}
-          </div>
-        );
-      } else {
-        links.push(
-          <div
-            key={i}
-            className="reservations-paging-number"
-            onClick={() => onGotoPage(i - 1)}
-          >
-            {i}
-          </div>
-        );
-      }
-    }
-
-    // Link to next page
-    if (currentPage < totalPages) {
-      links.push(
-        <div
-          key={-4}
-          className="reservations-paging-prev-next"
-          onClick={onNextPage}
-        >
-          Next
-        </div>
-      );
-    }
-
-    return links;
-  };
-
-  const renderPaging = () => {
-    const pageSize = constants.PAGING_PAGE_SIZE;
-    const pageCount = Math.ceil(reservations.count / pageSize);
-
-    const paginationLinks = generatePaginationLinks(pageNumber + 1, pageCount);
-
-    if (paginationLinks.length < 1) {
+  // Client-side filter (the backend get-reservations ignores query params).
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return data.filter((r) => {
+      if (statusFilter && statusVariant(r?.status) !== statusFilter) return false;
+      if (!q) return true;
       return (
-        <div className="pt-4 pb-3 px-5">
-          <h1>Reservsations</h1>
-        </div>
+        String(r?.reservationID || "").toLowerCase().includes(q) ||
+        String(r?.agencyName || "").toLowerCase().includes(q) ||
+        String(clientName(r)).toLowerCase().includes(q) ||
+        String(r?.propertyId || "").toLowerCase().includes(q)
       );
-    }
+    });
+  }, [data, search, statusFilter]);
 
-    return (
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-        }}
-      >
-        <div className="reservations-main-title">Reservations</div>
-        <div className="reservations-paging">
-          <img src={pagingLine} alt="" style={{ marginRight: "15px" }} />
-          {paginationLinks}
-        </div>
-      </div>
-    );
-  };
+  const totalItems = filtered.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / RES_PAGE_SIZE));
+  const safePage = Math.min(pageNumber, totalPages - 1);
+  const pageRows = useMemo(
+    () => filtered.slice(safePage * RES_PAGE_SIZE, safePage * RES_PAGE_SIZE + RES_PAGE_SIZE),
+    [filtered, safePage]
+  );
+  const pagingFrom = totalItems ? safePage * RES_PAGE_SIZE + 1 : 0;
+  const pagingTo = Math.min((safePage + 1) * RES_PAGE_SIZE, totalItems);
+  const showEmpty = !isLoading && totalItems === 0;
+  const hasActiveFilters = !!(search || statusFilter);
 
-  const handleReservationSearch = (name, value) => {
-    setseachInpputes(value);
+  const changeViewMode = (next) => {
+    setViewMode(next);
+    try {
+      localStorage.setItem(VIEW_MODE_LS_KEY, next);
+    } catch (_) {}
   };
-  const refreshReservations = () => {
-    AuthService.GetReservation(seachInpputes)
-      .then((response) => {
-        setData(response.reservations);
-      })
-      .catch((e) => {
-        console.log(e);
-      });
+  const onChangePage = (next) => {
+    setPageNumber(next);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
-  const handlSearchClick = () => {
-    refreshReservations();
+  const onSearch = (v) => {
+    setSearch(v);
+    setPageNumber(0);
   };
-
-  // What the backend did about the guest's money when cancelling — surfaced to
-  // the agent. Mirrors VT-FE's FLYWIRE_ACTION_MESSAGES so the extranet reports
-  // the refund/hold outcome exactly like VT-FE does.
-  const FLYWIRE_ACTION_MESSAGES = {
-    hold_released: "The guest's card authorization hold was released.",
-    cancel_failed:
-      "The pre-auth hold could NOT be released automatically — admins were emailed to release it in the Flywire dashboard (it auto-expires after 7 days regardless).",
-    refunded: "A full refund was issued to the guest's card automatically.",
-    refund_manual_required:
-      "REFUND REQUIRED: the guest's card was charged — admins were emailed to issue the refund in the Flywire dashboard.",
-    refund_failed:
-      "Automatic refund FAILED — admins were emailed to refund manually in the Flywire dashboard.",
-    error:
-      "Payment handling errored — check with the admins that the charge/hold was resolved.",
+  const onStatus = (key) => {
+    setStatusFilter(key);
+    setPageNumber(0);
   };
-
-  // Only offer Cancel for live reservations (not already declined/cancelled).
-  const isCancellable = (status) => {
-    const st = String(status || "").toLowerCase();
-    return st === "approved" || st === "pending" || st === "confirmed";
+  const resetFilters = () => {
+    setSearch("");
+    setStatusFilter("");
+    setPageNumber(0);
   };
 
   // Cancel a reservation of ANY PMS source, mirroring VT-FE's
@@ -301,7 +263,7 @@ const Reservations = (props) => {
         }
       } else {
         // Legacy channel (Guesty / direct) — mirrors VT-FE's /reserve-cancel.
-        const data = JSON.stringify({
+        const body = JSON.stringify({
           client: {
             firstName: r?.guestFirstName,
             lastName: r?.guestLastName,
@@ -327,7 +289,7 @@ const Reservations = (props) => {
             "Account-Id": "640625ea0620e40031b8597d",
             "Content-Type": "application/json",
           },
-          data,
+          data: body,
         });
         if (!channelResp?.data?.success) {
           throw new Error(channelResp?.data?.error || "Failed to cancel reservation on channel!");
@@ -345,11 +307,9 @@ const Reservations = (props) => {
       }
       const actionMsg = FLYWIRE_ACTION_MESSAGES[responseUpdate?.flywireAction];
       window.alert(
-        actionMsg
-          ? `Reservation cancelled. ${actionMsg}`
-          : "Reservation cancelled."
+        actionMsg ? `Reservation cancelled. ${actionMsg}` : "Reservation cancelled."
       );
-      refreshReservations();
+      loadReservations();
     } catch (err) {
       console.log("cancel error:", err);
       window.alert(
@@ -363,266 +323,311 @@ const Reservations = (props) => {
     }
   };
 
-  const renderHeader = () => {
-    return (
-      <div style={{ "background-color": "rgba(19, 59, 113, 0.8)" }}>
-        <PageHeader searchOpen={null} topBgColor="#133B71"></PageHeader>
-        <div className="mt-4 row p-3">
-          <div className="reservations-top-row2 col-sm-2 mb-2">
-            <input
-              type="text"
-              className="reservations-search-input form-control mb-2"
-              placeholder="Enter reservation ID"
-              onChange={(e) =>
-                handleReservationSearch("reservationId", e.target.value)
-              }
-            />
-          </div>
-          <div className="reservations-top-row2-button col-sm-2 mb-2">
-            <DatePickerDeparture />
-          </div>
-          <div className="reservations-top-row2-button col-sm-2 mb-2">
-            <DatePickerArrival />
-          </div>
-          <div className="reservations-top-row2-button col-sm-2 ">
-            <Button
-              style={{ height: "60px", fontSize: "20px" }}
-              icon={
-                <img
-                  src={searchLogo}
-                  style={{ width: "22px", marginRight: "5px" }}
-                  alt=""
-                />
-              }
-              fullwidth={true}
-              variant="green"
-              text="Search"
-              onClick={handlSearchClick}
-            />
-          </div>
-        </div>
-      </div>
+  const cancelButton = (iteam) =>
+    isCancellable(iteam.status) ? (
+      <button
+        type="button"
+        className="res-cancel-btn"
+        disabled={cancelingId === iteam.reservationID}
+        onClick={() => onCancelReservation(iteam)}
+      >
+        {cancelingId === iteam.reservationID ? "Cancelling…" : "Cancel"}
+      </button>
+    ) : (
+      <span className="res-action-empty">—</span>
     );
-  };
 
-  const columns = [
-    {
-      id: "reservationID",
-      name: "Reservation ID",
-      selector: (row) => row.reservationID,
-      cell: (row) => row.reservationID,
-      width: "1fr",
-    },
-    {
-      id: "reservationDate",
-      name: "Reservation Date",
-      sortable: true,
-      selector: (row) => row.bookedAt,
-      cell: (row) => <div>{moment(row.bookedAt).format("YYYY-DD-mm")}</div>,
-      width: "1fr",
-    },
-    {
-      id: "Agency Name",
-      name: "Agency Name",
-      sortable: true,
-      selector: (row) => row.agencyName,
-      cell: (row) => (
-        <div className="link18" onClick={() => {}}>
-          {row.agencyName}
-        </div>
-      ),
-      width: "1fr",
-    },
-    {
-      id: "status",
-      name: "Status",
-      sortable: true,
-      selector: (row) => row.guestBookingStatus,
-      cell: (row) => row.guestBookingStatus,
-      cellStyle: { display: "block", padding: "10px 0px" },
-      width: "1fr",
-    },
-    {
-      id: "totalPrice",
-      name: "Total Price",
-      sortable: true,
-      selector: (row) => row.taxAmount,
-      cell: (row) => <div>{row.taxAmount}</div>,
-      width: "1fr",
-    },
-    {
-      id: "clientName",
-      name: "Client Name",
-      sortable: true,
-      selector: (row) => row.guestFirstName,
-      cell: (row) => <div>{row.guestFirstName}</div>,
-      width: "1fr",
-    },
-    {
-      id: "arrivalDate",
-      name: "Arrival Date",
-      sortable: true,
-      selector: (row) => row.startDate,
-      cell: (row) => <div>{row.startDate}</div>,
-      width: "1fr",
-    },
-    //  {
-    //  id: 'destination',
-    //  name: 'Destination',
-    //  sortable: true,
-    //  selector: row => row.destination,
-    //  cell: row => <div>{row.destination}</div>,
-    //  width: '1fr'
-    // },
-    {
-      id: "nights",
-      name: "# Nights",
-      sortable: true,
-      selector: (row) => row.nights,
-      cell: (row) => <div>{row.nights}</div>,
-      width: "1fr",
-    },
-    {
-      id: "bookingTotal",
-      name: "Booking Total",
-      sortable: true,
-      selector: (row) => row.total,
-      cell: (row) => <div>{row.total}</div>,
-      width: "1fr",
-    },
-  ];
+  const emptyState = (
+    <div className="empty-state">
+      <div className="empty-state-icon">
+        <FiCalendar />
+      </div>
+      <h3 className="empty-state-title">No reservations found</h3>
+      <p className="empty-state-hint">
+        {hasActiveFilters
+          ? "Try clearing your search or status filter."
+          : "There are no reservations yet."}
+      </p>
+      {hasActiveFilters && (
+        <button type="button" className="empty-state-action" onClick={resetFilters}>
+          Clear filters
+        </button>
+      )}
+    </div>
+  );
 
   return (
-    <>
-      <div
-        className="reserve-container"
-        style={{ backgroundImage: `url(${pageBg})` }}
-      >
-        {renderHeader()}
+    <Layout
+      pageTitle="Reservations"
+      agency={agency}
+      agent={agent}
+      token={token}
+      screenSize={screenSize}
+      activeMenu={activeMenu}
+      handleToggleMenu={handleToggleMenu}
+      setActiveMenu={setActiveMenu}
+    >
+      <div className="partners-view reservations-view">
+        {/* Hero */}
+        <div className="page-hero">
+          <div className="page-hero-left">
+            <div className="page-hero-icon">
+              <FiCalendar size={22} />
+            </div>
+            <div>
+              <h1 className="page-hero-title">Reservations</h1>
+              <p className="page-hero-subhead">
+                Bookings across all channels — cancel to release the channel and
+                refund the guest
+              </p>
+            </div>
+          </div>
+          <div className="page-hero-meta">
+            <span className="page-hero-pill">
+              {totalItems
+                ? `${totalItems} reservation${totalItems === 1 ? "" : "s"}`
+                : "— reservations"}
+            </span>
+            <div className="page-hero-pager" role="group" aria-label="Pagination">
+              <button
+                type="button"
+                className="page-hero-pager-btn"
+                onClick={() => onChangePage(Math.max(0, safePage - 1))}
+                disabled={safePage <= 0}
+                aria-label="Previous page"
+                title="Previous page"
+              >
+                <FiChevronLeft size={16} />
+              </button>
+              <span className="page-hero-pager-label">
+                Page {safePage + 1} of {totalPages}
+              </span>
+              <button
+                type="button"
+                className="page-hero-pager-btn"
+                onClick={() => onChangePage(Math.min(totalPages - 1, safePage + 1))}
+                disabled={safePage >= totalPages - 1}
+                aria-label="Next page"
+                title="Next page"
+              >
+                <FiChevronRight size={16} />
+              </button>
+            </div>
+          </div>
+        </div>
 
-        {reservations != null && reservations.length === 0 ? (
-          <div
-            className="reservations-results"
-            style={{ backgroundColor: "#FFF" }}
-          >
-            <LoadingBox visible={isLoading} />
-            {reservations && renderPaging()}
-            {/* <div className="px-5">
-                            {<Paging perPage={constants.PAGING_AGENCIES_SIZE} totalItems={100} currentPage={pageNumber} onChangePage={onChangePage} />}
-                            <div className="table-responsive">
-                                <Datatable bodyHeight="calc(100vh - 160px)" data={data} columns={columns} patchBgColor="#F5F5F2" />
-                            </div>
-                        </div> */}
-            <div className="table-responsive px-3">
-              <table class="table">
-                <thead style={{ backgroundColor: "#f9f9f7" }}>
+        {/* Toolbar */}
+        <div className="toolbar">
+          <div className="search-wrap">
+            <IoIosSearch className="search-icon" />
+            <input
+              type="text"
+              className="search-input"
+              placeholder="Search reservation ID, guest, or agency…"
+              value={search}
+              onChange={(e) => onSearch(e.target.value)}
+              aria-label="Search reservations"
+            />
+            {search && (
+              <button
+                type="button"
+                className="search-clear"
+                onClick={() => onSearch("")}
+                aria-label="Clear search"
+                title="Clear search"
+              >
+                <IoMdClose size={16} />
+              </button>
+            )}
+          </div>
+
+          <div className="sort-wrap">
+            <span className="sort-wrap-label">Status</span>
+            <div className="sort-chips" role="tablist" aria-label="Filter reservations by status">
+              {STATUS_FILTERS.map((opt) => (
+                <button
+                  key={opt.key || "all"}
+                  type="button"
+                  role="tab"
+                  aria-selected={statusFilter === opt.key}
+                  className={statusFilter === opt.key ? "active" : ""}
+                  onClick={() => onStatus(opt.key)}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="view-switcher" role="tablist" aria-label="View mode">
+            {VIEW_MODES.map((m) => (
+              <button
+                key={m.key}
+                type="button"
+                role="tab"
+                aria-selected={viewMode === m.key}
+                className={viewMode === m.key ? "active" : ""}
+                onClick={() => changeViewMode(m.key)}
+                title={m.label}
+              >
+                <m.Icon size={14} />
+                <span>{m.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Body — switches by viewMode */}
+        <div className={`partners-card partners-card--${viewMode}`}>
+          {viewMode === "grid" ? (
+            /* -------- GRID -------- */
+            <div className="partners-grid">
+              {isLoading &&
+                Array.from({ length: 6 }).map((_, i) => (
+                  <div className="partner-card is-skeleton" key={`skel-card-${i}`}>
+                    <span className="skeleton-block" style={{ width: 120, height: 18 }} />
+                    <span className="skeleton-block" style={{ width: 180, height: 12, marginTop: 8 }} />
+                    <div className="partner-card-pills">
+                      {[0, 1, 2].map((k) => (
+                        <span key={k} className="skeleton-pill" />
+                      ))}
+                    </div>
+                  </div>
+                ))}
+
+              {!isLoading &&
+                pageRows.map((iteam, index) => (
+                  <div className="partner-card res-card" key={iteam._id || iteam.reservationID || index}>
+                    <div className="partner-card-header">
+                      <span className="partner-card-serial">#{iteam.reservationID}</span>
+                      <span className={`status-pill res-status ${statusVariant(iteam.status)}`}>
+                        {iteam.status || "-"}
+                      </span>
+                    </div>
+                    <h3 className="partner-card-name" title={clientName(iteam)}>
+                      {clientName(iteam)}
+                    </h3>
+                    <div className="partner-card-accountid" title={iteam.agencyName || ""}>
+                      {iteam.agencyName || "—"}
+                    </div>
+                    <div className="res-card-grid">
+                      <div className="res-card-cell">
+                        <span className="res-card-k">Arrival</span>
+                        <span className="res-card-v">{fmtDate(iteam.startDate)}</span>
+                      </div>
+                      <div className="res-card-cell">
+                        <span className="res-card-k">Nights</span>
+                        <span className="res-card-v">{iteam.nights != null ? iteam.nights : "-"}</span>
+                      </div>
+                      <div className="res-card-cell">
+                        <span className="res-card-k">Total</span>
+                        <span className="res-card-v">{iteam.total != null ? iteam.total : "-"}</span>
+                      </div>
+                    </div>
+                    <div className="partner-card-footer res-card-footer">
+                      <span>Booked {fmtDate(iteam.reservationDate || iteam.bookedAt)}</span>
+                      {cancelButton(iteam)}
+                    </div>
+                  </div>
+                ))}
+
+              {showEmpty && <div className="partners-grid-empty">{emptyState}</div>}
+            </div>
+          ) : (
+            /* -------- ROWS (default) and TABLE (compact) -------- */
+            <div className="partners-table-scroll">
+              <table className={`partners-table ${viewMode === "table" ? "partners-table--compact" : ""}`}>
+                <thead>
                   <tr>
-                    {columns?.map((iteam, index) => {
-                      return (
-                        <>
-                          <th
-                            scope="col"
-                            className="p-4 "
-                            style={{ cursor: "pointer" }}
-                          >
-                            <h3>
-                              {iteam.name} <BsChevronDown />
-                            </h3>
-                          </th>
-                        </>
-                      );
-                    })}
-                    <th scope="col" className="p-4 ">
-                      <h3>Action</h3>
-                    </th>
+                    <th style={{ width: 120 }}>Reservation ID</th>
+                    <th style={{ width: 130 }}>Reservation Date</th>
+                    <th>Agency Name</th>
+                    <th style={{ width: 120 }}>Status</th>
+                    <th style={{ width: 110 }}>Total Price</th>
+                    <th>Client</th>
+                    <th style={{ width: 130 }}>Arrival Date</th>
+                    <th style={{ width: 90 }}># Nights</th>
+                    <th style={{ width: 120 }}>Booking Total</th>
+                    <th style={{ width: 120 }}>Action</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {data?.map((iteam, index) => {
-                    return (
-                      <>
-                        <tr>
-                          <th className="px-4 p-3 ">
-                            <h4>
-                              {iteam.reservationID !== null
-                                ? iteam.reservationID
-                                : "-"}
-                            </h4>
-                          </th>
-                          <td className="px-4 p-3">
-                            <h4>
-                              {iteam.reservationDate != null
-                                ? iteam.reservationDate
-                                : "-"}
-                            </h4>
+                  {isLoading &&
+                    Array.from({ length: 6 }).map((_, i) => (
+                      <tr key={`skeleton-${i}`}>
+                        {Array.from({ length: 10 }).map((__, k) => (
+                          <td key={k}>
+                            <span className="skeleton-block" style={{ width: 80 }} />
                           </td>
-                          <td className="px-4 p-3 text-primary text-decoration-underline">
-                            <h4>
-                              {iteam.agencyName !== null
-                                ? iteam.agencyName
-                                : "-"}
-                            </h4>
-                          </td>
-                          <td className="px-4 p-3">
-                            <h4>
-                              {iteam.status !== null ? iteam.status : "-"}
-                            </h4>
-                          </td>
-                          <td className="px-4 p-3">
-                            <h4>{iteam.total !== null ? iteam.total : "-"}</h4>
-                          </td>
-                          <td className="px-4 p-3">
-                            <h4>
-                              {iteam.client_id !== null ? iteam.client_id : "-"}
-                            </h4>
-                          </td>
-                          <td className="px-4 p-3">
-                            <h4>
-                              {iteam.startDate !== null ? iteam.startDate : "-"}
-                            </h4>
-                          </td>
-                          <td className="px-4 p-3">
-                            <h4>
-                              {iteam.nights !== null ? iteam.nights : "-"}
-                            </h4>
-                          </td>
-                          <td className="px-4 p-3">
-                            <h4>{iteam.total !== null ? iteam.total : "-"}</h4>
-                          </td>
-                          <td className="px-4 p-3">
-                            {isCancellable(iteam.status) ? (
-                              <button
-                                type="button"
-                                className="btn btn-danger btn-sm"
-                                disabled={cancelingId === iteam.reservationID}
-                                onClick={() => onCancelReservation(iteam)}
-                              >
-                                {cancelingId === iteam.reservationID
-                                  ? "Cancelling…"
-                                  : "Cancel"}
-                              </button>
-                            ) : (
-                              <h4>-</h4>
-                            )}
-                          </td>
-                        </tr>
-                      </>
-                    );
-                  })}
+                        ))}
+                      </tr>
+                    ))}
+
+                  {!isLoading &&
+                    pageRows.map((iteam, index) => (
+                      <tr key={iteam._id || iteam.reservationID || index}>
+                        <td className="pm-name" data-label="Reservation ID">
+                          {iteam.reservationID != null ? iteam.reservationID : "-"}
+                        </td>
+                        <td data-label="Reservation Date">
+                          {fmtDate(iteam.reservationDate || iteam.bookedAt)}
+                        </td>
+                        <td data-label="Agency Name">{iteam.agencyName || "-"}</td>
+                        <td data-label="Status">
+                          <span className={`status-pill res-status ${statusVariant(iteam.status)}`}>
+                            {iteam.status || "-"}
+                          </span>
+                        </td>
+                        <td data-label="Total Price">
+                          {iteam.total != null ? iteam.total : "-"}
+                        </td>
+                        <td data-label="Client">{clientName(iteam)}</td>
+                        <td data-label="Arrival Date">{fmtDate(iteam.startDate)}</td>
+                        <td data-label="# Nights">
+                          {iteam.nights != null ? iteam.nights : "-"}
+                        </td>
+                        <td data-label="Booking Total">
+                          {iteam.total != null ? iteam.total : "-"}
+                        </td>
+                        <td data-label="Action">{cancelButton(iteam)}</td>
+                      </tr>
+                    ))}
+
+                  {showEmpty && (
+                    <tr>
+                      <td colSpan={10} style={{ padding: 0 }}>
+                        {emptyState}
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
-          </div>
-        ) : (
-          <div
-            className="reservations-results"
-            style={{ backgroundColor: "#FFF" }}
-          >
-            No results
-          </div>
-        )}
+          )}
+
+          {totalItems > 0 && (
+            <div className="partners-card-footer">
+              <Paging
+                perPage={RES_PAGE_SIZE}
+                totalItems={totalItems}
+                currentPage={safePage}
+                onChangePage={onChangePage}
+              />
+              <div
+                style={{
+                  textAlign: "right",
+                  fontSize: "0.78rem",
+                  color: "#6b7280",
+                  marginTop: 6,
+                }}
+              >
+                Displaying {pagingFrom}–{pagingTo} of {totalItems}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
-    </>
+    </Layout>
   );
 };
 
