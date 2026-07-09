@@ -86,6 +86,14 @@ const bpCancelReservation = async (params) => {
     // params: { confirmation_code, confirmation_id }
     return userRequest.delete(constants.SHUB_URL + `/local/bookingpal/reservation`, { params })
 }
+// Create the reservation-of-record for the BP reserve + Flywire flow. VT
+// extranet writes to VT-BE (RESERVATION_API), which derives source='BP' from
+// propertyId and verifies the Flywire payment via its own webhook.
+const addReservation = async (payload) => {
+    return axios.post(`${constants.RESERVATION_API}/reservation/add-reservation`, payload, {
+        headers: { authorization: `Bearer ${userToken}` },
+    })
+}
 
 
 const addNewPartner = async (payload) => {
@@ -630,6 +638,7 @@ const AuthService = {
     GetWishListLog,
     AgentSignup,
     GetReservation,
+    addReservation,
     updateProfileApi,
     AddNewClientApi,
     GetProfile,

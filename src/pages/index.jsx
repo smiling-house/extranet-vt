@@ -32,6 +32,7 @@ import PartnersBartV2 from "./PartnersBartV2";
 import PartnersInvenioV2 from "./PartnersInvenioV2";
 import PartnersBookingpalV2 from "./PartnersBookingpalV2";
 import ListingsBookingpal from "./ListingsBookingpal";
+import RequestToBookFlywire from "./RequestToBookFlywire";
 import EPartners from "./EPartners";
 // material ui
 import Welcome from "./Welcome";
@@ -120,6 +121,7 @@ import {
   PATH_PARTNERS_INVENIO,
   PATH_PARTNERS_BOOKINGPAL,
   PATH_LISTINGS_BOOKINGPAL,
+  PATH_RETURN_FLYWIRE,
   PATH_VERIFY_COMPARE_NEW_PMS,
   PATH_ZIPS_REGIONS_MAPPING,
   PATH_ZIPS_REGIONS_MAPPING_COUNTRY,
@@ -703,6 +705,9 @@ if(partnerAccountId) {
             handleToggleMenu={handleToggleMenu}
             setActiveMenu={setActiveMenu}
           />
+        </Route>
+        <Route exact path={[PATH_RETURN_FLYWIRE]}>
+          <RequestToBookFlywire />
         </Route>
         <Route exact path={[PATH_LISTINGS_SH_RU_DECLINED_BUT_LISTED_ON_RU]}>
           <ListingsRU_DECLINED_BUT_LISTED_ON_RU

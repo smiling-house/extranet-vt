@@ -1,16 +1,35 @@
 // -------------------------------------------------
-// BookingPal Reservation Management demo modal (mirrors PartnersHostaway/BookingDemo).
-// Drives all 7 OUTBOUND BookingPal reservation operations via VTHub/SHub
-// (/local/bookingpal/*). Launched per-listing from ListingsBookingpal.
+// BookingPal reserve modal. Prices via the hub Get-Quote with the VT-FE
+// up-sell markup (ceil(ceil(N)/0.86)), then takes a Flywire INSTANT card
+// payment and books: on the payment return leg (/request-to-book-flywire) the
+// BP CHANNEL reservation is created on the hub AND a reservation-of-record is
+// written (VT-BE for VT, SHub for SH — via RESERVATION_API). Byte-identical
+// across the VT and SH extranets; per-repo values come from constants.
+// The lower "advanced" buttons keep the raw BP lifecycle ops for operators.
 // -------------------------------------------------
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { v4 as uuidv4 } from "uuid";
 import AuthService from "../../../services/auth.service";
+import constants from "../../../Util/constants";
+import { bpUpsell, extractBpQuoteNet } from "../../../Util/bpUpsell";
+import { loadFlywireSDK, buildInstantConfig, resolveFlywireCharge } from "../../../Util/flywireInstant";
 import swal from "sweetalert";
 
 const todayPlus = (days) => {
   const d = new Date();
   d.setDate(d.getDate() + days);
   return d.toISOString().slice(0, 10);
+};
+
+// YYYY-MM-DD (+ nights) → DD.MM.YYYY (VT-BE/SHub parseDate splits on '.').
+const addDaysISO = (iso, days) => {
+  const d = new Date(`${iso}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + Number(days || 0));
+  return d.toISOString().slice(0, 10);
+};
+const ddmmyyyy = (iso) => {
+  const [y, m, d] = String(iso || "").slice(0, 10).split("-");
+  return y && m && d ? `${d}.${m}.${y}` : "";
 };
 
 const show = (title, data) =>
@@ -31,15 +50,32 @@ const ReservationDemo = ({ listing, onClose }) => {
   const [startDate, setStartDate] = useState(todayPlus(60));
   const [nights, setNights] = useState(3);
   const [numberOfGuests, setNumberOfGuests] = useState(2);
-  const [guestName, setGuestName] = useState("VT Test Guest");
-  const [guestEmail, setGuestEmail] = useState("vt-test@example.com");
-  const [guestPhone, setGuestPhone] = useState("+10000000000");
-  const [total, setTotal] = useState(500);
-  const [currency, setCurrency] = useState("USD");
+  const [guestName, setGuestName] = useState("");
+  const [guestEmail, setGuestEmail] = useState("");
+  const [guestPhone, setGuestPhone] = useState("");
 
   const [confirmationId, setConfirmationId] = useState("");
   const [confirmationCode, setConfirmationCode] = useState("");
   const [busy, setBusy] = useState("");
+
+  // Pricing (quote → up-sell)
+  const [quoting, setQuoting] = useState(false);
+  const [netTotal, setNetTotal] = useState(0);
+  const [sellingPrice, setSellingPrice] = useState(0);
+  const [quoteCurrency, setQuoteCurrency] = useState("");
+  const [agencyCommission, setAgencyCommission] = useState(0);
+  // What the guest is ACTUALLY charged (may be USD-converted for non-USD/CHF/EUR).
+  const [chargeAmount, setChargeAmount] = useState(0);
+  const [chargeCurrency, setChargeCurrency] = useState("");
+  const [priced, setPriced] = useState(false);
+  const [paying, setPaying] = useState(false);
+
+  useEffect(() => {
+    loadFlywireSDK().catch((e) => console.error(e));
+  }, []);
+
+  // Re-price whenever the stay inputs change (must re-quote before paying).
+  const invalidatePrice = () => { setPriced(false); setSellingPrice(0); setNetTotal(0); setChargeAmount(0); setChargeCurrency(""); };
 
   const wrap = async (label, fn) => {
     setBusy(label);
@@ -59,6 +95,165 @@ const ReservationDemo = ({ listing, onClose }) => {
     }
   };
 
+  // Quote the hub, apply the up-sell markup, show the charged price.
+  const getPrice = async () => {
+    if (!listingId || !startDate || !Number(nights) || !Number(numberOfGuests)) {
+      swal("Missing details", "Enter listing, dates, nights and guests first.", "warning");
+      return;
+    }
+    setQuoting(true);
+    try {
+      const res = await AuthService.bpQuote({
+        listing_id: listingId,
+        start_date: startDate,
+        nights: Number(nights),
+        number_of_guests: Number(numberOfGuests),
+      });
+      if (res?.data?.success === false) {
+        swal("Quote failed", String(res.data.detail || res.data.error || "No price available"), "error");
+        invalidatePrice();
+        return;
+      }
+      const { net, currency } = extractBpQuoteNet(res?.data);
+      if (!(net > 0)) {
+        swal("No price", "BookingPal returned no usable price for these dates.", "error");
+        invalidatePrice();
+        return;
+      }
+      const up = bpUpsell(net);
+      // Resolve the actual charge (native portal, else USD-converted) so the
+      // displayed + recorded amount/currency match what Flywire charges.
+      const charge = resolveFlywireCharge(up.sellingPrice, currency);
+      if (charge.amount == null || !(charge.amount > 0)) {
+        swal("Currency unavailable", `No conversion rate for ${currency}. Cannot take card payment for this currency.`, "error");
+        invalidatePrice();
+        return;
+      }
+      setNetTotal(up.net);
+      setSellingPrice(up.sellingPrice);
+      setAgencyCommission(up.agencyCommission);
+      setQuoteCurrency(currency);
+      setChargeAmount(charge.amount);
+      setChargeCurrency(charge.chargeCurrency);
+      setPriced(true);
+    } catch (e) {
+      swal("Quote error", errText(e), "error");
+      invalidatePrice();
+    } finally {
+      setQuoting(false);
+    }
+  };
+
+  // Take the Flywire INSTANT payment; the return leg finalizes the booking.
+  const bookAndPay = () => {
+    if (!priced || !(sellingPrice > 0)) {
+      swal("Get a price first", "Click “Get price” before paying.", "warning");
+      return;
+    }
+    if (!guestName.trim() || !guestEmail.trim()) {
+      swal("Guest details", "Enter the guest name and email.", "warning");
+      return;
+    }
+    if (!window.FlywirePayment) {
+      swal("Payment unavailable", "The payment SDK didn't load. Refresh and try again.", "error");
+      return;
+    }
+
+    const callbackId = "BP" + uuidv4();
+    const parts = guestName.trim().split(/\s+/);
+    const guestFirstName = parts[0] || "";
+    const guestLastName = parts.slice(1).join(" ") || "-";
+    const endISO = addDaysISO(startDate, nights);
+    const agent = JSON.parse(localStorage.getItem("agent") || "{}");
+    const travelAgency = JSON.parse(localStorage.getItem("travelAgency") || "{}");
+
+    // Validate the operator context BEFORE charging — add-reservation (which
+    // runs on the post-payment return leg) hard-requires these, so a missing
+    // agent identity here would charge the card and then fail to save the
+    // reservation-of-record. Block up front instead.
+    const agencyName = travelAgency?.agencyName || agent?.agencyName;
+    if (!agent?.agent_id || !agent?.agency_id || !agencyName) {
+      swal("Session issue", "Your agent/agency profile is incomplete. Please re-login before taking payment.", "error");
+      return;
+    }
+
+    // What the guest is actually charged (resolved once, consistent with the
+    // Flywire config amount). Store THIS on the reservation-of-record.
+    const charge = resolveFlywireCharge(sellingPrice, quoteCurrency);
+    if (charge.amount == null || !(charge.amount > 0)) {
+      swal("Currency unavailable", `No conversion rate for ${quoteCurrency}. Cannot take payment for this currency.`, "error");
+      return;
+    }
+
+    const vtbe = {
+      agent_id: agent.agent_id,
+      agency_id: agent.agency_id,
+      agencyName,
+      agentName: agent?.firstName,
+      agentEmail: agent?.email,
+      client_id: constants.BP_OPERATOR_CLIENT_ID,
+      bookedAt: new Date().toISOString(),
+      bookingId: callbackId,
+      confirmationCode: callbackId,
+      cancellationPolicyCategory: "string",
+      currency: charge.chargeCurrency,        // matches the actual charge
+      startDate: ddmmyyyy(startDate),
+      endDate: ddmmyyyy(endISO),
+      fees: "0",
+      guestFirstName,
+      guestLastName,
+      guestEmail,
+      guestPhoneNumbers: guestPhone,
+      guestPreferredLocale: "en",
+      nightlyBasePrice: String(Math.max(1, Math.round(charge.amount / Math.max(1, Number(nights))))),
+      nights: Number(nights),
+      numberOfGuests: String(numberOfGuests),
+      payment_type: "instant",
+      propertyId: `BP-${listingId}`,
+      status: "approved",
+      total: charge.amount,                   // what the guest is charged
+      // Authoritative expected amount for the webhook reconciliation (what we
+      // asked Flywire to charge, in the charge currency) — NOT the return-URL echo.
+      flywireAmount: String(charge.amount),
+      propertyName: listing?.data?.title || "",
+      securityDeposit: 0,
+    };
+
+    const pending = {
+      listing_id: listingId,
+      start_date: startDate,
+      nights: Number(nights),
+      number_of_guests: Number(numberOfGuests),
+      currency: quoteCurrency,                // native currency for the CHANNEL total
+      netTotal,
+      guest: { name: guestName, email: guestEmail, phone: guestPhone },
+      vtbe,
+    };
+    localStorage.setItem("bpPendingReservation", JSON.stringify(pending));
+
+    const returnUrl = `${window.location.origin}/request-to-book-flywire/?confirmation=${callbackId}&ptype=instant`;
+    const config = buildInstantConfig({
+      callbackId,
+      sellingPrice,
+      currency: quoteCurrency,
+      guest: { firstName: guestFirstName, lastName: guestLastName, email: guestEmail, phone: guestPhone },
+      returnUrl,
+      onError: () => setPaying(false),
+    });
+    if (config.amount == null) {
+      swal("Currency unavailable", `No conversion rate for ${quoteCurrency}. Cannot take payment for this currency.`, "error");
+      localStorage.removeItem("bpPendingReservation");
+      return;
+    }
+    try {
+      setPaying(true);
+      window.FlywirePayment.initiate(config).render();
+    } catch (e) {
+      setPaying(false);
+      swal("Payment error", errText(e), "error");
+    }
+  };
+
   const onCheckAvailability = () =>
     wrap("Check availability", () => AuthService.bpCheckAvailability({ listing_id: listingId, start_date: startDate, nights }));
 
@@ -69,33 +264,17 @@ const ReservationDemo = ({ listing, onClose }) => {
     wrap("Quote preview", () => AuthService.bpQuotePreview({ reservation_id: confirmationId, start_date: startDate, nights, number_of_guests: numberOfGuests }));
 
   const onCreate = async () => {
-    // BookingPal expects the guest name split into first/last (the hub maps
-    // guest_first_name/guest_last_name), and a credit_card block on create.
-    const parts = guestName.trim().split(/\s+/);
-    const guest_first_name = parts.shift() || "";
-    const guest_last_name = parts.join(" ");
+    // Raw operator create (no Flywire). Payment for real bookings goes through
+    // the "Book & Pay" flow above; this sends the quote NET to the channel.
     const body = await wrap("Create reservation", () =>
       AuthService.bpCreateReservation({
         listing_id: listingId,
         start_date: startDate,
         nights: Number(nights),
         number_of_guests: Number(numberOfGuests),
-        total: Number(total),
-        currency,
-        guest_first_name,
-        guest_last_name,
-        guest_email: guestEmail,
-        guest_phone_numbers: [guestPhone],
-        credit_card: {
-          card_number: "4111111111111111",
-          card_month: "10",
-          card_year: "28",
-          card_type: 1,
-          cc_security_code: "222",
-          cc_address: "test address",
-          cc_country: "sr",
-          cc_city: "NS",
-        },
+        total: Number(netTotal || 0),
+        currency: quoteCurrency || "USD",
+        guest: { name: guestName, email: guestEmail, phone: guestPhone },
       })
     );
     const r = body?.result;
@@ -122,7 +301,7 @@ const ReservationDemo = ({ listing, onClose }) => {
         <div className="modal-content">
           <div className="modal-header">
             <h4 className="modal-title" style={{ fontSize: 20, padding: "8px 12px" }}>
-              BookingPal Reservation — {listing?.data?.title || listing?.id || ""}
+              Reserve — {listing?.data?.title || listing?.id || ""}
             </h4>
             <button type="button" className="close" aria-label="Close" onClick={onClose} style={{ fontSize: "1.8rem", fontWeight: 700 }}>
               &times;
@@ -130,36 +309,32 @@ const ReservationDemo = ({ listing, onClose }) => {
           </div>
 
           <div className="modal-body" style={{ padding: 20 }}>
-            <div style={{ color: "#666", fontSize: 13, marginBottom: 12 }}>
-              Outbound calls to BookingPal via the hub. Availability/Quote first, then Create; Details/Modify/Cancel use the returned confirmation id/code.
-            </div>
-
             <div className="row">
               <div className="col-md-3" style={{ marginBottom: 8 }}>
                 <label>Listing ID *</label>
-                <input type="number" className="form-control" value={listingId} onChange={(e) => setListingId(e.target.value)} />
+                <input type="number" className="form-control" value={listingId} onChange={(e) => { setListingId(e.target.value); invalidatePrice(); }} />
               </div>
               <div className="col-md-3" style={{ marginBottom: 8 }}>
                 <label>Start date</label>
-                <input type="date" className="form-control" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+                <input type="date" className="form-control" value={startDate} onChange={(e) => { setStartDate(e.target.value); invalidatePrice(); }} />
               </div>
               <div className="col-md-3" style={{ marginBottom: 8 }}>
                 <label>Nights</label>
-                <input type="number" className="form-control" value={nights} onChange={(e) => setNights(e.target.value)} />
+                <input type="number" className="form-control" value={nights} onChange={(e) => { setNights(e.target.value); invalidatePrice(); }} />
               </div>
               <div className="col-md-3" style={{ marginBottom: 8 }}>
                 <label># Guests</label>
-                <input type="number" className="form-control" value={numberOfGuests} onChange={(e) => setNumberOfGuests(e.target.value)} />
+                <input type="number" className="form-control" value={numberOfGuests} onChange={(e) => { setNumberOfGuests(e.target.value); invalidatePrice(); }} />
               </div>
             </div>
 
             <div className="row">
               <div className="col-md-4" style={{ marginBottom: 8 }}>
-                <label>Guest name</label>
+                <label>Guest name *</label>
                 <input type="text" className="form-control" value={guestName} onChange={(e) => setGuestName(e.target.value)} />
               </div>
               <div className="col-md-4" style={{ marginBottom: 8 }}>
-                <label>Guest email</label>
+                <label>Guest email *</label>
                 <input type="email" className="form-control" value={guestEmail} onChange={(e) => setGuestEmail(e.target.value)} />
               </div>
               <div className="col-md-4" style={{ marginBottom: 8 }}>
@@ -168,39 +343,58 @@ const ReservationDemo = ({ listing, onClose }) => {
               </div>
             </div>
 
-            <div className="row">
-              <div className="col-md-3" style={{ marginBottom: 8 }}>
-                <label>Total</label>
-                <input type="number" className="form-control" value={total} onChange={(e) => setTotal(e.target.value)} />
+            {/* Price panel */}
+            <div style={{ marginTop: 8, padding: 12, background: "#f6f8fb", borderRadius: 8 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+                <button className="btn btn-outline-primary" disabled={quoting || paying} onClick={getPrice}>
+                  {quoting ? "Getting price…" : "Get price"}
+                </button>
+                {priced && (
+                  <div style={{ fontSize: 14 }}>
+                    <span style={{ color: "#666" }}>Charged now: </span>
+                    <strong style={{ fontSize: 18 }}>{chargeCurrency} {chargeAmount}</strong>
+                    {chargeCurrency !== quoteCurrency && (
+                      <span style={{ color: "#999", marginLeft: 8 }}>(≈ {quoteCurrency} {sellingPrice})</span>
+                    )}
+                    <span style={{ color: "#999", marginLeft: 10 }}>(net {quoteCurrency} {netTotal} · agency {quoteCurrency} {Math.round(agencyCommission)})</span>
+                  </div>
+                )}
               </div>
-              <div className="col-md-3" style={{ marginBottom: 8 }}>
-                <label>Currency</label>
-                <input type="text" className="form-control" value={currency} onChange={(e) => setCurrency(e.target.value)} />
-              </div>
-              <div className="col-md-3" style={{ marginBottom: 8 }}>
-                <label>Confirmation ID</label>
-                <input type="text" className="form-control" value={confirmationId} onChange={(e) => setConfirmationId(e.target.value)} />
-              </div>
-              <div className="col-md-3" style={{ marginBottom: 8 }}>
-                <label>Confirmation code</label>
-                <input type="text" className="form-control" value={confirmationCode} onChange={(e) => setConfirmationCode(e.target.value)} />
+              <div style={{ marginTop: 10 }}>
+                <button className="btn btn-success" disabled={!priced || paying} onClick={bookAndPay}>
+                  {paying ? "Opening payment…" : "Book & Pay (Instant)"}
+                </button>
               </div>
             </div>
 
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 12 }}>
-              <button className="btn btn-outline-primary" disabled={!!busy} onClick={onCheckAvailability}>Check availability</button>
-              <button className="btn btn-outline-primary" disabled={!!busy} onClick={onQuote}>Get quote</button>
-              <button className="btn btn-primary" disabled={!!busy} onClick={onCreate}>Create reservation</button>
-              <button className="btn btn-outline-secondary" disabled={!!busy || !confirmationId} onClick={onDetails}>Details</button>
-              <button className="btn btn-outline-secondary" disabled={!!busy || !confirmationId} onClick={onQuotePreview}>Quote preview</button>
-              <button className="btn btn-outline-warning" disabled={!!busy || !confirmationId} onClick={onModify}>Modify</button>
-              <button className="btn btn-danger" disabled={!!busy || !confirmationCode} onClick={onCancel}>Cancel</button>
-            </div>
-            {busy && <div style={{ marginTop: 10, color: "#888" }}>{busy}…</div>}
+            {/* Advanced BP lifecycle ops (operator tools) */}
+            <details style={{ marginTop: 16 }}>
+              <summary style={{ cursor: "pointer", color: "#666" }}>Advanced (raw BookingPal operations)</summary>
+              <div className="row" style={{ marginTop: 8 }}>
+                <div className="col-md-6" style={{ marginBottom: 8 }}>
+                  <label>Confirmation ID</label>
+                  <input type="text" className="form-control" value={confirmationId} onChange={(e) => setConfirmationId(e.target.value)} />
+                </div>
+                <div className="col-md-6" style={{ marginBottom: 8 }}>
+                  <label>Confirmation code</label>
+                  <input type="text" className="form-control" value={confirmationCode} onChange={(e) => setConfirmationCode(e.target.value)} />
+                </div>
+              </div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 8 }}>
+                <button className="btn btn-outline-primary" disabled={!!busy} onClick={onCheckAvailability}>Check availability</button>
+                <button className="btn btn-outline-primary" disabled={!!busy} onClick={onQuote}>Get quote (raw)</button>
+                <button className="btn btn-primary" disabled={!!busy} onClick={onCreate}>Create reservation</button>
+                <button className="btn btn-outline-secondary" disabled={!!busy || !confirmationId} onClick={onDetails}>Details</button>
+                <button className="btn btn-outline-secondary" disabled={!!busy || !confirmationId} onClick={onQuotePreview}>Quote preview</button>
+                <button className="btn btn-outline-warning" disabled={!!busy || !confirmationId} onClick={onModify}>Modify</button>
+                <button className="btn btn-danger" disabled={!!busy || !confirmationCode} onClick={onCancel}>Cancel</button>
+              </div>
+              {busy && <div style={{ marginTop: 10, color: "#888" }}>{busy}…</div>}
+            </details>
           </div>
 
           <div className="modal-footer">
-            <button className="btn btn-secondary" onClick={onClose} disabled={!!busy}>Close</button>
+            <button className="btn btn-secondary" onClick={onClose} disabled={!!busy || paying}>Close</button>
           </div>
         </div>
       </div>

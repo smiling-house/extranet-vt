@@ -120,7 +120,26 @@ const constants = {
 	SHUB_TOKEN: 'Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2NvdW50X29iamVjdF9pZCI6Mzk5MTU4NzUsInVzZXJfaWQiOiI0MDY2NTAyMSIsInVzZXJfbmFtZSI6InN5c3RlbStsdW5hLTh5NXljIiwic2NvcGUiOlsiYnJpdm8uYXBpIl0sImF0aSI6ImI5MTliYmJiLTA1ZWItNDlmOC05MjlhLWM0MTJlYzY3NWI2YyIsImlzc3VlZCI6IjE2NzUzNzA2NDMzNzMiLCJleHAiOjIyOTczMzM3MjcsInNlcnZpY2VfdG9rZW4iOm51bGwsImF1dGhvcml0aWVzIjpbIlJPTEVfU1VQRVJfQURNSU4iLCJST0xFX0FETUlOIl0sImp0aSI6IjExODQzYjg2LWIyYzUtNGMwNS1hYWZlLTcxZTI4NGIyNjNlOCIsImNsaWVudF9pZCI6IjkzOTFlYjVkLWUwNmUtNDY4MS1iNTdhLWQwZTU3NDhhM2RlZSIsIndoaXRlX2xpc3RlZCI6ZmFsc2V9.Mqmx7onIVz_EVAunhwqBAhAmlsGXMQ18hh_EV_61KQIpaGXlrgXgx1hOOdNWLFriG3Un6jfS7H7vwMAYmBT6-8yl9L7VB7Cpxva49XozuSJazQ42UDDlTOsnWAmatzmFna-Uzjc8MDfVQbR8AwMiFq_Jb9ViaJ4XBkj2KhEKs1g',
 
 	X_API_KEY:'S994RQ5bl0yp6DGFqI79pwtnHmtYaMX2b5OmOUsl',
-	GUESTY_CHANNEL_SOURCE:'VT'
+	GUESTY_CHANNEL_SOURCE:'VT',
+
+	// ── BookingPal reserve: Flywire INSTANT + reservation-of-record ──────────
+	// VT extranet reuses VT-BE for reservations + the Flywire webhook (like
+	// VT-FE). RESERVATION_API is the reservation backend the extranet writes to
+	// and reads the Reservations page from; FLYWIRE_CALLBACK_URL is where
+	// Flywire posts the callback-v2 event (server-to-server).
+	RESERVATION_API: 'https://backend.villatracker.com',                       // VT-BE
+	FLYWIRE_CALLBACK_URL: 'https://backend.villatracker.com/reservation/flywire-response',
+	FLYWIRE_ENV: process.env.REACT_APP_FLYWIRE_ENV || 'prod',                  // 'prod' | 'demo'
+	// SmilingHouse Flywire portals (single-currency in prod; demo = SHE, USD).
+	FLYWIRE_RECIPIENTS: {
+		prod: { USD: 'UXH', CHF: 'RXH', EUR: 'YXH' },
+		demo: { USD: 'SHE', CHF: 'SHE', EUR: 'SHE' },
+	},
+	// Synthetic client id for operator-created BP bookings (no client picker in
+	// the modal); only needs to be truthy (VT-BE does not FK-check it).
+	BP_OPERATOR_CLIENT_ID: 999999,
 };
+
+export const PATH_RETURN_FLYWIRE = '/request-to-book-flywire';
 
 export default constants;
