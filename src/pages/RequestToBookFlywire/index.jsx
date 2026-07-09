@@ -32,7 +32,6 @@ const RequestToBookFlywire = () => {
       const amount = params.get("amount");
       const payment_method = params.get("payment_method");
       const sig = params.get("sig");
-      const ptype = params.get("ptype"); // 'instant'
 
       // A reservation is only created for an explicit, referenced success.
       if (status !== "success" || !reference) {

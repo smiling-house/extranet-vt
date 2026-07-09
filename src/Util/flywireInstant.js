@@ -57,7 +57,7 @@ export function buildInstantConfig({ callbackId, sellingPrice, currency, guest, 
   const { amount, recipientCode } = resolveFlywireCharge(sellingPrice, currency);
 
   return {
-    env,
+    env: constants.FLYWIRE_ENV,
     recipientCode,
     amount,
     returnUrl,
