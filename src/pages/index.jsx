@@ -113,6 +113,7 @@ import {
   PATH_EPS_EPARTNER_RESERVATIONS_PROPERTIES,
   PATH_AGODA_LISTINGS,
   PATH_AGODA_SYNC,
+  PATH_AGODA_INQUIRIES,
   PATH_AGODA_ACCOUNT,
   APP_DISPLAY_NAME,
   PATH_PARTNERS_BART,
@@ -154,6 +155,7 @@ import EPartnerReservationsProperties from "./EPartnerReservationsProperties";
 
 import AgodaListings from "./AgodaListings";
 import AgodaSync from "./AgodaSync";
+import AgodaInquiries from "./AgodaInquiries";
 import AgodaAccount from "./AgodaAccount";
 
 import ZipcodesRegionsMapping from "./ZipcodesRegionsMapping";
@@ -767,6 +769,9 @@ if(partnerAccountId) {
           </Route>
         <Route path={[PATH_AGODA_SYNC]}>
           <AgodaSync agent={agent} agency={agency} token={token} />
+          </Route>
+        <Route path={[PATH_AGODA_INQUIRIES]}>
+          <AgodaInquiries agent={agent} agency={agency} token={token} />
           </Route>
         <Route path={[PATH_AGODA_ACCOUNT]}>
           <AgodaAccount agent={agent} agency={agency} token={token} />
