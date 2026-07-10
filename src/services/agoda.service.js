@@ -120,6 +120,15 @@ export async function testAuth (accountId = '') {
   return res.data
 }
 
+// GET /services/agoda/bookings/:bookingId — stored inquiry (triage) merged
+// with a live GetBookingDetails pull (room/rate names, nightly prices,
+// cancellation policy, benefits, special requests).
+export async function fetchBookingDetail (bookingId, hotelCode = '') {
+  const qs = hotelCode ? `?hotelCode=${encodeURIComponent(hotelCode)}` : ''
+  const res = await api.get(`${base}/services/agoda/bookings/${encodeURIComponent(bookingId)}${qs}`)
+  return res.data
+}
+
 export async function updateInquiryStatus (id, status, notes = '') {
   const res = await api.patch(`${base}/services/agoda/inquiries/${id}/status`, { status, notes })
   return res.data
@@ -128,5 +137,5 @@ export async function updateInquiryStatus (id, status, notes = '') {
 export default {
   fetchAgodaListings, saveAgodaConfig, setAgodaEnabled, bulkAgodaConfig,
   mirrorImages, cpapiCreateProperty, cpapiCreateRoom, cpapiCreateRatePlan, cpapiCreateProduct,
-  pushListing, pushAllEnabled, fetchSyncLedger, fetchInquiries, updateInquiryStatus, registerAccount, testAuth,
+  pushListing, pushAllEnabled, fetchSyncLedger, fetchInquiries, fetchBookingDetail, updateInquiryStatus, registerAccount, testAuth,
 }
