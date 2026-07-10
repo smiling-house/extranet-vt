@@ -138,7 +138,17 @@ const AgodaBooking = (props) => {
             <Card title="Room & rate plan">
               <Row label="Room type">{b?.roomType} {b?.roomTypeCode ? <span style={mono}>({b.roomTypeCode})</span> : null}</Row>
               <Row label="Rate plan">{b?.ratePlanName} {b?.ratePlanCode ? <span style={mono}>({b.ratePlanCode})</span> : null}</Row>
-              <Row label="Booked via">{b?.channelName}</Row>
+              <Row label="Booked via">{b?.channelName}{b?.channelCode ? <span style={{ ...mono, marginLeft: 6 }}>(channel {b.channelCode})</span> : null}</Row>
+              {b?.promotionName && (
+                <Row label="YCS promotion">
+                  {b.promotionName} {b.promotionCode ? <span style={mono}>({b.promotionCode})</span> : null}
+                </Row>
+              )}
+              <Row label="Payment">
+                {b?.paymentModel === 2 ? "Agoda collects (prepaid) — charge the guest nothing on arrival"
+                  : b?.paymentModel === 1 ? "Property collects from guest"
+                  : "—"}
+              </Row>
               <Row label="Cancellation policy">
                 {cxl ? <span style={{ color: nonRefundable ? "#b91c1c" : "#111827" }}>{cxl}</span> : "—"}
                 {b?.cancellationCode ? <span style={{ ...mono, marginLeft: 6 }}>{b.cancellationCode}</span> : null}
