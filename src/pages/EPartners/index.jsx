@@ -533,7 +533,7 @@ const showOrHideSideBarMenu=()=> {
 					}
 					{selectedEPartnerToEdit &&
 						<div className="popup-wrapper" >
-							<div className="popup-container p-2" style={{ width: "730px" }} >
+							<div className="popup-container p-2 epartner-edit-popup" style={{ width: "730px" }} >
 								<EditEPartner
 									agent={agent}
 									newPartnerID={parseInt(totalEPartners) + 1}
