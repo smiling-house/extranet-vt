@@ -51,6 +51,9 @@ import { PATH_PROPERTY, PATH_EPARTNERS } from "../../Util/constants.js"
 import { useLocation, useHistory } from "react-router-dom";
 
 import "./EListings.scss"
+// Scoped overrides that undo theme-dashboard's /listings bleed on this page.
+// Must be imported after EListings.scss so it lands later in the bundle.
+import "./EPSSelectScope.scss"
 import Paging from "../../components/Paging/index.js"
 import constants from "../../Util/constants.js"
 import closeIcon from '../../assets/icons/closeIcon.png'
@@ -890,7 +893,7 @@ return (
         />
         <div className={activeMenu ? `${"page-body"}` : "page-body"} >
 
-            <div className="listings-container"
+            <div className="listings-container eps-scope"
                 style={{ backgroundImage: `url(${pageBg})` }}
             >
                 <LoadingBox visible={isLoading} />
@@ -964,6 +967,7 @@ return (
                                                                 
                                                             </div>
                                                             <div class="line-two">
+                                                                <div className="listing-id-line">ID: {iteam.listing?._id || "-"}</div>
                                                                 <div class="line-two-line-one">
                                                                     <span class="nick-title">
                                                                         <strong class="nick">{iteam.listing.nickname}</strong> - <span class="title"><strong class="nick">{iteam.listing?.propertyType}</strong>, </span>
@@ -1056,6 +1060,7 @@ return (
                                                             
                                                         </div>
                                                         <div class="line-two">
+                                                            <div className="listing-id-line">ID: {iteam.listing?._id || "-"}</div>
                                                             <div class="line-two-line-one">
                                                                 <span class="nick-title">
                                                                     <strong class="nick">{iteam.listing.nickname}</strong> - <span class="title"><strong class="nick">{iteam.listing?.propertyType}</strong>, </span>

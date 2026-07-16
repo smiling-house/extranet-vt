@@ -1,0 +1,73 @@
+/* ---------------------------------------------------------------------------
+ * EPSSelect (/eps-select-listings) — scoped design + alignment fix.
+ *
+ * WHY THIS FILE EXISTS
+ * theme-dashboard.css carries a "/listings cleanup" block whose selectors are
+ * scoped to `.listings-container`. Its own comment reads "Scoped to
+ * .listings-container so nothing else is affected" — but that assumption is
+ * wrong: the external-partner pages reuse the very same `.listings-container`
+ * wrapper. Those rules therefore bleed onto this page, and they beat this
+ * page's own EListings.scss on specificity:
+ *
+ *   .listings-container table.table td   -> (0,2,2) !important   theme-dashboard
+ *   .column-body                         -> (0,1,0) !important   EListings.scss
+ *
+ * Net effect on /eps-select-listings: cells render top-aligned at
+ * 14px/0.85rem instead of the intended middle-aligned 5px 15px/16px, and the
+ * table header picks up a sticky offset meant for a different page layout —
+ * the "distorted / misaligned" look that was reported.
+ *
+ * theme-dashboard.css and EListings.scss are both shared by other pages, so
+ * neither is edited here. Every rule below is scoped under `.eps-scope`, a
+ * marker class added only to this page's `.listings-container` root, so no
+ * other page can be affected.
+ * ------------------------------------------------------------------------- */
+
+.eps-scope.listings-container {
+
+	/* 1. Header + body cells — restore this page's intended metrics.
+	 *    Outranks `.listings-container table.table td` / `... thead th`. */
+	table.table thead th.column-header,
+	table.table tbody td.column-body {
+		padding: 5px 15px !important;
+		font-size: 16px !important;
+		vertical-align: middle !important;
+	}
+
+	/* 2. The page declares <thead style="background:#ffffff"> inline, but
+	 *    theme-dashboard forces #f1f4f8 onto every th and silently overrides
+	 *    that intent. Let the page's own white header show through. */
+	table.table thead th.column-header {
+		background: #fff !important;
+	}
+
+	/* 3. theme-dashboard pins thead `sticky` at top:70px for the /listings
+	 *    layout. Here the table lives inside `.table-responsive{overflow:auto}`,
+	 *    so the offset resolves against that scroll box and drops the header
+	 *    70px into the table. Return it to normal flow. */
+	table.table thead {
+		position: static;
+	}
+
+	/* 4. The property cell is a flex row ([photo] [details]), so
+	 *    `vertical-align` cannot centre its contents — flex alignment governs.
+	 *    Default `align-items: stretch` leaves the photo and the text block
+	 *    aligned to different edges; centre them against each other. */
+	td.column-body.two-line-cell {
+		align-items: center;
+	}
+
+	/* 5. Listing id, rendered on its own line directly above the title.
+	 *    Monospace + muted so the long ObjectId reads as metadata and never
+	 *    competes with the nickname/title beneath it. `break-all` keeps the
+	 *    24-char id from widening the column on narrow viewports. */
+	td.column-body.two-line-cell .line-two .listing-id-line {
+		font-family: 'JetBrains Mono', 'Menlo', 'Consolas', monospace;
+		font-size: 12px;
+		font-weight: 500;
+		line-height: 1.2;
+		color: #6b7280;
+		margin-bottom: 2px;
+		word-break: break-all;
+	}
+}
