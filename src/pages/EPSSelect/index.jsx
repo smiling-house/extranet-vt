@@ -770,6 +770,21 @@ const deSelectAllListings = () => {
  */
 const updateFilteredListings = () => {
 
+    // Guard: this partner must have a partnerId before anything is uploaded.
+    // Without it the calls below would POST to
+    // /eps/upload-external-partner-listings/undefined and
+    // /eps/update-external-partner-id-status/undefined, silently writing the
+    // selection against no partner. Stop at the click instead.
+    if (partnerId === undefined || partnerId === null || partnerId === '') {
+        swal({
+            show: true,
+            icon: 'error',
+            title: 'Opps!!',
+            text: `Missing External Partner ID for ${Epartner?.partnerName || 'this partner'}. Listings cannot be updated without it.`
+        })
+        return;
+    }
+
     // console.log('ppv - updateFilteredListings', selectedfilteredlistings)
     const now = new Date().toISOString();
     const selectedlistings =  selectedfilteredlistings.map(item => ({
