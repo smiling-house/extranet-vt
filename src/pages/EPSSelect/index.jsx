@@ -149,6 +149,7 @@ const Listings = (props) => {
     const [filteredDataList, setFilteredDataList] = useState([])
     const [searchFilteredListData, setSearchFilteredListData] = useState([])
     
+const [sources, setSources] = useState(['G','RU','BP','VillasInStBarth','InvenioHomes','HW']);
 
     // const dispatch = useDispatch();
     // const properties = useSelector((state) => state.property.properties);
@@ -286,7 +287,7 @@ const Listings = (props) => {
             limit: constants.PAGING_LISTING_SIZE, 
             skip: skip,
             sortBy: 'data.nickname:1',
-            source: ['G'] //need only guesty properties from new RU DH for external partners now
+            source: sources //need only guesty properties from new RU DH for external partners now
         } 
         const queryString = Object.keys(params).map(key => key + '=' + params[key]).join("&")
         console.log(queryString)
@@ -355,7 +356,7 @@ const Listings = (props) => {
             limit: constants.PAGING_LISTING_SIZE, 
             skip: 0,
             sortBy: 'data.nickname:1' ,
-            source: ['G'] //need only guesty properties from new RU DH for external partners now          
+            source: sources  //need only guesty properties from new RU DH for external partners now          
     }
     
     console.log('getting from /listings:',params)
