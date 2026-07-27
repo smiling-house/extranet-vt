@@ -33,7 +33,7 @@ const AgodaListings = (props) => {
     const [busyRow, setBusyRow] = useState(null); // listingId currently running an action
     const [q, setQ] = useState("");
     const [accountId, setAccountId] = useState("");
-    const [status, setStatus] = useState(""); // '' | enabled | disabled | ready | blocked
+    const [status, setStatus] = useState(""); // '' | ready | blocked | partial | configured | enabled | disabled
     const [edits, setEdits] = useState({});   // id -> {hotelCode, roomTypeCode, ratePlanCode, currency}
     const [showCodes, setShowCodes] = useState(null); // listingId with the codes editor open
 
@@ -190,12 +190,16 @@ const AgodaListings = (props) => {
                             <input className="form-control" style={{ maxWidth: 240 }} placeholder="Search name / id"
                                 value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => e.key === "Enter" && onSearch()} />
                             <button className="btn btn-primary" onClick={onSearch}>Search</button>
+                            {/* Ordered by onboarding lifecycle: eligible -> created but
+                                incomplete -> fully mapped -> live. */}
                             <select className="form-control" style={{ maxWidth: 200 }} value={status} onChange={(e) => setStatus(e.target.value)}>
                                 <option value="">All</option>
-                                <option value="enabled">Enabled</option>
-                                <option value="disabled">Not enabled</option>
                                 <option value="ready">Ready</option>
                                 <option value="blocked">Blocked</option>
+                                <option value="partial">Partial (mid-create)</option>
+                                <option value="configured">Configured</option>
+                                <option value="enabled">Enabled</option>
+                                <option value="disabled">Not enabled</option>
                             </select>
                             <span style={{ alignSelf: "center", color: "#555" }}>{total} listings</span>
                         </div>
