@@ -207,6 +207,27 @@
   padding: 0 !important;
 }
 
+/* property-redesign.css forces overflow:visible on EVERY .datepicker descendant,
+   which unclips react-dates' horizontally-sliding month strip so the hidden
+   buffer months bleed out as a faint second panel with ragged edges. Restore the
+   clip on the sliding container (the absolutely-positioned popup still shows). */
+.property-page-wrapper .propertyDatePicker .DayPicker_transitionContainer {
+  overflow: hidden !important;
+}
+
+/* property-redesign.css paints EVERY calendar day (td[role="button"]) with
+   --muted !important, flattening available vs unavailable. Restore the contrast
+   on the property page: selectable days read dark, non-selectable read light/
+   muted. (:not(selected) keeps the selected day's own white text intact.) */
+.property-page-wrapper .property-page-body-top-right .datepicker td.CalendarDay__default:not(.CalendarDay__blocked_calendar):not(.CalendarDay__blocked_out_of_range):not(.CalendarDay__selected) {
+  color: #1B2D4F !important;
+}
+.property-page-wrapper .property-page-body-top-right .datepicker td.CalendarDay__blocked_calendar,
+.property-page-wrapper .property-page-body-top-right .datepicker td.CalendarDay__blocked_calendar:hover,
+.property-page-wrapper .property-page-body-top-right .datepicker td.CalendarDay__blocked_out_of_range {
+  color: #C3CAD3 !important;
+}
+
 /* Keep the calendar icon from crowding the "Arrive"/"Depart" placeholder (it
    showed as "ive"/"part"). Small icon on the left, text padded clear of it.
    High specificity + !important to beat property-redesign.css's input rules. */
@@ -359,17 +380,16 @@
   box-shadow: 0 8px 28px rgba(27, 45, 79, 0.16) !important;
 }
 
-/* Booked / restricted days: greyed + struck through + non-selectable cursor,
-   so unavailable dates read as unavailable BEFORE clicking (they were already
-   unclickable via isDayBlocked, but looked identical to open days). */
+/* Non-selectable days (booked / past): muted grey so they read as unavailable
+   without the noisy strikethrough. Already unclickable via isDayBlocked. */
 .CalendarDay__blocked_calendar,
 .CalendarDay__blocked_calendar:active,
 .CalendarDay__blocked_calendar:hover {
-  background-color: #F7F9FB !important;
-  color: #B9C2CE !important;
-  text-decoration: line-through !important;
+  background-color: transparent !important;
+  color: #C3CAD3 !important;
+  text-decoration: none !important;
   cursor: not-allowed !important;
-  font-weight: 500 !important;
+  font-weight: 400 !important;
 }
 
 .CalendarDay__blocked_out_of_range,
