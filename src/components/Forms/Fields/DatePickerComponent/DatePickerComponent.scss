@@ -193,6 +193,30 @@
   border-spacing: 0;
 }
 
+/* property-redesign.css leaves the month in an auto-layout table whose day cells
+   collapse to ~25px (content width) while the weekday header stays 39px, so the
+   date columns don't sit under their labels. Force react-dates' fixed 39px grid
+   so both line up. */
+.propertyDatePicker .CalendarMonth_table {
+  table-layout: fixed !important;
+  width: 273px !important;
+}
+.propertyDatePicker .CalendarMonth_table td.CalendarDay {
+  width: 39px !important;
+  height: 39px !important;
+  padding: 0 !important;
+}
+
+/* Keep the calendar icon from crowding the "Arrive"/"Depart" placeholder (it
+   showed as "ive"/"part"). Small icon on the left, text padded clear of it.
+   High specificity + !important to beat property-redesign.css's input rules. */
+.property-page-wrapper .propertyDatePicker #property-arrivedate,
+.property-page-wrapper .propertyDatePicker #property-departdate {
+  background-size: 16px 16px !important;
+  background-position: left 12px center !important;
+  padding: 11px 12px 11px 38px !important;
+}
+
 .propertyDatePicker .DayPicker_weekHeader .DayPicker_weekHeader_1 .DayPicker_weekHeader__vertical .DayPicker_weekHeader__vertical_2 {
   top: -6px;
   margin-left: -226px;
