@@ -85,7 +85,8 @@ property,
 
   const property = location?.state?.property;
   const xdata = location?.state?.xdata;
-  const fullCalendar = location?.state?.fullCalendar;
+  const [fetchedFullCalendar, setFetchedFullCalendar] = useState(null);
+  const fullCalendar = fetchedFullCalendar ?? location?.state?.fullCalendar;
   const activeRatePlan = location?.state?.activeRatePlan;
   const channelSource = location?.state?.channelSource;
   const selectedNights = location?.state?.nights;
@@ -114,6 +115,30 @@ property,
       .catch((e) => console.error("Cold-load property by id failed:", e));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Fetch the FULL calendar (real per-night price + allotment). The listing's
+  // own calendar from /local/listings is stripped by the slim pipeline, which
+  // left prices at $0 for any selected date. Runs for both in-app nav and
+  // cold-load, keyed on the resolved listing id.
+  useEffect(() => {
+    const id =
+      property?._id || new URLSearchParams(location.search || "").get("id");
+    if (!id) return;
+    const req = axios.create({
+      baseURL: constants.SHUB_URL,
+      headers: { Authorization: constants.SHUB_TOKEN },
+    });
+    req
+      .get(`/local/load-fullcalendar/${id}`)
+      .then((res) => {
+        if (res?.data?.status && Array.isArray(res.data.fullCalendar) && res.data.fullCalendar.length) {
+          setFetchedFullCalendar(res.data.fullCalendar);
+        }
+      })
+      .catch((e) => console.error("load-fullcalendar failed:", e?.message || e));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [property?._id]);
+
   const [startDate, setStartDate] = useState(
     dayjs(getStorageValue("dateFrom")) || null
   );
