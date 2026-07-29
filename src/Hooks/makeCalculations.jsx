@@ -403,16 +403,19 @@ return ('some error fetching')
             .filter((period) => dayjs(period?.date).isSame(formattedDate, 'day')) : null
 
           // console.log('day or res:', formattedDate, selectedDay)
-          if (!selectedDay) {
-            error.push({ error: 'could not find day in the fullCalendar: ' + formattedDate })
+          // Missing night: .filter() returns [] (not null) when the date isn't in
+          // the calendar, so guard on length too — otherwise the code below reads an
+          // undefined day and quietly sums NaN/$0.
+          if (!selectedDay || !selectedDay.length) {
+            error.push({ error: 'Not available for the selected dates. Please choose different dates.' })
             return { error }
           }
             if (selectedDay && Array.isArray(selectedDay)) {
              // console.log('sel:',selectedDay)
-              
+
               if (Object.prototype.hasOwnProperty.call(selectedDay[0], 'allotment')) {
                 if (!selectedDay[0]?.allotment) {
-                  error.push({ error: 'day is not available: ' + formattedDate })
+                  error.push({ error: 'Not available for the selected dates. Please choose different dates.' })
                   return { error }
                 }
               } else {
@@ -420,10 +423,11 @@ return ('some error fetching')
                 error.push({ error: 'could not find day allotment in the fullCalendar: ' + formattedDate })
             return { error }
               }
-            } 
+            }
 
           const selectedPrice = selectedDay.map((period) => period.price);
-          if (selectedPrice) {
+          // Never silently sell a rate-less night at $0 — require a positive price.
+          if (Number(selectedPrice[0]) > 0) {
             sum += selectedPrice[0];
             addToDailyRates({
               price: selectedPrice[0],
@@ -433,7 +437,7 @@ return ('some error fetching')
             );
             ;
           } else {
-            error.push({ error: 'day price is not available: ' + formattedDate })
+            error.push({ error: 'Pricing is not available for the selected dates. Please change dates.' })
             return { error }
           }
           currentDate = currentDate.add(1, 'day');
