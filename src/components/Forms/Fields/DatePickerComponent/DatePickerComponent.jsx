@@ -11,8 +11,12 @@ import moment from "moment";
 const DatePickerComponent = ({ arrivalDate, departDate, fullCalendar, onChange, disabled }) => {
   const location = useLocation();
   const isPropertyPath = location.pathname.includes('property');
-  const blocked = fullCalendar ? fullCalendar.filter((element) => (element?.allotment === 0)) : [];
-  const blockedDates = blocked.map((x) => x.date.substring(0, 10));
+  // Booked = allotment explicitly zero/false (number 0, "0", false) — matches
+  // VT-FE. Some feeds ship allotment as a string, which a strict `=== 0` let
+  // through, leaving those days pickable.
+  const isDayBooked = (e) =>
+    e?.allotment === 0 || e?.allotment === "0" || e?.allotment === false;
+  const blockedDates = fullCalendar ? fullCalendar.filter(isDayBooked).map((x) => x.date.substring(0, 10)) : [];
   const [startDate, setArrivalDate] = useState(null);
   const [minNights, setMinNights] = useState(0);
   const [endDate, setDepartDate] = useState(null);
@@ -141,35 +145,9 @@ const DatePickerComponent = ({ arrivalDate, departDate, fullCalendar, onChange, 
     padding: isPropertyPath ? '0' : '0 10px'
   };
 
-  // Property page: use simple native date inputs (matches the mockup, no
-  // overlapping icons). Reuses the same handleDatesChange/onChange contract.
-  if (isPropertyPath) {
-    const fmt = (d) => {
-      if (!d) return "";
-      const m = moment.isMoment(d) ? d : moment(d);
-      return m.isValid() ? m.format("YYYY-MM-DD") : "";
-    };
-    const today = moment().format("YYYY-MM-DD");
-    return (
-      <div className="propertyDatePicker pr-dates">
-        <input
-          type="date"
-          className="pr-date-input"
-          min={today}
-          value={fmt(startDate)}
-          onChange={(e) => handleDatesChange({ startDate: e.target.value ? moment(e.target.value) : null, endDate })}
-        />
-        <input
-          type="date"
-          className="pr-date-input"
-          min={fmt(startDate) || today}
-          value={fmt(endDate)}
-          onChange={(e) => handleDatesChange({ startDate, endDate: e.target.value ? moment(e.target.value) : null })}
-        />
-      </div>
-    );
-  }
-
+  // Property page uses the SAME react-dates picker as VT-FE so blocked dates
+  // (allotment 0) are greyed / not selectable — native <input type="date">
+  // could only enforce a min date and let blocked days be picked.
   return (
     <div className={isPropertyPath ? "propertyDatePicker" : ""}>
       <DateRangePicker
