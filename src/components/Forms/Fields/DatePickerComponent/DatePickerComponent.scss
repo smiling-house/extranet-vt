@@ -16,11 +16,21 @@
   font-weight: 500;
   background-image: url('../../../../assets/icons/calendar.png');
   background-size: 24px 24px;
-  background-position: left center;
+  // Inset the calendar icon from the input's left edge (it used to sit flush
+  // against the border) and pad the text past it.
+  background-position: left 8px center;
   background-repeat: no-repeat;
   min-width: 142px;
-  padding-left: 30px;
-  padding: 8.2px 30px;
+  padding: 8.2px 30px 8.2px 40px;
+}
+
+// On narrow phones the two 142px inputs (arrive + depart) side-by-side force the
+// search bar wider than the viewport. Let them shrink to fit.
+@media (max-width: 767px) {
+  #arrivedate,
+  #departdate {
+    min-width: 0;
+  }
 }
 
 .DateRangePicker .DateRangePickerInput__withBorder {
@@ -39,7 +49,13 @@
   display: flex !important;
   width: 100% !important;
   border-radius: 4px !important;
-  padding: 0 10px;
+  padding: 0 10px !important;
+}
+
+// Property-page picker uses no horizontal padding (was an inline <style> on the
+// component; moved here so the component doesn't re-inject CSS on every render).
+.propertyDatePicker .DateInput {
+  padding: 0 !important;
 }
 
 .DateInput .calendar-icon {
@@ -65,7 +81,10 @@
   }
 }
 
-.DateRangePicker_picker {
+// Scoped to NON-portaled popups only (i.e. descendants of the inline wrapper). The
+// search-bar calendar portals itself to <body>, so it is no longer a descendant of
+// .DateRangePicker and correctly does NOT match this rule.
+.DateRangePicker .DateRangePicker_picker {
   left: -40.568px !important;
 
   @media (max-width: 768px) {
@@ -74,15 +93,33 @@
     left: -74.568px !important;
   }
 }
+/* Portal calendars: above the sticky results header (99999), the destination
+   floaters (100001) AND the mobile booking sheet (100005). This react-dates
+   version has no portal wrapper class — the picker itself carries the portal
+   modifier classes and defaults to z-index 1. */
+.DateRangePicker_picker__portal,
+.DateRangePicker_picker__fullScreenPortal {
+  z-index: 100006 !important;
+  background-color: #FFFFFF !important;
+}
+
+/* Property-page popup panel: match the card's field styling (12px radius,
+   #D7DDE6 border) and show ONE month (vertical) instead of a month and a half. */
+.propertyDatePicker .DayPicker__withBorder {
+  border-radius: 12px !important;
+  border: 1px solid #D7DDE6;
+  box-shadow: 0 8px 28px rgba(27, 45, 79, 0.14) !important;
+  overflow: hidden;
+}
+
+.propertyDatePicker .DayPicker_transitionContainer__vertical {
+  // One month incl. 6-week months + breathing room above the prev/next bar
+  // (372px left the 6th week row — e.g. Jan 2027's "31" — kissing the nav).
+  height: 408px !important;
+}
 
 .DateRangePickerInput__showClearDates {
   padding: 0;
-}
-
-.DayPicker_transitionContainer {
-  @media (max-width: 768px) {
-    height: 645px !important;
-  }
 }
 
 .CalendarDay__selected,
@@ -116,7 +153,7 @@
 
 .propertyDatePicker .DateRangePicker_picker {
   top: 44px !important;
-  left: 24.432px !important;
+  left: 10px !important;
 }
 
 .propertyDatePicker #property-arrivedate,
@@ -126,16 +163,22 @@
   font-weight: 500;
   background-image: url('../../../../assets/icons/calendar.png');
   background-size: 24px 24px;
-  background-position: left 10px center;
+  background-position: left 2px center;
   background-repeat: no-repeat;
-  padding: 8.2px 40px;
+  padding: 8.2px 30px;
 }
 
-@media (max-width: 768px) {
+/* Phones: pin the one-month dropdown fixed-center so the WHOLE month is
+   visible above the booking sheet (it used to run below the fold; the
+   fullscreen-portal alternative read as a broken empty page). */
+@media (max-width: 767px) {
   .propertyDatePicker .DateRangePicker_picker {
-    top: 47px !important;
-    margin-left: 74px !important;
-    left: -74.568px !important;
+    position: fixed !important;
+    top: 9vh !important;
+    left: 50% !important;
+    margin: 0 !important;
+    transform: translateX(-50%);
+    z-index: 100006 !important;
   }
 }
 
@@ -165,8 +208,8 @@
   padding-top: 20px !important;
 }
 
+/* (old 560px vertical height removed — the one-month rule above sizes it) */
 .propertyDatePicker .DayPicker_transitionContainer__vertical {
-  height: 560px !important;
   width: 100% !important;
 }
 
@@ -211,4 +254,98 @@
 
 .datepicker .DateRangePickerInput__arrow {
   display: none; /* Optionally hide the arrow between the inputs if desired */
+}
+
+/* ═════════════════════════════════════════════════════════════════════════════
+   Luxury skin (2026-07-17) — STYLING ONLY, react-dates behavior untouched.
+   Property-page inputs get the design's 12px-radius bordered fields; the
+   calendar's selected/range colors move to the brand navy/sky palette
+   (globally, so the search-bar picker matches too).
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.propertyDatePicker #property-arrivedate,
+.propertyDatePicker #property-departdate {
+  border: 1px solid #D7DDE6;
+  border-radius: 12px;
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: #1B2D4F;
+  padding: 11px 12px 11px 38px;
+  background-position: left 10px center;
+  background-size: 18px 18px;
+  transition: border-color 140ms;
+}
+
+.propertyDatePicker #property-arrivedate::placeholder,
+.propertyDatePicker #property-departdate::placeholder {
+  color: #7A8AA0;
+}
+
+/* react-dates' focus class resets `border: 0` (keeping only a bottom line), so a
+   border-color-only override rendered as NO border — the field looked unselected.
+   Re-assert the full border + a soft sky ring so the focused field reads clearly. */
+.propertyDatePicker .DateInput_input__focused,
+.propertyDatePicker #property-arrivedate:focus,
+.propertyDatePicker #property-departdate:focus {
+  border: 1px solid #3FA5D6 !important;
+  box-shadow: 0 0 0 3px rgba(91, 184, 229, 0.25) !important;
+  outline: none !important;
+}
+
+.propertyDatePicker .DateRangePickerInput__withBorder {
+  gap: 10px !important;
+}
+
+/* Calendar palette — navy selected ends, sky range, quiet hover. */
+.CalendarDay__selected,
+.CalendarDay__selected:active,
+.CalendarDay__selected:hover {
+  background: #1B2D4F !important;
+  border: 1px double #1B2D4F !important;
+}
+
+.CalendarDay__selected_span {
+  background: #D2ECF8 !important;          /* sky-200 */
+  border: 1px double #ADDDF2 !important;   /* sky-300 */
+  color: #1B2D4F !important;
+}
+
+.CalendarDay__selected_span:active,
+.CalendarDay__selected_span:hover {
+  background: #84CCEC !important;          /* sky-400 */
+  border: 1px double #84CCEC !important;
+  color: #1B2D4F !important;
+}
+
+.CalendarDay__hovered_span,
+.CalendarDay__hovered_span:hover {
+  background: #EBF6FC !important;          /* sky-100 */
+  border: 1px double #D2ECF8 !important;
+  color: #1B2D4F !important;
+}
+
+.DayPicker__withBorder {
+  border-radius: 16px !important;
+  box-shadow: 0 8px 28px rgba(27, 45, 79, 0.16) !important;
+}
+
+/* Booked / restricted days: greyed + struck through + non-selectable cursor,
+   so unavailable dates read as unavailable BEFORE clicking (they were already
+   unclickable via isDayBlocked, but looked identical to open days). */
+.CalendarDay__blocked_calendar,
+.CalendarDay__blocked_calendar:active,
+.CalendarDay__blocked_calendar:hover {
+  background-color: #F7F9FB !important;
+  color: #B9C2CE !important;
+  text-decoration: line-through !important;
+  cursor: not-allowed !important;
+  font-weight: 500 !important;
+}
+
+.CalendarDay__blocked_out_of_range,
+.CalendarDay__blocked_out_of_range:active,
+.CalendarDay__blocked_out_of_range:hover {
+  color: #CBD2DB !important;
+  cursor: not-allowed !important;
 }
