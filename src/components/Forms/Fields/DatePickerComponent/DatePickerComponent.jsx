@@ -24,12 +24,6 @@ const DatePickerComponent = ({ arrivalDate, departDate, fullCalendar, onChange, 
   const [focusedInput, setFocusedInput] = useState(null);
 
   const getOrientation = () => {
-    // Property page always renders VERTICAL (one month) — the .propertyDatePicker
-    // CSS (absolute weekday header, vertical container) is written for vertical;
-    // rendering horizontal made the weekday row overlap the dates. Matches VT-FE.
-    if (isPropertyPath) {
-      return "vertical";
-    }
     return window.matchMedia("(max-width: 768px)").matches ? "vertical" : "horizontal";
   };
 

@@ -188,7 +188,7 @@
 }
 
 .propertyDatePicker .CalendarMonth_table {
-  margin-top: 20px;
+  margin-top: 0;
   border-collapse: collapse;
   border-spacing: 0;
 }
@@ -199,13 +199,16 @@
   padding: 0px 13px;
 }
 
+/* Extranet property container is narrower/centered vs VT-FE's booking card, so
+   VT-FE's top:22px offset dropped the Su–Sa row onto the first week. Keep
+   react-dates' default header placement (top:62px, below the month caption). */
 .propertyDatePicker .DayPicker_weekHeader {
   color: #757575;
   position: absolute;
-  top: 22px !important;
+  top: 62px !important;
   z-index: 2;
   text-align: left;
-  padding-top: 20px !important;
+  padding-top: 0 !important;
 }
 
 /* (old 560px vertical height removed — the one-month rule above sizes it) */
