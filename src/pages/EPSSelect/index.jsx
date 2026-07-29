@@ -51,6 +51,9 @@ import { PATH_PROPERTY, PATH_EPARTNERS } from "../../Util/constants.js"
 import { useLocation, useHistory } from "react-router-dom";
 
 import "./EListings.scss"
+// Scoped overrides that undo theme-dashboard's /listings bleed on this page.
+// Must be imported after EListings.scss so it lands later in the bundle.
+import "./EPSSelectScope.scss"
 import Paging from "../../components/Paging/index.js"
 import constants from "../../Util/constants.js"
 import closeIcon from '../../assets/icons/closeIcon.png'
@@ -146,6 +149,7 @@ const Listings = (props) => {
     const [filteredDataList, setFilteredDataList] = useState([])
     const [searchFilteredListData, setSearchFilteredListData] = useState([])
     
+const [sources, setSources] = useState(['G','RU','BP','VillasInStBarth','InvenioHomes','HW']);
 
     // const dispatch = useDispatch();
     // const properties = useSelector((state) => state.property.properties);
@@ -283,7 +287,7 @@ const Listings = (props) => {
             limit: constants.PAGING_LISTING_SIZE, 
             skip: skip,
             sortBy: 'data.nickname:1',
-            source: ['G'] //need only guesty properties from new RU DH for external partners now
+            source: sources //need only guesty properties from new RU DH for external partners now
         } 
         const queryString = Object.keys(params).map(key => key + '=' + params[key]).join("&")
         console.log(queryString)
@@ -352,7 +356,7 @@ const Listings = (props) => {
             limit: constants.PAGING_LISTING_SIZE, 
             skip: 0,
             sortBy: 'data.nickname:1' ,
-            source: ['G'] //need only guesty properties from new RU DH for external partners now          
+            source: sources  //need only guesty properties from new RU DH for external partners now          
     }
     
     console.log('getting from /listings:',params)
@@ -767,6 +771,21 @@ const deSelectAllListings = () => {
  */
 const updateFilteredListings = () => {
 
+    // Guard: this partner must have a partnerId before anything is uploaded.
+    // Without it the calls below would POST to
+    // /eps/upload-external-partner-listings/undefined and
+    // /eps/update-external-partner-id-status/undefined, silently writing the
+    // selection against no partner. Stop at the click instead.
+    if (partnerId === undefined || partnerId === null || partnerId === '') {
+        swal({
+            show: true,
+            icon: 'error',
+            title: 'Opps!!',
+            text: `Missing External Partner ID for ${Epartner?.partnerName || 'this partner'}. Listings cannot be updated without it.`
+        })
+        return;
+    }
+
     // console.log('ppv - updateFilteredListings', selectedfilteredlistings)
     const now = new Date().toISOString();
     const selectedlistings =  selectedfilteredlistings.map(item => ({
@@ -890,7 +909,7 @@ return (
         />
         <div className={activeMenu ? `${"page-body"}` : "page-body"} >
 
-            <div className="listings-container"
+            <div className="listings-container eps-scope"
                 style={{ backgroundImage: `url(${pageBg})` }}
             >
                 <LoadingBox visible={isLoading} />
@@ -964,6 +983,7 @@ return (
                                                                 
                                                             </div>
                                                             <div class="line-two">
+                                                                <div className="listing-id-line">ID: {iteam.listing?._id || "-"}</div>
                                                                 <div class="line-two-line-one">
                                                                     <span class="nick-title">
                                                                         <strong class="nick">{iteam.listing.nickname}</strong> - <span class="title"><strong class="nick">{iteam.listing?.propertyType}</strong>, </span>
@@ -1056,6 +1076,7 @@ return (
                                                             
                                                         </div>
                                                         <div class="line-two">
+                                                            <div className="listing-id-line">ID: {iteam.listing?._id || "-"}</div>
                                                             <div class="line-two-line-one">
                                                                 <span class="nick-title">
                                                                     <strong class="nick">{iteam.listing.nickname}</strong> - <span class="title"><strong class="nick">{iteam.listing?.propertyType}</strong>, </span>

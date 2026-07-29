@@ -87,6 +87,7 @@ export const PATH_PROPERTIES_NEEDS_ATTENTION = '/properties-needs-attention';
 export const PATH_AGODA_LISTINGS = '/agoda-listings';
 export const PATH_AGODA_SYNC = '/agoda-sync';
 export const PATH_AGODA_INQUIRIES = '/agoda-inquiries';
+export const PATH_AGODA_BOOKING = '/agoda-booking';
 export const PATH_AGODA_ACCOUNT = '/agoda-account';
 export const PATH_AGODA_KEYS = '/agoda-keys';
 

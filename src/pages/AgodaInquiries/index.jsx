@@ -3,6 +3,8 @@ import Sidebar from "../../components/Sidebar/index.js";
 import LoadingBox from "../../components/LoadingBox/index.js";
 import swal from "sweetalert";
 import { fetchInquiries, updateInquiryStatus } from "../../services/agoda.service.js";
+import { useHistory } from "react-router-dom";
+import { PATH_AGODA_BOOKING } from "../../Util/constants.js";
 
 // Agoda Booking-Hint inquiries (inbound webhook queue). Backend:
 // GET /services/agoda/inquiries, PATCH /services/agoda/inquiries/:id/status.
@@ -10,6 +12,7 @@ const STATUSES = ["new", "in_progress", "confirmed", "rejected", "cancelled", "e
 
 const AgodaInquiries = (props) => {
     const { agency, agent, screenSize, activeMenu, handleToggleMenu } = props;
+    const history = useHistory();
     const [items, setItems] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [status, setStatus] = useState("");
@@ -70,9 +73,11 @@ const AgodaInquiries = (props) => {
                             </thead>
                             <tbody>
                                 {items.map((inq) => (
-                                    <tr key={inq._id}>
+                                    <tr key={inq._id} style={{ cursor: "pointer" }}
+                                        onClick={() => history.push(`${PATH_AGODA_BOOKING}/${inq.agodaBookingId}`)}
+                                        title="Open full booking details">
                                         <td>{inq.receivedAt ? new Date(inq.receivedAt).toLocaleString() : ""}</td>
-                                        <td style={{ fontFamily: "monospace", fontSize: 12 }}>{inq.agodaBookingId}</td>
+                                        <td style={{ fontFamily: "monospace", fontSize: 12, color: "#2b6cb0", textDecoration: "underline" }}>{inq.agodaBookingId}</td>
                                         <td>{inq.hotelCode}</td>
                                         <td>
                                             <div>{inq.guestName || "—"}</div>
@@ -85,7 +90,7 @@ const AgodaInquiries = (props) => {
                                         <td>{inq.adults || "?"}{inq.children ? ` +${inq.children}ch` : ""}</td>
                                         <td>{inq.totalAmount != null ? `${inq.totalAmount} ${inq.currency || ""}` : "—"}</td>
                                         <td><span style={{ color: "#fff", background: statusColor(inq.status), padding: "2px 8px", borderRadius: 10, fontSize: 11 }}>{inq.status}</span></td>
-                                        <td>
+                                        <td onClick={(e) => e.stopPropagation()}>
                                             <select className="form-control" style={{ fontSize: 12, padding: "2px 4px", width: 130 }}
                                                 value={inq.status} onChange={(e) => changeStatus(inq, e.target.value)}>
                                                 {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
