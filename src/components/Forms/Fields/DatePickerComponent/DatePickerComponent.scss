@@ -188,7 +188,7 @@
 }
 
 .propertyDatePicker .CalendarMonth_table {
-  margin-top: 0;
+  margin-top: 30px;
   border-collapse: collapse;
   border-spacing: 0;
 }
@@ -199,13 +199,15 @@
   padding: 0px 13px;
 }
 
-/* Extranet property container is narrower/centered vs VT-FE's booking card, so
-   VT-FE's top:22px offset dropped the Su–Sa row onto the first week. Keep
-   react-dates' default header placement (top:62px, below the month caption). */
+/* property-redesign.css restyles .CalendarMonth_caption to a compact 21px box
+   with no padding, so the date grid butts right up under the month name with no
+   room for react-dates' absolute weekday header (which then landed on row 2).
+   Sit the header in a gap just below the caption, and push the table (below) down
+   by the same amount so row 1 clears the header. */
 .propertyDatePicker .DayPicker_weekHeader {
   color: #757575;
   position: absolute;
-  top: 62px !important;
+  top: 26px !important;
   z-index: 2;
   text-align: left;
   padding-top: 0 !important;
