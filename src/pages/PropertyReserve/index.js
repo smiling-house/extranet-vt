@@ -12,6 +12,7 @@ import guests from "../../assets/icons/guests.png";
 import bed from "../../assets/g73.png";
 import creditCardsIcon from "../../assets/Image_36.png";
 import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
+import { isOnDemandListing } from "../../Util/onDemand";
 import { BsCheckSquare } from "react-icons/bs";
 import "./45.css";
 //import { loadStripe } from "@stripe/stripe-js";
@@ -547,10 +548,12 @@ const PropertyReservationPage = (props) => {
                       ? renderAmount("Sustainable", sustainIcon)
                       : ""}{" "}
                   </div>
-                  <div className="property-ondemand py-2">
-                    <h2 className="px-2">This property is</h2>
-                    <h1>"On demand"</h1>
-                  </div>
+                  {isOnDemandListing(prop) && (
+                    <div className="property-ondemand py-2">
+                      <h2 className="px-2">This property is</h2>
+                      <h1>"On demand"</h1>
+                    </div>
+                  )}
                   <hr
                     style={{ color: "#D5D5D5", border: "2px solid #D5D5D5" }}
                   />
