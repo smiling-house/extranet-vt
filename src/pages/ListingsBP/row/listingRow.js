@@ -68,6 +68,8 @@ import constants from "../../../Util/constants"
 import Popup from "../../../components/Popup/index.js";
 import InputField from "../../../components/InputField";
 import TextAreaField from "../../../components/TextAreaField/index";
+import { isOnDemandListing } from "../../../Util/onDemand";
+import { OnDemandBadge, PriceOnRequest } from "../../../components/OnDemand";
 
 const Listingrow = (props) => {
 
@@ -838,16 +840,25 @@ console.log('NEW REGION:::', response)
     <td className="px-4 p-3">
       <h4>
         {renderSpecialCollections()}<br></br><br></br>
-        weekdays: {property?.prices?.basePrice} {property?.prices?.currency}<br></br>
-        weekend:  {property?.prices?.weekendBasePrice || property?.prices?.basePrice} {property?.prices?.currency}<br></br>
-        {property?.prices?.weeklyPriceFactor < 1 && (
+        {isOnDemandListing({ QOD, tags }) ? (
+          <span style={{ display: "inline-flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+            <OnDemandBadge />
+            <PriceOnRequest />
+          </span>
+        ) : (
           <>
-            week discount: {parseInt(100 - property?.prices?.weeklyPriceFactor * 100)}% <br></br>
-          </>
-        )}
-        {property?.prices?.monthlyPriceFactor < 1 && (
-          <>
-            month discount: {parseInt(100 - property?.prices?.monthlyPriceFactor * 100)}%
+            weekdays: {property?.prices?.basePrice} {property?.prices?.currency}<br></br>
+            weekend:  {property?.prices?.weekendBasePrice || property?.prices?.basePrice} {property?.prices?.currency}<br></br>
+            {property?.prices?.weeklyPriceFactor < 1 && (
+              <>
+                week discount: {parseInt(100 - property?.prices?.weeklyPriceFactor * 100)}% <br></br>
+              </>
+            )}
+            {property?.prices?.monthlyPriceFactor < 1 && (
+              <>
+                month discount: {parseInt(100 - property?.prices?.monthlyPriceFactor * 100)}%
+              </>
+            )}
           </>
         )}
       </h4>

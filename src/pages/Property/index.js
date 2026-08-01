@@ -12,6 +12,8 @@ import likeFull from "../.././assets/icons/like-full.png";
 import bathIcon from "../../assets/property/baths.png";
 import bedsIcon from "../../assets/property/beds.png";
 import peopleIcon from "../../assets/property/people.png";
+import { isOnDemandListing } from "../../Util/onDemand";
+import { OnDemandBadge, PriceOnRequest } from "../../components/OnDemand";
 import eventsIcon from "../../assets/collections/icons/events.png";
 import familyIcon from "../../assets/collections/icons/family.png";
 import petsIcon from "../../assets/collections/icons/pets.png";
@@ -148,7 +150,7 @@ property,
   const [maxStay, setMaxStay] = useState(null);
   const [currencies, setCurrencies] = useState(localStorage.getItem("exchange") ? JSON.parse(localStorage.getItem("exchange")) : []);
   const [selectedCurrency, setSelectedCurrency] = useState(localStorage.getItem("currency"));
-  const [onDemand, setonDemand] = useState(property?.tags?.indexOf("onDemand") > -1);
+  const [onDemand, setonDemand] = useState(isOnDemandListing(property));
   const dateFrom = getStorageValue("dateFrom");
   const dateTo = getStorageValue("dateTo");
   const adults = Number(localStorage.getItem('adults') || '1');
@@ -936,6 +938,13 @@ property,
                         <div className="pr-price-comm">
                           + {getCurrencyDisplaySymbol(selectedCurrency)} {(price?.totalAmount / 10).toFixed(1)} agency commission
                         </div>
+                      </div>
+                    )}
+
+                    {onDemand && (
+                      <div className="d-flex align-items-center flex-wrap" style={{ gap: "10px", margin: "8px 0 16px" }}>
+                        <OnDemandBadge />
+                        <PriceOnRequest />
                       </div>
                     )}
 
