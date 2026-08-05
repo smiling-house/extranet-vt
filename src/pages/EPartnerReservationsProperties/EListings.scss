@@ -108,3 +108,70 @@
 		}
 	}
 }
+// -----------------------------------------------------------------------
+// EPS Reservations — additions on top of the shared modern list styling
+// (PartnersListView.scss provides .partners-view: hero, toolbar, table
+// card, pills, skeletons, empty state).
+// -----------------------------------------------------------------------
+.eps-reservations-view {
+
+	.partners-table-scroll table {
+		min-width: 1100px;
+	}
+
+	// Property ID link
+	.eps-property-link {
+		display: inline-flex;
+		align-items: center;
+		gap: 4px;
+		font-family: 'JetBrains Mono', 'Menlo', 'Consolas', monospace;
+		font-size: 0.78rem;
+		color: #0e7490;
+		text-decoration: none;
+
+		&:hover {
+			text-decoration: underline;
+			color: #155e75;
+		}
+
+		svg { opacity: 0.6; }
+	}
+
+	// Guest cell — name over email
+	td.eps-guest {
+		.eps-guest-name {
+			font-weight: 600;
+			color: #111827;
+			font-size: 0.85rem;
+		}
+		.eps-guest-email {
+			font-size: 0.75rem;
+			color: #6b7280;
+			overflow: hidden;
+			text-overflow: ellipsis;
+			max-width: 220px;
+		}
+	}
+
+	// Status pill is text (pending/approved/…), not a count — wider + clickable
+	// variants keep the pill hover affordance only when actionable.
+	.status-pill {
+		min-width: 74px;
+		text-transform: capitalize;
+		pointer-events: auto;
+
+		&:not(.eps-status-clickable) {
+			cursor: default;
+			&:hover { transform: none; box-shadow: none; }
+		}
+
+		&.eps-status-clickable { cursor: pointer; }
+	}
+
+	// Rows aren't drill-down links on this page.
+	table.partners-table tbody tr { cursor: default; }
+
+	@media (max-width: 768px) {
+		td.eps-guest .eps-guest-email { max-width: none; }
+	}
+}

@@ -1,108 +1,115 @@
-.ps-2 {
-	font-size: 15px;
-}
+// -----------------------------------------------------------------------
+// External Partners page — additions on top of the shared modern list
+// styling (PartnersListView.scss provides .partners-view: hero, toolbar,
+// table card, pills, skeletons, empty state).
+// -----------------------------------------------------------------------
 
-.agencies-container {
-	background-repeat: repeat-x;
+.epartners-view {
 
-	.agencies-floating-edit-menu {
-		left: 0px;
-		position: absolute;
-		z-index: 99;
-		background-color: white;
-		box-shadow: 0 3px 6px #00000029;
-		color: #707070;
-		width: 200px;
-		border-radius: 3px;
-		border: 1px solid #DEDEDE;
-		font-size: 10px;
-		line-height: 26px;
-
-		.agencies-floating-edit-menu-row {
-			display: flex;
-			align-items: center;
-			padding: 5px 10px;
-			cursor: pointer;
-			width:200px;
-		}
-
-		.agencies-floating-edit-menu-row:hover {
-			background-color: #F5F5F2;
-		}
+	// 14 data columns — give the table room and let the wrapper scroll.
+	.partners-table-scroll table {
+		min-width: 1500px;
 	}
 
-	.agencies-floating-edit-menu-floater {
-		position: fixed;
-		height: 100vh;
-		width: 100vw;
-		background-color: transparent;
-		top: 0;
-		left: 0;
-		z-index: 9;
-	}
+	// Second, narrower search input (partner ID).
+	.epartners-id-search {
+		flex: 0 1 220px;
+		min-width: 180px;
 
-	.agencies-main {
-		background-color: #FFF;
-
-		.agencies-edit-icon {
-			position: relative;
-			cursor: pointer;
-			display: flex;
+		@media (max-width: 900px) {
+			flex: 0 0 auto;
 			width: 100%;
-			height: 100%;
-			align-items: center;
-			background-color: #F9F9F8;
+		}
+	}
+
+	// "Add Partner" primary action in the toolbar.
+	.epartners-add-btn {
+		appearance: none;
+		display: inline-flex;
+		align-items: center;
+		gap: 7px;
+		background: #192C3D;
+		color: #fff;
+		border: none;
+		border-radius: 10px;
+		padding: 0 18px;
+		height: 42px;
+		font-size: 0.86rem;
+		font-weight: 700;
+		letter-spacing: 0.01em;
+		cursor: pointer;
+		transition: background 0.15s ease, box-shadow 0.15s ease, transform 0.12s ease;
+		font-family: inherit;
+		flex-shrink: 0;
+		margin-left: auto;
+
+		&:hover {
+			background: #11202d;
+			box-shadow: 0 2px 8px rgba(25, 44, 61, 0.35);
+		}
+
+		&:focus-visible {
+			outline: 2px solid #44C8F5;
+			outline-offset: 2px;
+		}
+
+		@media (max-width: 900px) {
+			margin-left: 0;
+			width: 100%;
 			justify-content: center;
 		}
-
-		.agencies-title {
-			font-size: 20px;
-			font-weight: 500;
-			color: #133C73;
-			padding: 0px 10px;
-		}
-		.agencies-main-subtitle {
-			font-size: 20px;
-			font-weight: 500;
-			color: #95999e;
-			padding: 5px;
-			text-align: left;
-		}
 	}
 
-	.agencies-search-container {
-		padding: 15px;
-		display: flex;
+	// Partner status badge (Approved / Pending / …) — clickable, opens the
+	// partner-manage page.
+	.epartners-status-badge {
+		display: inline-flex;
 		align-items: center;
-		background-color: rgba(19, 59, 113, 0.8);
-		grid-template-rows: 100px 100px 100px 1fr;
+		justify-content: center;
+		padding: 4px 10px;
+		border-radius: 999px;
+		font-size: 0.76rem;
+		font-weight: 700;
+		letter-spacing: 0.01em;
+		border: 1px solid #d1d5db;
+		background: #f3f4f6;
+		color: #374151;
+		cursor: pointer;
+		white-space: nowrap;
+		transition: transform 0.12s ease, box-shadow 0.12s ease;
+
+		&:hover {
+			transform: translateY(-1px);
+			box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+		}
+
+		&.approved { background: rgba(16, 65, 9, 0.10); color: #104109; border-color: rgba(16, 65, 9, 0.28); }
+		&.pending  { background: rgba(245, 158, 11, 0.10); color: #92400e; border-color: rgba(245, 158, 11, 0.28); }
+		&.declined { background: rgba(185, 28, 28, 0.10); color: #b91c1c; border-color: rgba(185, 28, 28, 0.28); }
+	}
+
+	// Secondary text columns (agent, contact, phone, email, provider).
+	td.epartners-secondary {
+		color: #4b5563;
+		font-size: 0.82rem;
+		max-width: 200px;
 		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
 
-		.agencies-search-input {
-			border-radius: 5px;
-			font-size: 15px !important;
-			padding: 10px;
-			height: 60px;
-			outline: none;
-			border: 0;
-			margin-right: 20px;
-		}
+	td.epartners-email {
+		max-width: 230px;
+	}
 
-		.agencies-search-separator {
-			margin: 0 20px;
-			height: 50px;
-			width: 1px;
-			border-right: 1px solid white;
-		}
-
-		.agencies-search-add-client-button {
-			display: flex;
-			align-items: center;
-			color: white;
-			font-size: 15px;
-			font-weight: 500;
-			user-select: none;
-			cursor: pointer;
+	// Mobile card view (inherited from PartnersListView.scss @768px) already
+	// converts rows to cards via data-label; long values may wrap there.
+	@media (max-width: 768px) {
+		td.epartners-secondary,
+		td.epartners-email {
+			max-width: none;
+			white-space: normal;
+			word-break: break-word;
 		}
 	}
 }
