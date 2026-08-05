@@ -370,6 +370,9 @@ export const signInUnified = (user, chkRememberMe, callback) => {
 					localStorage.setItem("partnerLogin", partner.accountId);
 					localStorage.setItem("partnerName", partner.pmName);
 					localStorage.setItem('extranet-vt-logged-in-role', 'partner');
+					// One-shot flag: the landing page shows the welcome toast, because a
+					// toast fired here dies with the full-page redirect before anyone sees it.
+					sessionStorage.setItem('extranet-welcome-toast', partner.pmName || '1');
 
 					// Fire-and-forget: stamp lastExtranetLogin on the partner record.
 					// Without this there is no server-side trace of WHICH partner

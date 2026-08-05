@@ -6,6 +6,8 @@ import { PATH_LOGIN, APP_DISPLAY_NAME } from '../../Util/constants';
 import menuIcon from '../../assets/icons8-menu-50.png';
 import './topbar.scss';
 
+// Partner sessions run on a shared internal agent account; show the PARTNER'S
+// name and role, never the internal agent identity.
 const Topbar = ({ 
   showSideBarMenu, 
   showOrHideSideBarMenu, 
@@ -21,6 +23,12 @@ const Topbar = ({
     dispatch(userActions.signOut());
     history.push(PATH_LOGIN);
   };
+
+
+  const _loggedRole = localStorage.getItem('extranet-vt-logged-in-role');
+  const _partnerName = localStorage.getItem('partnerName');
+  const displayName = (_loggedRole === 'partner' && _partnerName) ? _partnerName : agentData?.firstName;
+  const displayRole = _loggedRole === 'partner' ? 'Partner' : (extranet_vt_logged_in_role === 'admin' ? 'Administrator' : 'Partner');
 
   return (
     <div className="page-header" style={{
@@ -59,7 +67,7 @@ const Topbar = ({
                   letterSpacing: '-0.5px'
                 }}>
                   <span>{APP_DISPLAY_NAME}</span>
-                  {agentData?.firstName ? <span className="d-none d-md-inline"> — {agentData.firstName}</span> : null}
+                  {displayName ? <span className="d-none d-md-inline"> — {displayName}</span> : null}
                 </h1>
                 
                 {/* Mobile-only welcome message aligned with menu button */}
@@ -69,7 +77,7 @@ const Topbar = ({
                     fontWeight: '500',
                     lineHeight: '28px' // Matches menu button height for alignment
                   }}>
-                    Welcome, {agentData?.firstName}
+                    Welcome, {displayName}
                   </span>
                 </div>
               </div>
@@ -93,14 +101,14 @@ const Topbar = ({
                   fontWeight: 'bold',
                   fontSize: '14px'
                 }}>
-                  {agentData?.firstName?.charAt(0)?.toUpperCase() || 'U'}
+                  {displayName?.charAt(0)?.toUpperCase() || 'U'}
                 </div>
                 <div className="text-white">
                   <div style={{fontSize: '14px', fontWeight: '500'}}>
-                    {agentData?.firstName}
+                    {displayName}
                   </div>
                   <div style={{fontSize: '12px', opacity: '0.8'}}>
-                    {extranet_vt_logged_in_role === 'admin' ? 'Administrator' : 'Partner'}
+                    {displayRole}
                   </div>
                 </div>
               </div>

@@ -32,6 +32,7 @@ import PartnersBartV2 from "./PartnersBartV2";
 import PartnersInvenioV2 from "./PartnersInvenioV2";
 import PartnersBookingpalV2 from "./PartnersBookingpalV2";
 import ListingsBookingpal from "./ListingsBookingpal";
+import RequestToBookFlywire from "./RequestToBookFlywire";
 import EPartners from "./EPartners";
 // material ui
 import Welcome from "./Welcome";
@@ -113,12 +114,15 @@ import {
   PATH_EPS_EPARTNER_RESERVATIONS_PROPERTIES,
   PATH_AGODA_LISTINGS,
   PATH_AGODA_SYNC,
+  PATH_AGODA_INQUIRIES,
+  PATH_AGODA_BOOKING,
   PATH_AGODA_ACCOUNT,
   APP_DISPLAY_NAME,
   PATH_PARTNERS_BART,
   PATH_PARTNERS_INVENIO,
   PATH_PARTNERS_BOOKINGPAL,
   PATH_LISTINGS_BOOKINGPAL,
+  PATH_RETURN_FLYWIRE,
   PATH_VERIFY_COMPARE_NEW_PMS,
   PATH_ZIPS_REGIONS_MAPPING,
   PATH_ZIPS_REGIONS_MAPPING_COUNTRY,
@@ -154,6 +158,8 @@ import EPartnerReservationsProperties from "./EPartnerReservationsProperties";
 
 import AgodaListings from "./AgodaListings";
 import AgodaSync from "./AgodaSync";
+import AgodaInquiries from "./AgodaInquiries";
+import AgodaBooking from "./AgodaBooking";
 import AgodaAccount from "./AgodaAccount";
 
 import ZipcodesRegionsMapping from "./ZipcodesRegionsMapping";
@@ -254,13 +260,15 @@ const showOrHideSideBarMenu=()=> {
 const partnerAccountId = localStorage.getItem('partnerLogin');
 
 if(partnerAccountId) {
-  let GO_TO = '';
-  if( /sh-ru/i.test(partnerAccountId) === true ) {
+  // Default to the Guesty PM home. AccountIds are not only 24-hex: G- twins
+  // (26 chars), RU-/BP- and other shapes exist, and an unmatched id used to
+  // leave GO_TO = '' — dumping the partner on an empty page right after a
+  // successful login, which reads as "my password doesn't work".
+  let GO_TO = PATH_PARTNERS;
+  if( /sh-ru|^RU-/i.test(partnerAccountId) === true ) {
     GO_TO = PATH_PARTNERS_RU
-  } else if (/sh-bp/i.test(partnerAccountId) === true) {
+  } else if (/sh-bp|^BP-/i.test(partnerAccountId) === true) {
     GO_TO = PATH_PARTNERS_BP
-  } else if(partnerAccountId.length === 24) {
-    GO_TO = PATH_PARTNERS; //DEFAULT PAGE
   }
 
   history.push(GO_TO);
@@ -447,9 +455,16 @@ if(partnerAccountId) {
         </Route>
         <Route exact path={[PATH_RESERVATIONS]}>
           <Reservations
-            token={token}
+            agency={agency}
             agent={agent}
-            agency={agency} />
+            token={token}
+            setProfile={setProfile}
+            screenSize={screenSize}
+            setScreenSize={setScreenSize}
+            activeMenu={activeMenu}
+            handleToggleMenu={handleToggleMenu}
+            setActiveMenu={setActiveMenu}
+          />
         </Route>
         <Route exact path={[PATH_REPORTS]}>
           <Reports />
@@ -700,6 +715,9 @@ if(partnerAccountId) {
             setActiveMenu={setActiveMenu}
           />
         </Route>
+        <Route exact path={[PATH_RETURN_FLYWIRE]}>
+          <RequestToBookFlywire />
+        </Route>
         <Route exact path={[PATH_LISTINGS_SH_RU_DECLINED_BUT_LISTED_ON_RU]}>
           <ListingsRU_DECLINED_BUT_LISTED_ON_RU
             agency={agency}
@@ -765,6 +783,12 @@ if(partnerAccountId) {
           </Route>
         <Route path={[PATH_AGODA_SYNC]}>
           <AgodaSync agent={agent} agency={agency} token={token} />
+          </Route>
+        <Route exact path={`${PATH_AGODA_BOOKING}/:bookingId`}>
+          <AgodaBooking agent={agent} agency={agency} token={token} />
+          </Route>
+        <Route path={[PATH_AGODA_INQUIRIES]}>
+          <AgodaInquiries agent={agent} agency={agency} token={token} />
           </Route>
         <Route path={[PATH_AGODA_ACCOUNT]}>
           <AgodaAccount agent={agent} agency={agency} token={token} />

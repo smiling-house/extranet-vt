@@ -1,0 +1,59 @@
+/* ---------------------------------------------------------------------------
+ * EditEPartner popup (/external-partners) — scoped design fix.
+ *
+ * WHY THIS FILE EXISTS
+ * The `.edit-partner-*` class names are NOT unique to this popup: nine
+ * stylesheets define them and eight pages render them (Partners, PartnersSH,
+ * PartnersVT, PartnersBART, PartnersINVENIO, PartnersBookingpal,
+ * PartnersHostaway and this one). CRA bundles every imported stylesheet into a
+ * single global sheet, so editing EditEPartner.scss here would silently
+ * re-cascade the other seven popups. InputField.scss and Popup.scss are shared
+ * components for the same reason.
+ *
+ * Nothing shared is therefore touched. Every rule below is scoped under
+ * `.epartner-edit-popup` — a marker class added only to this popup's
+ * `.popup-container` in EPartners/index.jsx — so no other page can be affected.
+ *
+ * WHAT WAS DISTORTED
+ * 1. The footer is `display:flex` with the default `nowrap`, a fixed
+ *    `height:85px` and no padding, holding five <Button>s that are themselves
+ *    `white-space:nowrap; height:50px; font-size:18px`, each carrying an
+ *    inline `margin-right:30px`. That is roughly 950px of buttons inside the
+ *    ~660px usable width of the 730px popup, so the buttons shrink while their
+ *    un-wrappable labels spill out of their boxes and past the popup edge.
+ * 2. theme-dashboard.css normalises legacy inputs down to 0.9rem/40px, but
+ *    never touched InputField's `.input-field-label`, which is still 25px — so
+ *    every label renders at nearly double its own input's text size.
+ * ------------------------------------------------------------------------- */
+
+.epartner-edit-popup {
+
+	/* 1. Let the action row wrap onto a second line instead of crushing its
+	 *    buttons, and give it real padding — EditEPartner.scss has its
+	 *    `margin-right` commented out, which leaves the buttons flush against
+	 *    the popup border. `min-height` replaces the fixed height so a wrapped
+	 *    second row cannot be clipped. */
+	.edit-partner-footer {
+		height: auto;
+		min-height: 85px;
+		flex-wrap: wrap;
+		gap: 12px;
+		padding: 14px 20px;
+		box-sizing: border-box;
+	}
+
+	/* Each button hard-codes `margin-right:30px` inline. Neutralise it so the
+	 * `gap` above is the single source of spacing and the wrapped rows stay
+	 * evenly guttered. Inline styles require !important to override. */
+	.edit-partner-footer > button {
+		margin-right: 0 !important;
+	}
+
+	/* 2. Bring the field labels back into proportion with their inputs. */
+	.input-field-label {
+		font-size: 14px;
+		font-weight: 600;
+		color: #4b5563;
+		margin-bottom: 4px;
+	}
+}

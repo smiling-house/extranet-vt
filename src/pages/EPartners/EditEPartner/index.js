@@ -7,6 +7,9 @@ import editTitleIcon from "../../../assets/icons/admin/edit-title-icon.svg";
 import closeIcon from "../../../assets/icons/closeIcon.png";
 import {PATH_SELECT} from "../../../Util/constants";
 import "./EditEPartner.scss";
+// Scoped fixes for this popup only (footer overflow + oversized labels).
+// Imported after EditEPartner.scss so it lands later in the bundle.
+import "./EditEPartnerScope.scss";
 import AuthService from "../../../services/auth.service";
 import swal from "sweetalert";
 import { log } from "loglevel";

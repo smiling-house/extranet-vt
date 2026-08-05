@@ -59,6 +59,7 @@ import {
   PATH_PROPERTIES_NEEDS_ATTENTION,
   PATH_AGODA_LISTINGS,
   PATH_AGODA_SYNC,
+  PATH_AGODA_INQUIRIES,
   PATH_AGODA_ACCOUNT
 } from "../../Util/constants";
 
@@ -169,6 +170,7 @@ const Sidebar = ({ activeMenu, setActiveMenu, handleToggleMenu, showOrHideSideBa
         items: [
           { text: "Agoda — Properties", path: PATH_AGODA_LISTINGS, icon: <MdBusiness size={18} /> },
           { text: "Agoda — Sync Status", path: PATH_AGODA_SYNC, icon: <FiSettings size={18} /> },
+          { text: "Agoda — Inquiries", path: PATH_AGODA_INQUIRIES, icon: <FiCalendar size={18} /> },
           { text: "Agoda — Account", path: PATH_AGODA_ACCOUNT, icon: <MdVerifiedUser size={18} /> },
         ]
       }
@@ -287,11 +289,11 @@ const Sidebar = ({ activeMenu, setActiveMenu, handleToggleMenu, showOrHideSideBa
       {/* User Info */}
       <div className="sidebar-user-info">
         <div className="sidebar-user-avatar">
-          <span>{agent?.firstName?.charAt(0)?.toUpperCase() || 'U'}</span>
+          <span>{(localStorage.getItem('partnerName') || agent?.firstName)?.charAt(0)?.toUpperCase() || 'U'}</span>
         </div>
         <div className="sidebar-user-details">
-          <div className="sidebar-user-name">{agent?.firstName || 'User'}</div>
-          <div className="sidebar-user-role">{currentRole === 'admin' ? 'Administrator' : 'Partner'}</div>
+          <div className="sidebar-user-name">{localStorage.getItem('extranet-vt-logged-in-role') === 'partner' ? (localStorage.getItem('partnerName') || agent?.firstName || 'User') : (agent?.firstName || 'User')}</div>
+          <div className="sidebar-user-role">{localStorage.getItem('extranet-vt-logged-in-role') === 'partner' ? 'Partner' : (currentRole === 'admin' ? 'Administrator' : 'Partner')}</div>
         </div>
       </div>
 
