@@ -47,6 +47,7 @@ import {
 import dayjs from "dayjs";
 import goBack from "../../assets/go-back.svg";
 import makeCalculations from "../../Hooks/makeCalculations.jsx";
+import { formatBookingTerms } from "../../Util/bookingTerms.js";
 import { UPSALE, AGENCY_COMMISION } from "../../Util/constants";
 import LoadingBox from '../../components/LoadingBox';
 import swal from "sweetalert";
@@ -629,6 +630,9 @@ property,
     };
     const amenities = property?.amenities;
     const summary = xdata?.desc || property?.publicDescription?.summary || property?.publicDescription?.space
+    // Backfilled per-listing booking terms (data.bookingTerms); falls back to the
+    // generic copy below when a listing has no policy.
+    const bookingTermsView = formatBookingTerms(property?.bookingTerms);
 
     const toggleShowAll = () => {
       setShowAll(!showAll);
@@ -933,16 +937,55 @@ property,
                           </ul>
                         </div>
                       </div>
+                      {bookingTermsView.houseRulesText && (
+                        <div style={{ fontSize: "18px", color: "#333", marginTop: "8px" }}><b>House rules:</b> {bookingTermsView.houseRulesText}</div>
+                      )}
+                      {bookingTermsView.depositText && (
+                        <div style={{ fontSize: "18px", color: "#333", marginTop: "8px" }}><b>Deposit:</b> {bookingTermsView.depositText}</div>
+                      )}
+                      {(bookingTermsView.checkIn || bookingTermsView.checkOut) && (
+                        <div style={{ fontSize: "18px", color: "#333", marginTop: "8px" }}>
+                          <b>Check-in / Check-out:</b> {bookingTermsView.checkIn || property?.defaultCheckInTime || "—"} / {bookingTermsView.checkOut || property?.defaultCheckOutTime || "—"}
+                          {bookingTermsView.checkInEnd ? ` (latest check-in ${bookingTermsView.checkInEnd})` : ""}
+                        </div>
+                      )}
+                      {bookingTermsView.paymentSchedule && (
+                        <div style={{ fontSize: "18px", color: "#333", marginTop: "8px" }}>
+                          <b>Payment schedule:</b>
+                          <ul className="px-4">
+                            {bookingTermsView.paymentSchedule.map((p, i) => (
+                              <li key={i}>{p.label}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
                       <div style={{ fontSize: "20px", color: "#707070" }}>
                         <br />
-                        we'll make every effort to work with property management
-                        to find options if your
+                        <b>Cancellation policy:</b>
                         <br />
-                        plans change but refunds cannot be guaranteed and and on
-                        a best-effort basis.
-                        <br />
-                        If canceled within 60 days before arrival, a penalty fee
-                        of 50% of the reservation amount will apply.
+                        {bookingTermsView.cancellationText ? (
+                          <>
+                            {bookingTermsView.cancellationText}
+                            {bookingTermsView.cancellationWindows && (
+                              <ul className="px-4">
+                                {bookingTermsView.cancellationWindows.map((w, i) => (
+                                  <li key={i}>{w.label}</li>
+                                ))}
+                              </ul>
+                            )}
+                          </>
+                        ) : (
+                          <>
+                            we'll make every effort to work with property management
+                            to find options if your
+                            <br />
+                            plans change but refunds cannot be guaranteed and and on
+                            a best-effort basis.
+                            <br />
+                            If canceled within 60 days before arrival, a penalty fee
+                            of 50% of the reservation amount will apply.
+                          </>
+                        )}
                         <br />
                         <br />
                         <div className="link18-bold">
