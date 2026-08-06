@@ -8,7 +8,7 @@ import taxesNames from "../Util/data/taxesNames.json";
 //import moment from "moment/moment";
 
 function makeCalculations  (props) {
-  const { property, activeRatePlan, fullCalendar, dateFrom, dateTo, adults = 1, children = 0, currency = 'USD', reservation_id = 'xxxx' } = props
+  const { property, activeRatePlan, fullCalendar, unifiedQuote, dateFrom, dateTo, adults = 1, children = 0, currency = 'USD', reservation_id = 'xxxx' } = props
   const client = localStorage.getItem("selectedClient") ? JSON.parse(localStorage.getItem("selectedClient")) : {}
   let calculated =false;
   let totalAF = 0;
@@ -390,203 +390,86 @@ return ('some error fetching')
     if (property && (!dateFrom || !dateTo)) { // means return PRICE PER NIGHT only from base price.
       totalAmount=property?.prices?.basePrice * multiplier;
       localStorage.removeItem('SH_PROP') //remove from local.
-    } else if (property && dateFrom && dateTo && fullCalendar) {
-      const calculateAF = () => {
-        let sum = 0;
-        let currentDate = dayjs(dateFrom);
-        const toDate = dayjs(dateTo);
+    } else if (property && dateFrom && dateTo && unifiedQuote && unifiedQuote.ok && unifiedQuote.available) {
+      // ── Unified live quote ────────────────────────────────────────────────
+      // The NET now comes from GET /api/booking/quote (ONE endpoint, every PM)
+      // instead of a local calendar sum. We ONLY apply the extranet's own markup
+      // (divider) + FX + the PCM host-channel line here; the endpoint already
+      // returns rent + fees + taxes as NET line items in unifiedQuote.currency.
+      const netCurrency = unifiedQuote.currency || propertyCurrency;
+      const netExchangeRate = getExchangeRate(netCurrency);
+      // NET(netCurrency) → display currency, WITH the extranet markup divider.
+      const uMultiplier = (exchangeRate / netExchangeRate) / divider;
+      // FX-only (never marked up) — for the refundable security deposit.
+      const fxOnly = exchangeRate / netExchangeRate;
 
-        while (currentDate.isBefore(toDate, 'day')) {
-          const formattedDate = currentDate.format('YYYY-MM-DD');
-          const formattedNextDate = currentDate.add(1, 'day').format('YYYY-MM-DD');
-          const selectedDay = fullCalendar ? fullCalendar
-            .filter((period) => dayjs(period?.date).isSame(formattedDate, 'day')) : null
+      const netTotal = Number(unifiedQuote.netTotal) || 0;
+      const feesTotalNet = Number(unifiedQuote.feesTotal) || 0;
+      const taxesTotalNet = Number(unifiedQuote.taxesTotal) || 0;
+      const taxPriceNet = feesTotalNet + taxesTotalNet;   // == old totalTaxPrice (cleaning + taxes)
+      const rentNet = netTotal - taxPriceNet;             // == old AF sum (net grand total is authoritative)
 
-          // console.log('day or res:', formattedDate, selectedDay)
-          // Missing night: .filter() returns [] (not null) when the date isn't in
-          // the calendar, so guard on length too — otherwise the code below reads an
-          // undefined day and quietly sums NaN/$0.
-          if (!selectedDay || !selectedDay.length) {
-            error.push({ error: 'Not available for the selected dates. Please choose different dates.' })
-            return { error }
-          }
-            if (selectedDay && Array.isArray(selectedDay)) {
-             // console.log('sel:',selectedDay)
+      const liList = Array.isArray(unifiedQuote.lineItems) ? unifiedQuote.lineItems : [];
+      taxesArray.length = 0;
+      taxesArrayRES.length = 0;
 
-              if (Object.prototype.hasOwnProperty.call(selectedDay[0], 'allotment')) {
-                if (!selectedDay[0]?.allotment) {
-                  error.push({ error: 'Not available for the selected dates. Please choose different dates.' })
-                  return { error }
-                }
-              } else {
-              //  console.log('sel:',selectedDay)
-                error.push({ error: 'could not find day allotment in the fullCalendar: ' + formattedDate })
-            return { error }
-              }
-            }
-
-          const selectedPrice = selectedDay.map((period) => period.price);
-          // Never silently sell a rate-less night at $0 — require a positive price.
-          if (Number(selectedPrice[0]) > 0) {
-            sum += selectedPrice[0];
-            addToDailyRates({
-              price: selectedPrice[0],
-              EffectiveDate: formattedDate,
-              ExpireDate: formattedNextDate
-            }
-            );
-            ;
-          } else {
-            error.push({ error: 'Pricing is not available for the selected dates. Please change dates.' })
-            return { error }
-          }
-          currentDate = currentDate.add(1, 'day');
-        }
-
-        let extraGuests = accommodates - (property?.prices?.guestsIncludedInRegularFee || 0);
-        if (extraGuests < 0) extraGuests = 0;
-        const extraPersonFee = property?.prices?.extraPersonFee || 0;
-        const extraGuestsTotalFee = extraGuests * extraPersonFee * nights;
-
-        sum += extraGuestsTotalFee;
-
-        if (nights >= 28 && property?.prices?.monthlyPriceFactor) {
-          sum *= property?.prices?.monthlyPriceFactor;
-        } else if (nights >= 7 && property?.prices?.weeklyPriceFactor) {
-          sum *= property?.prices?.weeklyPriceFactor;
-        }
-
-        let totalTaxPrice = 0;
-        let taxes = property?.taxes?.length > 0 ? property?.taxes : [];
-        taxesArrayRES.length = 0
-        taxesArray.length = 0
-        // CF
-        addToTaxes(
-          {
-            amount: sum * multiplier,
-            description: "Accomodation Fare",
-            initial: "AF"
-          }
-        )
-        if (property?.prices?.cleaningFee) {
-          //setTaxesArray(prev => ({ ...prev, 'Cleaning Fee': property?.prices?.cleaningFee * multiplier }));
-          totalTaxPrice = property?.prices?.cleaningFee
-          addToTaxes(
-            {
-              amount: property?.prices?.cleaningFee * multiplier,
-              description: "Cleaning Fee",
-              initial: "CF"
-            }
-          )
-          // on res
-          addToTaxesRES(
-            {
-              amount: property?.prices?.cleaningFee,
-              description: "Cleaning Fee",
-              initial: "CF"
-            }
-          )
-        }
-        //console.log('accomodates:', accommodates)
-        taxes.forEach((item) => {
-          let taxAmount = 0;
-          //console.log(item)
-          if (isPercentage(item?.units)) {
-            taxAmount = (sum * item?.amount) / 100;
-          } else {
-            switch (item.quantifier) {
-              case 'PER_STAY':
-                taxAmount = item.amount;
-                break;
-              case 'PER_GUEST':
-
-                taxAmount = item.amount * accommodates;
-                break;
-              case 'PER_NIGHT':
-                taxAmount = item.amount * nights;
-                break;
-              case 'PER_GUEST_PER_NIGHT':
-                taxAmount = item.amount * accommodates * nights;
-                break;
-              default:
-                break;
-            }
-          }
-          //setTaxesArray(prev => ({ ...prev, [item.type]: taxAmount * multiplier }));
-          addToTaxesRES(
-            {
-              amount: taxAmount * multiplier,
-              description: getTaxPerType(item.type).description,
-              initial: getTaxPerType(item.type).initial
-            }
-          )
-          addToTaxes(
-            {
-              amount: taxAmount,
-              description: getTaxPerType(item.type).description,
-              initial: getTaxPerType(item.type).initial
-            }
-          );
-          totalTaxPrice += taxAmount
+      // Guest-facing itemization (marked up): map the endpoint line items 1:1.
+      liList.forEach((li) => {
+        addToTaxes({
+          amount: (Number(li.amount) || 0) * uMultiplier,
+          description: li.description || li.name || li.initial,
+          initial: li.initial,
         });
-        if (property?.prices?.securityDepositFee) {
-          const deposit = property?.prices?.securityDepositFee
-          security=deposit * multiplier
-          localStorage.setItem('security', deposit * multiplier)
-          console.log('security:', deposit, property?.prices?.currency, 'in ', currency, deposit * multiplier)
+      });
 
-          // addToTaxes(
-          //   {
-          //     amount: deposit * multiplier,
-          //     description: "Security deposit (returned to client at end of stay)",
-          //     initial: "SE"
-          //   }
-          // )
-        }
-        totalAF=sum * multiplier;
-        totalAFRES=sum;
-        totalAmountRES=sum + totalTaxPrice;
-        totalTaxes=totalTaxPrice * multiplier;
-        totalAmount=(sum + totalTaxPrice) * multiplier;
-        totalTaxesRES=totalTaxPrice;
+      // Channel breakdown (NET, native): fees + taxes, then the extranet PCM line.
+      liList
+        .filter((li) => li.initial === 'CF' || li.initial === 'FE' || li.initial === 'TX')
+        .forEach((li) => {
+          addToTaxesRES({
+            amount: Number(li.amount) || 0,
+            description: li.description || li.name || li.initial,
+            initial: li.initial,
+          });
+        });
+      addToTaxesRES({
+        amount: -(netTotal) / 10,
+        description: "Prededucted Host Channel Fee",
+        initial: "PCM",
+      });
 
-        addToTaxesRES(
-          {
-            amount: -(sum + totalTaxPrice) / 10,
-            description: "Prededucted Host Channel Fee",
-            initial: "PCM"
-          }
-        )
-      };
-      //  console.log('data:', props)
-      calculateAF();
-      const price = {
-        reservation_id,
-        totalAmount,
-        security,
-        totalTaxes,
-        taxesArray,
-        agencyCommission,
-        totalAmountRES,
-        totalTaxesRES,
-        taxesArrayRES,
-        agencyCommissionRES,
-        exchangeRate,
-        propertyExchangeRate,
-        //resPayload
+      // Security deposit: FX only, NEVER marked up (same rule as before).
+      if (unifiedQuote.securityDeposit) {
+        const deposit = Number(unifiedQuote.securityDeposit) || 0;
+        security = deposit * fxOnly;
+        localStorage.setItem('security', security);
       }
-     // console.log('price with arrays:', price)
-      calculated=true
+
+      totalAFRES = rentNet;
+      totalAF = rentNet * uMultiplier;
+      totalAmountRES = netTotal;
+      totalTaxesRES = taxPriceNet;
+      totalAmount = netTotal * uMultiplier;
+      totalTaxes = taxPriceNet * uMultiplier;
+      calculated = true;
+    } else if (property && dateFrom && dateTo && (!unifiedQuote || unifiedQuote.available === false || unifiedQuote.ok === false)) {
+      // Dates chosen but the live quote is unavailable (blocked / min-stay / error)
+      // or still loading — surface the reason and leave totals at 0. Never fall
+      // back to a stale local price path (no leftovers).
+      if (unifiedQuote && (unifiedQuote.available === false || unifiedQuote.ok === false)) {
+        error.push({ error: unifiedQuote.error || 'Not available for the selected dates. Please choose different dates.' })
+      }
     }
 
     agencyCommission=totalAmount / 10;
     agencyCommissionRES=totalAmountRES / 10;
     //resPayload=buildRESPayload()
 
-  if (isSH && !externalPrice) {
+  if (isSH) {
+    // Live prices for SH-native (sh…) listings now come from the unified
+    // /api/booking/quote endpoint like every other channel; the old getEXprice()
+    // self-call (expired JWT, result never used) is gone.
     const SH_ID = propertyId.substring(2, 20)
-    console.log("Loading Prices of external properties property with ID:", SH_ID);
-    if (!externalPrice) {const getPrices = getEXprice();}
     localStorage.setItem('SH_PROP', SH_ID) //setting the SH ID for top level dispatch on effect
   }
   const price = {
