@@ -11,7 +11,7 @@ import React, { useState, useEffect } from "react";
 import { v4 as uuidv4 } from "uuid";
 import AuthService from "../../../services/auth.service";
 import constants from "../../../Util/constants";
-import { bpUpsell, extractBpQuoteNet } from "../../../Util/bpUpsell";
+import { bpUpsell } from "../../../Util/bpUpsell";
 import { loadFlywireSDK, buildInstantConfig, resolveFlywireCharge } from "../../../Util/flywireInstant";
 import swal from "sweetalert";
 
@@ -146,18 +146,24 @@ const ReservationDemo = ({ listing, onClose }) => {
     }
     setQuoting(true);
     try {
-      const res = await AuthService.bpQuote({
-        listing_id: listingId,
-        start_date: startDate,
-        nights: Number(nights),
-        number_of_guests: Number(numberOfGuests),
+      // Unified live quote — same endpoint every PM uses. BP is priced through
+      // the same BookingpalReservationController.quote() → /v2/quote as before,
+      // so the NET is net-neutral vs the old /local/bookingpal/quote path.
+      const res = await AuthService.getUnifiedQuote({
+        listingId: `BP-${listingId}`,
+        checkIn: startDate,
+        checkOut: addDaysISO(startDate, Number(nights)),
+        guests: Number(numberOfGuests),
+        currency: "USD",
       });
-      if (res?.data?.success === false) {
-        swal("Quote failed", String(res.data.detail || res.data.error || "No price available"), "error");
+      const body = res?.data || {};
+      if (body.ok === false || body.available === false) {
+        swal("Quote failed", String(body.error || "No price available"), "error");
         invalidatePrice();
         return;
       }
-      const { net, currency } = extractBpQuoteNet(res?.data);
+      const net = Number(body.netTotal);
+      const currency = String(body.currency || "USD").toUpperCase();
       if (!(net > 0)) {
         swal("No price", "BookingPal returned no usable price for these dates.", "error");
         invalidatePrice();

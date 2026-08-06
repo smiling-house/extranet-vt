@@ -66,6 +66,19 @@ const bpQuote = async (params) => {
     // params: { listing_id, start_date, nights, number_of_guests }
     return userRequest.get(constants.SHUB_URL + `/local/bookingpal/quote`, { params })
 }
+// Unified live quote — ONE endpoint, every PM (Guesty/SH/RU/DH/BP/HW/VIB/INV).
+// Hub is this repo's fixed constants.SHUB_URL; auth = the static Bearer
+// (accepted by verifyAccessToken) already on userRequest, plus x-api-key. No new
+// token/env. Returns the normalized NET DTO: { ok, available, netTotal, currency,
+// propertyCurrency, rent, taxesTotal, feesTotal, securityDeposit, lineItems, ... }.
+const getUnifiedQuote = async ({ listingId, checkIn, checkOut, guests, currency }) => {
+    return userRequest.get(constants.SHUB_URL + `/api/booking/quote`, {
+        params: { listingId, checkIn, checkOut, guests, currency },
+        // Bearer (on userRequest) already passes verifyAccessToken on both hubs;
+        // x-api-key is an extra accepted credential where the repo ships one (VT).
+        headers: constants.X_API_KEY ? { 'x-api-key': constants.X_API_KEY } : {},
+    })
+}
 const bpQuotePreview = async (params) => {
     // params: { reservation_id, start_date, nights, number_of_guests }
     return userRequest.get(constants.SHUB_URL + `/local/bookingpal/quote-preview`, { params })
@@ -686,6 +699,7 @@ const AuthService = {
     cancelHostawayBooking,
     bpCheckAvailability,
     bpQuote,
+    getUnifiedQuote,
     bpQuotePreview,
     bpCreateReservation,
     bpReservationDetails,

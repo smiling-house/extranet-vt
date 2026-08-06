@@ -166,9 +166,53 @@ property,
   const properties = useSelector((state) => state.property.properties);
   const isSH = property ? property._id.substring(0, 2) === 'sh' : false
   const [loadingPrice, setLoadingPrice] = useState(false)
+  const [unifiedQuote, setUnifiedQuote] = useState(null);
+
+  // Live price for the selected dates comes from the unified /api/booking/quote
+  // endpoint (ONE endpoint, every PM). load-fullcalendar above still drives the
+  // date-picker availability + min/max-stay UI; this drives the PRICE.
+  useEffect(() => {
+    const id = property?._id;
+    if (!id || !startDate || !endDate) { setUnifiedQuote(null); return; }
+    const checkIn = dayjs(startDate).format("YYYY-MM-DD");
+    const checkOut = dayjs(endDate).format("YYYY-MM-DD");
+    if (!dayjs(startDate).isValid() || !dayjs(endDate).isValid() || checkOut <= checkIn) {
+      setUnifiedQuote(null); return;
+    }
+    let cancelled = false;
+    setLoadingPrice(true);
+    AuthService.getUnifiedQuote({
+      listingId: id,
+      checkIn,
+      checkOut,
+      guests: (parseInt(localStorage.getItem("adults") || "1") + parseInt(localStorage.getItem("children") || "0")) || 1,
+      currency: selectedCurrency || "USD",
+    })
+      .then((res) => { if (!cancelled) setUnifiedQuote(res?.data || null); })
+      .catch((e) => {
+        if (!cancelled) setUnifiedQuote({ ok: false, available: false, error: "Live price unavailable for these dates." });
+        console.error("unified quote failed:", e?.message || e);
+      })
+      .finally(() => { if (!cancelled) setLoadingPrice(false); });
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [property?._id, startDate, endDate, selectedCurrency]);
+
+  // Surface an unavailable live quote through the existing red-error list;
+  // clear it once a valid quote comes back.
+  useEffect(() => {
+    if (!unifiedQuote) return;
+    if (unifiedQuote.available === false || unifiedQuote.ok === false) {
+      setErrors([unifiedQuote.error || "Not available for the selected dates. Please choose different dates."]);
+    } else if (unifiedQuote.ok && unifiedQuote.available) {
+      setErrors([]);
+    }
+  }, [unifiedQuote]);
+
   const price = makeCalculations({
     property,
     fullCalendar,
+    unifiedQuote,
     activeRatePlan,
     dateFrom: startDate,
     dateTo: endDate,
