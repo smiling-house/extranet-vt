@@ -70,6 +70,7 @@ import InputField from "../../../components/InputField";
 import TextAreaField from "../../../components/TextAreaField/index";
 import { isOnDemandListing } from "../../../Util/onDemand";
 import { OnDemandBadge, PriceOnRequest } from "../../../components/OnDemand";
+import { instantBookState } from "../../../Util/instantBook";
 
 const Listingrow = (props) => {
 
@@ -914,13 +915,31 @@ setCurrentListingStatusUpdatedBy(agentData.firstName);
         }
       </h4>
 
-{(currentListingStatus?.toLowerCase() !== 'approved' && currentListingRegion !== 'unmapped') && 
+{(currentListingStatus?.toLowerCase() !== 'approved' && currentListingRegion !== 'unmapped') &&
   <Button
     style={{ fontSize: "15px"}}
-    text="Approve" 
+    text="Approve"
     onClick={()=>approveSingleProperty(property._id)}
   />
 }
+
+      {(() => {
+        const ib = instantBookState({ xdata, partner, hubId: property?._id })
+        return (
+          <div style={{ marginTop: 10, fontSize: 13, fontWeight: "normal" }}>
+            <span style={{
+              display: "inline-block", padding: "3px 8px", borderRadius: 6,
+              background: ib.tone === "on" ? "#e6f6e6" : "#f0f0ee",
+              color: ib.tone === "on" ? "#1c7c1c" : "#555",
+              border: "1px solid " + (ib.tone === "on" ? "#bfe5bf" : "#ddd"),
+            }}>{ib.label}</span>
+            {ib.inert &&
+              <div style={{ marginTop: 4, color: "#a15c00" }}>
+                <i>Not bookable — enquiry only (source has no reservation API)</i>
+              </div>}
+          </div>
+        )
+      })()}
 
     </td>
     <td className="px-4 p-3">

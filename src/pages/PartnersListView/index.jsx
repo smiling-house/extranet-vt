@@ -484,6 +484,15 @@ const PartnersListView = (props) => {
                     <h3 className="partner-card-name" title={item.pmName || ""}>
                       {item.pmName || "—"}
                     </h3>
+                    {item.legacyCompanyName && (
+                      <div
+                        className="partner-card-accountid"
+                        style={{ fontStyle: "italic" }}
+                        title={`Company name from the legacy account ${item.legacyAccountId || ""} — RU only sends the owner's personal name`}
+                      >
+                        {item.legacyCompanyName}
+                      </div>
+                    )}
                     <div className="partner-card-accountid" title={item.accountId || ""}>
                       {item.accountId || ""}
                     </div>
@@ -600,6 +609,14 @@ const PartnersListView = (props) => {
                         </td>
                         <td className="pm-name" data-label="Partner Name" title={item.pmName || ""}>
                           {item.pmName || "—"}
+                          {item.legacyCompanyName && (
+                            <div
+                              style={{ fontStyle: "italic", fontWeight: "normal", opacity: 0.75 }}
+                              title={`Company name from the legacy account ${item.legacyAccountId || ""} — RU only sends the owner's personal name`}
+                            >
+                              {item.legacyCompanyName}
+                            </div>
+                          )}
                         </td>
                         <td className="account-id" data-label="Account ID" title={item.accountId || ""}>
                           {item.accountId || ""}

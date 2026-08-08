@@ -9,6 +9,7 @@
 import React, { useState } from "react";
 import { useHistory } from "react-router-dom";
 import { PATH_PROPERTY } from "../../../Util/constants";
+import { instantBookState, partnerInstantBookLabel } from "../../../Util/instantBook";
 import "./listings-redesign.css";
 
 /* ── Inline icons (Phosphor-ish, currentColor) ───────────────────────────── */
@@ -86,6 +87,13 @@ const statusBadge = (status) => {
   return { cls: "warn", label: status || "Pending", icon: null };
 };
 
+/* Partner doc for the instant-book account default — the page stores it in
+   localStorage on drill-down; read per render so a partner switch (which
+   reloads or re-navigates) is always current. */
+const storedPartner = () => {
+  try { return JSON.parse(localStorage.getItem("partner")) || null; } catch (e) { return null; }
+};
+
 /* normalise a raw listing item → flat fields the views render */
 export const normalize = (it) => {
   const property = it.listing || it.property || {};
@@ -112,7 +120,36 @@ export const normalize = (it) => {
     checkValue: (xdata.region === "unmapped" || xdata.region === "" || xdata.region == null)
       ? `${property._id}_unmapped` : property._id,
     photos: pics(property, xdata).length,
+    instantBook: instantBookState({
+      xdata,
+      partner: storedPartner(),
+      hubId: property._id || it.id,
+      source: it.source || it.channelSource,
+    }),
   };
+};
+
+/* Instant-book pill — three states (explicit ON / explicit OFF / inherits
+   account default), plus an "enquiry only" warning when the flag is set on a
+   source the booking API cannot reserve (stored but inert). */
+export const InstantBookBadge = ({ ib, compact }) => {
+  if (!ib) return null;
+  const cls = ib.tone === "on" ? "ok" : ib.tone === "off" ? "neutral" : "info";
+  const text = compact
+    ? (ib.override !== null ? `IB ${ib.override ? "ON" : "OFF"}` : `IB inherit (${ib.effective ? "ON" : "OFF"})`)
+    : ib.label;
+  return (
+    <>
+      <span className={`lr-badge ${cls}`} title={ib.setBy ? `Set by ${ib.setBy}${ib.setAt ? ` · ${String(ib.setAt).slice(0, 10)}` : ""}` : ib.label}>
+        <Icon d={I.sparkle} size={12} />{text}
+      </span>
+      {ib.inert && (
+        <span className="lr-badge warn" title="This source has no reservation API — the Instant Book flag is stored but the listing stays enquiry-only.">
+          {compact ? "enquiry only" : "Not bookable — enquiry only"}
+        </span>
+      )}
+    </>
+  );
 };
 
 /* ── Shared subcomponents ────────────────────────────────────────────────── */
@@ -232,7 +269,7 @@ export const ExpandedRow = ({ item, onView }) => {
         </div>
       </div>
       <div className="lr-exp-rail">
-        <div className="badges"><StatusBadges d={d} full /></div>
+        <div className="badges"><StatusBadges d={d} full /><InstantBookBadge ib={d.instantBook} /></div>
         <div className="spacer" />
         <button className="lr-btn primary" onClick={onView}><Icon d={I.eye} size={16} />View details</button>
         <div className="row2">
@@ -259,6 +296,7 @@ export const GridCard = ({ item, onView }) => {
         </div>
         <Loc d={d} />
         <div className="lr-card-caps"><Caps d={d} small /></div>
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}><InstantBookBadge ib={d.instantBook} compact /></div>
         <div className="lr-card-pc">
           <div><div className="lr-fromlab">From / night</div><div className="lr-bigprice">{money(d.weekday, d.currency)}</div></div>
           <Cols d={d} mini />
@@ -302,6 +340,7 @@ export const TableRow = ({ item, onView }) => {
         <div className="lr-tbl-status">
           <StatusBadges d={d} full={false} />
           <span className={`lr-badge ${d.mapped ? "info" : "neutral"}`}><Icon d={I.link} size={12} />{d.mapped ? "Mapped" : "Unmapped"}</span>
+          <InstantBookBadge ib={d.instantBook} compact />
           <div className="acts">
             <button className="lr-icobtn sm" title="View details" onClick={onView}><Icon d={I.eye} size={14} /></button>
             <button className="lr-icobtn sm" title="Share"><Icon d={I.share} size={14} /></button>
@@ -362,6 +401,11 @@ export const ListingsHeader = ({
         <div className="lr-sub">
           <span className="layers"><Icon d={I.layers} size={15} /></span>
           Displaying <b>{from}–{to}</b> of <b>{total != null ? total : "?"}</b> properties
+        </div>
+        <div className="lr-sub" title="Account-level Instant Book default — listings without their own override inherit this.">
+          <span className={`lr-badge ${partner?.instantBook === true ? "ok" : "neutral"}`} style={{ marginTop: 6 }}>
+            <Icon d={I.sparkle} size={12} />{partnerInstantBookLabel(partner)}
+          </span>
         </div>
       </div>
       <ViewSwitcher value={viewMode} onChange={onViewMode} bare />
