@@ -11,7 +11,7 @@ import { useSelector } from "react-redux";
 import { userRequest } from "../../../api/requestMethods";
 import axios from "axios";
 import { baseURL } from "../../../core";
-import { formatBookingTerms } from "../../../Util/bookingTerms";
+import { formatBookingTerms, smilingHouseCancellationCopy } from "../../../Util/bookingTerms";
 import {
   calculateTotalNights,
   countWeekendDays,
@@ -187,6 +187,7 @@ const ShareSelectionPopup = (props) => {
           // Backfilled per-listing booking terms for the brochure (same formatter
           // the detail page uses). Empty -> template falls back to generic copy.
           const _bt = formatBookingTerms(property?.bookingTerms);
+          const _shCancel = smilingHouseCancellationCopy(property?.bookingTerms);
           const payload = {
             title: property?.title,
             guests: property?.accommodates,
@@ -218,8 +219,9 @@ const ShareSelectionPopup = (props) => {
               property?.defaultCheckOutTime
             } (24-hour)`,
             currency: detectCurrency(property?.prices?.currency),
-            // Backfilled booking terms (empty -> template falls back to generic copy).
-            cancellationText: _bt.cancellationText || '',
+            // Full Smiling House cancellation policy (partner terms >=30d + 50% floor <30d).
+            cancellationText: _shCancel.lines.join(' '),
+            cancellationNonRefundable: _shCancel.nonRefundable,
             depositText: _bt.depositText || '',
             paymentSchedule: (_bt.paymentSchedule || []).map((p) => p.label),
             houseRulesText: _bt.houseRulesText || '',
