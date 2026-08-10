@@ -47,7 +47,7 @@ import {
 import dayjs from "dayjs";
 import goBack from "../../assets/go-back.svg";
 import makeCalculations from "../../Hooks/makeCalculations.jsx";
-import { formatBookingTerms } from "../../Util/bookingTerms.js";
+import { formatBookingTerms, smilingHouseCancellationCopy, cancellationForDates } from "../../Util/bookingTerms.js";
 import { UPSALE, AGENCY_COMMISION } from "../../Util/constants";
 import LoadingBox from '../../components/LoadingBox';
 import swal from "sweetalert";
@@ -633,6 +633,8 @@ property,
     // Backfilled per-listing booking terms (data.bookingTerms); falls back to the
     // generic copy below when a listing has no policy.
     const bookingTermsView = formatBookingTerms(property?.bookingTerms);
+    const shCancel = smilingHouseCancellationCopy(property?.bookingTerms);
+    const shCancelForDates = startDate ? cancellationForDates(property?.bookingTerms, startDate) : null;
 
     const toggleShowAll = () => {
       setShowAll(!showAll);
@@ -962,31 +964,26 @@ property,
                       <div style={{ fontSize: "20px", color: "#707070" }}>
                         <br />
                         <b>Cancellation policy:</b>
-                        <br />
-                        {bookingTermsView.cancellationText ? (
-                          <>
-                            {bookingTermsView.cancellationText}
-                            {bookingTermsView.cancellationWindows && (
-                              <ul className="px-4">
-                                {bookingTermsView.cancellationWindows.map((w, i) => (
-                                  <li key={i}>{w.label}</li>
-                                ))}
-                              </ul>
-                            )}
-                          </>
-                        ) : (
-                          <>
-                            we'll make every effort to work with property management
-                            to find options if your
-                            <br />
-                            plans change but refunds cannot be guaranteed and and on
-                            a best-effort basis.
-                            <br />
-                            If canceled within 60 days before arrival, a penalty fee
-                            of 50% of the reservation amount will apply.
-                          </>
+                        {shCancel.nonRefundable && (
+                          <span style={{ marginLeft: 8, padding: "2px 8px", borderRadius: 4, background: "#fde8e8", color: "#b91c1c", fontWeight: 700, fontSize: 14 }}>
+                            Non-refundable
+                          </span>
                         )}
-                        <br />
+                        {shCancel.lines.map((line, i) => (
+                          <div key={i} style={{ marginTop: 6, fontSize: 16 }}>{line}</div>
+                        ))}
+                        {shCancelForDates && (
+                          <div style={{ marginTop: 8, padding: "6px 10px", borderRadius: 4, background: "#eef6ff", color: "#0b5cad", fontWeight: 600, fontSize: 16 }}>
+                            {shCancelForDates.message}
+                          </div>
+                        )}
+                        {shCancel.windows && (
+                          <ul className="px-4" style={{ fontSize: 16 }}>
+                            {shCancel.windows.map((w, i) => (
+                              <li key={i}>{w.label}</li>
+                            ))}
+                          </ul>
+                        )}
                         <br />
                         <div className="link18-bold">
                           Click here to view complete property terms &

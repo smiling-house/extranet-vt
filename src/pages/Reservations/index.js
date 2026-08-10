@@ -32,6 +32,16 @@ const FLYWIRE_ACTION_MESSAGES = {
     "REFUND REQUIRED: the guest's card was charged — admins were emailed to issue the refund in the Flywire dashboard.",
   refund_failed:
     "Automatic refund FAILED — admins were emailed to refund manually in the Flywire dashboard.",
+  captured_partial:
+    "Cancellation policy applied: the retained penalty was captured; the remainder of the hold is released.",
+  captured_full:
+    "Cancellation policy: the full amount was captured (non-refundable / stricter partner terms).",
+  retained_full:
+    "Cancellation policy: non-refundable — no refund; the charged amount is retained.",
+  partial_refunded:
+    "Cancellation policy: a partial refund was issued to the guest's card automatically.",
+  partial_manual_required:
+    "Cancellation policy: a PARTIAL refund is required — admins were emailed the exact amount to refund in the Flywire dashboard.",
   error:
     "Payment handling errored — check with the admins that the charge/hold was resolved.",
 };
@@ -194,10 +204,20 @@ const Reservations = (props) => {
 
     const confirmed = window.confirm(
       wasCharged
-        ? "Cancel this reservation? The guest's card WAS CHARGED for this instant booking — cancelling triggers a full refund to the guest."
+        ? "Cancel this reservation? The guest's card WAS CHARGED for this instant booking."
         : "Cancel this reservation? It will be cancelled on the channel."
     );
     if (!confirmed) return;
+
+    // Who is cancelling drives the refund overlay: a GUEST cancellation applies
+    // the 30-day/50% cancellation policy (a penalty may be retained); a
+    // HOST/property decline is a full refund. (window.confirm: OK = guest.)
+    let cancelledBy = "host";
+    if (r?.flywireReference) {
+      cancelledBy = window.confirm(
+        "Is this a GUEST cancellation?\n\nOK = Guest cancellation (cancellation policy applies — a penalty may be retained).\nCancel = Host / property decline (full refund)."
+      ) ? "guest" : "host";
+    }
 
     setCancelingId(reservationID);
     try {
@@ -300,7 +320,8 @@ const Reservations = (props) => {
       //    Flywire payment as part of this call and reports the outcome back.
       const responseUpdate = await AuthService.bpDeclineReservation(
         reservationID,
-        "declined"
+        "declined",
+        { cancelledBy }
       );
       if (!responseUpdate?.success) {
         throw new Error("Failed to cancel reservation.");

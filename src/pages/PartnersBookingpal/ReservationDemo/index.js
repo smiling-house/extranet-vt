@@ -12,6 +12,7 @@ import { v4 as uuidv4 } from "uuid";
 import AuthService from "../../../services/auth.service";
 import constants from "../../../Util/constants";
 import { bpUpsell } from "../../../Util/bpUpsell";
+import { detectNonRefundable } from "../../../Util/bookingTerms";
 import { loadFlywireSDK, buildInstantConfig, resolveFlywireCharge } from "../../../Util/flywireInstant";
 import swal from "sweetalert";
 
@@ -253,6 +254,20 @@ const ReservationDemo = ({ listing, onClose }) => {
       return;
     }
 
+    // Freeze the cancellation policy the guest is agreeing to (refund overlay
+    // reads this at cancel time; absence => legacy full refund). refundBaseAmount
+    // = the accommodation charged (fees 0 here, deposit separate).
+    const _cx = listing?.data?.bookingTerms?.cancellation || null;
+    const cancellationSnapshot = {
+      windows: (_cx && _cx.windows) || null,
+      code: (_cx && _cx.code) || null,
+      text: (_cx && _cx.text) || null,
+      nonRefundable: detectNonRefundable(_cx),
+      refundBaseAmount: charge.amount,
+      propertyTimezone: listing?.data?.timezone || listing?.data?.address?.timezone || null,
+      capturedAt: new Date().toISOString(),
+    };
+
     const vtbe = {
       agent_id: agent.agent_id,
       agency_id: agent.agency_id,
@@ -264,6 +279,7 @@ const ReservationDemo = ({ listing, onClose }) => {
       bookingId: callbackId,
       confirmationCode: callbackId,
       cancellationPolicyCategory: "string",
+      cancellationSnapshot,
       currency: charge.chargeCurrency,        // matches the actual charge
       startDate: ddmmyyyy(startDate),
       endDate: ddmmyyyy(endISO),

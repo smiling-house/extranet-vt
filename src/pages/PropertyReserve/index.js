@@ -687,11 +687,11 @@ const PropertyReservationPage = (props) => {
                 {/* <hr style={{ color: "#D5D5D5", border: "2px solid #D5D5D5" }} /> */}
                 <div className="px-2 pb-2 text-center house-details">
                   <p className="w-75 h3 fw-medium mx-auto py-3">
-                    Enjoy a 48-Hours Risk Free Guarantee for bookings placed
-                    more than 60 days prior to check-in. Beyond that, we'll make
-                    every effort to work with property management to find
-                    options if your plans change but refunds cannot be
-                    guaranteed and and on a best-offort basis.
+                    Cancellations 30 or more days before check-in follow this
+                    property's own cancellation terms. For cancellations less than
+                    30 days before check-in, a minimum of 50% of the accommodation
+                    total is non-refundable (or the property's terms, if stricter).
+                    Fully non-refundable properties are clearly marked before you book.
                     {/* {property?.publicDescription?.space} */}
                   </p>
 

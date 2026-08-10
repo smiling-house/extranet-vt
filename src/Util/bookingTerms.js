@@ -146,4 +146,86 @@ export function formatBookingTerms(bt) {
   return out;
 }
 
+// True when the partner policy refunds nothing at any point (implicit — there is
+// no canonical marker: derive from code/text or all-penalty windows).
+export function detectNonRefundable(cancellation) {
+  if (!cancellation) return false;
+  const hay = `${cancellation.code || ''} ${cancellation.text || ''}`;
+  if (/non[\s-]?refundable/i.test(hay)) return true;
+  const w = cancellation.windows;
+  if (Array.isArray(w) && w.length && w.every((x) => Number(x.penaltyPct) >= 100)) return true;
+  return false;
+}
+
+// Guest-facing Smiling House cancellation policy copy: partner terms for
+// cancellations 30+ days before check-in, plus the standard "within 30 days,
+// min 50% of the accommodation total is non-refundable" condition; non-refundable
+// properties get a distinct single line. Returns { nonRefundable, lines[],
+// partnerText, windows } so callers render + badge consistently.
+export function smilingHouseCancellationCopy(bt) {
+  const t = formatBookingTerms(bt);
+  const nonRefundable = detectNonRefundable(bt && bt.cancellation);
+  if (nonRefundable) {
+    return {
+      nonRefundable: true,
+      lines: ['This property is non-refundable — no refund is available after booking.'],
+      partnerText: t.cancellationText,
+      windows: t.cancellationWindows,
+    };
+  }
+  return {
+    nonRefundable: false,
+    lines: [
+      t.cancellationText
+        ? `Cancellations 30 or more days before check-in follow this property's terms: ${t.cancellationText}.`
+        : "Cancellations 30 or more days before check-in follow this property's own cancellation terms.",
+      'For cancellations less than 30 days before check-in, a minimum of 50% of the accommodation total is non-refundable (or the property’s terms, if stricter).',
+    ],
+    partnerText: t.cancellationText,
+    windows: t.cancellationWindows,
+  };
+}
+
+// Date-aware cancellation outcome for a SELECTED check-in date (cancel moment =
+// now). Mirrors the backend refund engine's window-pick + SH overlay so a guest
+// sees which condition applies for their dates. Indicative for display only
+// (code-only partner terms are treated as fully refundable; the 50% floor still
+// caps within 30 days). Returns null when there is no valid date.
+export function cancellationForDates(bt, checkInDate) {
+  if (!checkInDate) return null;
+  const checkIn = new Date(checkInDate);
+  if (isNaN(checkIn.getTime())) return null;
+  const now = new Date();
+  const daysOut = Math.round(
+    (Date.UTC(checkIn.getFullYear(), checkIn.getMonth(), checkIn.getDate()) -
+      Date.UTC(now.getFullYear(), now.getMonth(), now.getDate())) / 86400000
+  );
+  const cx = bt && bt.cancellation;
+  const nonRefundable = detectNonRefundable(cx);
+  let partnerPct = 100;
+  if (nonRefundable) partnerPct = 0;
+  else if (cx && Array.isArray(cx.windows) && cx.windows.length) {
+    for (const w of cx.windows) {
+      const from = Number(w.fromDays);
+      const to = w.toDays == null ? Infinity : Number(w.toDays);
+      if (daysOut >= from && daysOut < to) {
+        partnerPct = Math.max(0, Math.min(100, 100 - Number(w.penaltyPct)));
+        break;
+      }
+    }
+  }
+  const guestPct = daysOut >= 30 ? partnerPct : Math.min(partnerPct, 50);
+  return {
+    daysOut,
+    guestPct,
+    nonRefundable,
+    within30: daysOut < 30,
+    message: nonRefundable
+      ? 'This booking is non-refundable — no refund applies for your selected dates.'
+      : daysOut >= 30
+        ? `Your check-in is ${daysOut} days away: the property's own cancellation terms apply (currently about ${guestPct}% refundable).`
+        : `Your check-in is ${daysOut} days away (under 30): a minimum of 50% of the accommodation total is non-refundable — currently about ${guestPct}% refundable.`,
+  };
+}
+
 export default formatBookingTerms;
