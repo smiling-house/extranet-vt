@@ -67,6 +67,7 @@ import PartnersHostawayV2 from "./PartnersHostawayV2";
 import PartnersGuestyDH from "./PartnersGuestyDH";
 import PartnersRuDH from "./PartnersRuDH";
 import SearchListings from "./SearchListings";
+import MasterSearch from "./MasterSearch";
 
 import PropertiesNeedsAttention from "./PropertiesNeedsAttention";
 
@@ -136,6 +137,7 @@ import {
   PATH_PARTNERS_RU_DH,
   PATH_PARTNERS_HOSTAWAY,
   PATH_SEARCH_LISTINGS,
+  PATH_MASTER_SEARCH,
   PATH_PROPERTIES_NEEDS_ATTENTION
 } from "../Util/constants";
 import AuthService from "../services/auth.service";
@@ -836,6 +838,18 @@ if(partnerAccountId) {
             agency={agency}
             token={token}
             handleToggleMenu={handleToggleMenu}
+          />
+        </Route>
+
+        <Route path={[PATH_MASTER_SEARCH]}>
+          <MasterSearch
+            agent={agent}
+            agency={agency}
+            token={token}
+            screenSize={screenSize}
+            activeMenu={activeMenu}
+            handleToggleMenu={handleToggleMenu}
+            setActiveMenu={setActiveMenu}
           />
         </Route>
     
