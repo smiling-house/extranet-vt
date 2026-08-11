@@ -43,6 +43,7 @@ import Map from "./Map";
 import Reports from "./Reports";
 import Touch from "./Touch";
 import Faq from "./Faq";
+import TermsConditions from "./termsConditions";
 import HotDestinations from "./HotDestinations"; 
 import Collections from "./Collections";
 import WishList from "./WishList";
@@ -80,6 +81,7 @@ import {
   PATH_TASKS,
   PATH_COLLECTIONS,
   PATH_FAQ,
+  PATH_TERMS_CONDITIONS,
   PATH_FAVORITES,
   PATH_FORGOT_PASSWORD,
   PATH_HOME,
@@ -508,6 +510,9 @@ if(partnerAccountId) {
         </Route>
         <Route exact path={[PATH_FAQ]}>
           <Faq />
+        </Route>
+        <Route exact path={[PATH_TERMS_CONDITIONS]}>
+          <TermsConditions agency={agency} agent={agent} />
         </Route>
         <Route exact path={[PATH_ADMIN]}>
           <Admin

@@ -1,953 +1,468 @@
-import React, { useEffect, useState } from "react";
-import screenshot from "../../assets/screen_shot_2020_07__jk7r5.png";
-import PageHeader from "../../components/PageHeader";
-import goBack from "../../assets/go-back.svg";
-import eventsIcon from "../../assets/collections/icons/events.png";
-import familyIcon from "../../assets/collections/icons/family.png";
-import petsIcon from "../../assets/collections/icons/pets.png";
-import sustainIcon from "../../assets/collections/icons/sustainable.png";
-import bath from "../../assets/property/baths.png";
-import TermsFooter from "../../components/TermsFooter/TermsFooter";
-import guests from "../../assets/icons/guests.png";
-import bed from "../../assets/g73.png";
-import creditCardsIcon from "../../assets/Image_36.png";
-import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
-import { isOnDemandListing } from "../../Util/onDemand";
-import { BsCheckSquare } from "react-icons/bs";
-import "./45.css";
-//import { loadStripe } from "@stripe/stripe-js";
-//import { Elements } from "@stripe/react-stripe-js";
-import CheckoutForm from "./CheckoutForm";
+// -------------------------------------------------
+// Instant-book reserve page (recreated). Mirrors the VT-FE PropertyReserve flow
+// and reuses the extranet's PROVEN Flywire INSTANT path — the identical logic
+// ReservationDemo.bookAndPay uses (hub quote → up-sell → cancellation snapshot →
+// bpPendingReservation → buildInstantConfig → FlywirePayment.initiate), finalized
+// by the shared /request-to-book-flywire return leg. Inputs come from the
+// detail-page Instant Book popup (nav-state) instead of the operator form; when
+// arriving with autoInstant it opens the Flywire popup automatically (VT-FE
+// parity). Byte-identical across the VT and SH extranets; per-repo values
+// (RESERVATION_API / Flywire recipients) come from constants.
+// -------------------------------------------------
+import React, { useState, useEffect, useRef } from "react";
 import { useLocation, useHistory } from "react-router-dom";
-import UseCreateObject from "../../Hooks/UseCreateObject.jsx";
-import { PATH_SEARCH, PATH_RESERVE } from "../../Util/constants";
-
+import { v4 as uuidv4 } from "uuid";
+import dayjs from "dayjs";
+import swal from "sweetalert";
+import PageHeader from "../../components/PageHeader";
+import TermsFooter from "../../components/TermsFooter/TermsFooter";
+import AuthService from "../../services/auth.service";
+import constants, { PATH_SEARCH } from "../../Util/constants";
+import { bpUpsell } from "../../Util/bpUpsell";
+import { detectNonRefundable, smilingHouseCancellationCopy, cancellationForDates } from "../../Util/bookingTerms";
+import { loadFlywireSDK, buildInstantConfig, resolveFlywireCharge } from "../../Util/flywireInstant";
+import { getStorageValue } from "../../Util/general";
 import "./PropertyReserve.scss";
-import moment from "moment/moment";
-import {
-  calculateTotalNights,
-  countWeekendDays,
-  detectCurrency,
-  getStorageValue,
-  isPercentage,
-  isPercentageOrAmount,
-} from "../../Util/general";
-import { userRequest } from "../../api/requestMethods";
-import { data, dummyTaxes } from "../Listings2/makeData";
-import NameSelect from "../../components/Forms/Fields/NameAutoComplete/NameSelect";
-import ImageWithHover from "../../components/ImageWithHover";
-import LinesEllipsis from "react-lines-ellipsis";
 
-const google = window.google;
-//const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLIC_KEY);
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const PHONE_RE = /^\+?[\d\s().-]{7,18}$/;
+
+// DD.MM.YYYY for the VT-BE/SHub parseDate (splits on '.').
+const ddmmyyyy = (iso) => {
+  const [y, m, d] = String(iso || "").slice(0, 10).split("-");
+  return y && m && d ? `${d}.${m}.${y}` : "";
+};
+const errText = (e) =>
+  e?.response?.data?.detail?.message ||
+  e?.response?.data?.error ||
+  e?.message ||
+  String(e);
 
 const PropertyReservationPage = (props) => {
   const location = useLocation();
   const history = useHistory();
-  const property = location.state && location.state.property;
-  const calculatedAmount = location?.state?.price;
-  const selectedNights = location?.state?.nights;
-  let prop = UseCreateObject(property);
-  console.log("reserver property params", property);
-  console.log("hooked prop >>>: ", prop);
-  if (property) {
-    console.log("propertyData:", property);
-    let searchPropertiesArray = [];
+  const st = (location && location.state) || {};
+  const property = st.property;
+  const autoInstant = !!st.autoInstant;
 
-    //
-  }
-  // // Work for Responsiveness start ==================================================>
-  const [smallScreen, setSmallScreen] = useState(false);
-  //console.log("smallScreen >>", smallScreen);
-  const [screenSize, setScreenSize] = useState(null);
-  const [paymentMethod, setPaymentMethod] = useState("wire");
-  const [clients, setClients] = useState(null);
-  const [picIndex, setPicIndex] = useState(0);
+  // Stay context (dates + guests) comes from the search selection in
+  // localStorage — the same source the detail-page quote used.
+  const startISO = dayjs(getStorageValue("dateFrom")).isValid()
+    ? dayjs(getStorageValue("dateFrom")).format("YYYY-MM-DD")
+    : "";
+  const endISO = dayjs(getStorageValue("dateTo")).isValid()
+    ? dayjs(getStorageValue("dateTo")).format("YYYY-MM-DD")
+    : "";
+  const nights = startISO && endISO ? Math.max(1, dayjs(endISO).diff(dayjs(startISO), "day")) : 0;
+  const numberOfGuests =
+    (parseInt(localStorage.getItem("adults") || "1", 10) + parseInt(localStorage.getItem("children") || "0", 10)) || 1;
+
+  // Instant book is a BookingPal (Flywire) flow: hub id is "BP-<n>".
+  const hubId = property?._id ? String(property._id) : "";
+  const isBP = hubId.startsWith("BP-");
+  const listingId = isBP ? hubId.replace(/^BP-/, "") : "";
+
   const [client, setClient] = useState({
-    firstName: "",
-    lastName: "",
-    phone: "",
-    email: "",
+    firstName: "", lastName: "", middleName: "", email: "", phone: "",
+    address: "", city: "", state: "", postalCode: "", country: "",
+    ...(st.client || {}),
   });
 
-  const days = [
-    "Sunday",
-    "Monday",
-    "Tuesday",
-    "Wednesday",
-    "Thursday",
-    "Friday",
-    "Saturday",
-  ];
+  const [quoting, setQuoting] = useState(false);
+  const [priced, setPriced] = useState(false);
+  const [netTotal, setNetTotal] = useState(0);
+  const [sellingPrice, setSellingPrice] = useState(0);
+  const [quoteCurrency, setQuoteCurrency] = useState("");
+  const [chargeAmount, setChargeAmount] = useState(0);
+  const [chargeCurrency, setChargeCurrency] = useState("");
+  const [priceError, setPriceError] = useState("");
+  const [paying, setPaying] = useState(false);
 
-  useEffect(() => {
-    const handleResize = () => setScreenSize(window.innerWidth);
-    window.addEventListener("resize", handleResize);
-    handleResize();
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
+  const shCancel = smilingHouseCancellationCopy(property?.bookingTerms);
+  const shCancelForDates = startISO ? cancellationForDates(property?.bookingTerms, startISO) : null;
 
-  useEffect(() => {
-    if (screenSize < 992) {
-      setSmallScreen(true);
-    } else {
-      setSmallScreen(false);
+  const onField = (name) => (e) => setClient((prev) => ({ ...prev, [name]: e.target.value }));
+
+  // Ensure FX rates exist (needed for the USD-conversion charge path), same as
+  // the ReservationDemo flow.
+  const ensureExchangeRates = async () => {
+    try {
+      const existing = JSON.parse(localStorage.getItem("exchangeRatesData") || "null");
+      if (existing && Object.keys(existing).length > 0) return;
+      const res = await AuthService.getExchangeRates();
+      const arr = res?.data;
+      if (Array.isArray(arr) && arr.length) {
+        const map = {};
+        arr.forEach((item) => {
+          if (item?.currency_code) map[item.currency_code] = { conversion_rates: item.conversion_rates };
+        });
+        localStorage.setItem("exchangeRatesData", JSON.stringify(map));
+      }
+    } catch (e) {
+      console.error("exchange-rate load failed", e);
     }
-  }, [screenSize]);
-  // // Work for Responsiveness end ==================================================>
-
-  const doSearch = (params) => {
-    //console.log("go back!");
-    history.push(PATH_SEARCH);
   };
 
-  const renderAmount = (title, pic, amount) => {
-    return (
-      <div className="d-flex flex-column px-3 justifty-content-between align-items-center">
-        <img src={pic} alt="" height={40} />
-        <span className="px-1">{title}</span>
-        {amount ? (
-          <span style={{ fontSize: "20px" }}>{amount}</span>
-        ) : (
-          <span style={{ fontSize: "20px" }}>&nbsp;</span>
-        )}
-      </div>
-    );
-  };
-
-  const renderAdditionalFee = (text, value, symbol) => {
-    return (
-      <div className="d-flex justify-content-between">
-        <div className="h5">{text}</div>
-        <div className="h5">
-          {value}
-          {symbol}
-        </div>
-      </div>
-    );
-  };
-
-  const formatTaxName = (tax) => {
-    let name =
-      tax?.type === "OTHER"
-        ? `${tax?.name} tax`
-        : tax.type?.split("_").join(" ");
-    return name?.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
-  };
-
-  const getAdditionalFee = (key, value, calculateTax, totalPrice) => {
-    let taxes = property?.taxes?.length > 0 ? property?.taxes : dummyTaxes; // for calculation of taxes i add dummy taxes data
-    if (key === "cleaningFee" && property?.prices?.cleaningFee) {
-      return renderAdditionalFee(
-        "Cleaning Fee",
-        property?.prices?.cleaningFee,
-        detectCurrency(property?.prices?.currency)
-      );
+  // Quote the hub, apply the up-sell markup, resolve the charged amount.
+  const getPrice = async () => {
+    if (!isBP || !listingId || !startISO || !endISO || !nights || !numberOfGuests) {
+      setPriceError("Select your dates and guests on the property page first.");
+      return;
     }
-    if (key === "securityDeposit" && property?.prices?.securityDepositFee) {
-      return renderAdditionalFee(
-        "Security Deposit",
-        property?.prices?.securityDepositFee,
-        detectCurrency(property?.prices?.currency)
-      );
-    }
-    if (key === "taxes" && taxes.length > 0) {
-      return taxes.map((tax) => {
-        return renderAdditionalFee(
-          formatTaxName(tax),
-          tax?.amount,
-          isPercentageOrAmount(tax?.units, property?.prices?.currency)
-        );
+    setQuoting(true);
+    setPriceError("");
+    try {
+      const res = await AuthService.getUnifiedQuote({
+        listingId: hubId,
+        checkIn: startISO,
+        checkOut: endISO,
+        guests: numberOfGuests,
+        currency: "USD",
       });
-    }
-    if (calculateTax) {
-      const getTaxPercentage = (amount) => (totalPrice * amount) / 100;
-      const getTaxAmount = (obj) => {
-        let taxAmount;
-        switch (obj.quantifier) {
-          case "PER_STAY":
-            // handle PER_STAY quantifier
-            taxAmount = obj.amount;
-            break;
-          case "PER_GUEST":
-            // handle PER_GUEST quantifier
-            taxAmount = obj.amount * property?.accommodates;
-            break;
-          case "PER_NIGHT":
-            // handle PER_NIGHT quantifier
-            taxAmount =
-              obj?.amount *
-              (selectedNights ? selectedNights : calculateTotalNights());
-            break;
-          case "PER_GUEST_PER_NIGHT":
-            taxAmount =
-              obj.amount *
-              property?.accommodates *
-              (selectedNights ? selectedNights : calculateTotalNights());
-            // handle PER_GUEST_PER_NIGHT quantifier
-            break;
-          // add more cases as needed for other quantifier values
-          default:
-            // handle default case (optional)
-            break;
-        }
-        return taxAmount;
-      };
-
-      return taxes?.reduce((acc, curr) => {
-        const taxAmount = isPercentage(curr?.units)
-          ? getTaxPercentage(curr?.amount)
-          : getTaxAmount(curr);
-        return acc + taxAmount;
-      }, 0);
+      const body = res?.data || {};
+      if (body.ok === false || body.available === false) {
+        setPriced(false);
+        setPriceError(String(body.error || "No price available for these dates."));
+        return;
+      }
+      const net = Number(body.netTotal);
+      const currency = String(body.currency || "USD").toUpperCase();
+      if (!(net > 0)) {
+        setPriced(false);
+        setPriceError("No usable price was returned for these dates.");
+        return;
+      }
+      const up = bpUpsell(net);
+      await ensureExchangeRates();
+      const charge = resolveFlywireCharge(up.sellingPrice, currency);
+      if (charge.amount == null || !(charge.amount > 0)) {
+        setPriced(false);
+        setPriceError(`No conversion rate for ${currency}. Card payment is unavailable for this currency.`);
+        return;
+      }
+      setNetTotal(up.net);
+      setSellingPrice(up.sellingPrice);
+      setQuoteCurrency(currency);
+      setChargeAmount(charge.amount);
+      setChargeCurrency(charge.chargeCurrency);
+      setPriced(true);
+    } catch (e) {
+      setPriced(false);
+      setPriceError(errText(e));
+    } finally {
+      setQuoting(false);
     }
   };
 
-  const calculateTotalPrice = () => {
-    const totalNightsMoreThanAWeek = calculateTotalNights() > 7;
-    const totalNightsMoreThanAMonth = calculateTotalNights() > 28;
-    const totalGuests = property?.accommodates;
-    const extraGuests =
-      totalGuests - (property?.prices?.guestsIncludedInRegularFee || 0);
-    const extraPersonFee = property?.prices?.extraPersonFee || 0;
-    const extraGuestsTotalFee =
-      extraGuests * extraPersonFee * calculateTotalNights();
-    // week days and week End days
-    const weekEndDays = property?.prices.weekendDays
-      ? countWeekendDays(undefined, undefined, property?.prices.weekendDays)
-      : 0;
-    const weekDays = property?.prices?.weekendBasePrice
-      ? calculateTotalNights() - weekEndDays
-      : calculateTotalNights();
-
-    let totalPrice = calculatedAmount
-      ? calculatedAmount
-      : weekDays * property?.prices?.basePrice +
-        weekEndDays * (property?.prices?.weekendBasePrice || 0) +
-        extraGuestsTotalFee +
-        (property?.prices?.cleaningFee || 0);
-    if (totalNightsMoreThanAMonth && !calculatedAmount) {
-      totalPrice = totalPrice * property?.prices?.monthlyPriceFactor;
-    } else if (totalNightsMoreThanAWeek && !calculatedAmount) {
-      // count;
-      totalPrice = totalPrice * property?.prices?.weeklyPriceFactor;
+  // Take the Flywire INSTANT payment; the return leg finalizes the booking.
+  const bookAndPay = async () => {
+    if (!priced || !(sellingPrice > 0)) {
+      swal("Price not ready", "We couldn't confirm the price yet — please wait a moment and try again.", "warning");
+      return;
+    }
+    if (!client.firstName.trim() || !client.lastName.trim() || !client.email.trim() || !client.phone.trim()) {
+      swal("Guest details", "Enter the guest's first name, last name, email and phone.", "warning");
+      return;
+    }
+    if (!EMAIL_RE.test(client.email.trim())) {
+      swal("Check email", "Enter a valid guest email address.", "warning");
+      return;
+    }
+    if (!PHONE_RE.test(client.phone.trim())) {
+      swal("Check phone", "Enter a valid phone number — 7 to 18 digits, with an optional leading +.", "warning");
+      return;
+    }
+    if (!client.address.trim() || !client.city.trim() || !client.country.trim()) {
+      swal("Billing details", "Enter the address, city and country.", "warning");
+      return;
     }
 
-    // calculate taxes
-    let taxes = property?.taxes?.length > 0 ? property?.taxes : dummyTaxes;
-    if (taxes) {
-      const totalTaxPrice = getAdditionalFee(
-        undefined,
-        undefined,
-        true,
-        totalPrice
+    if (!window.FlywirePayment) {
+      try { await loadFlywireSDK(); } catch (e) { /* handled below */ }
+    }
+    if (!window.FlywirePayment) {
+      swal(
+        "Payment unavailable",
+        "The Flywire payment SDK could not load — it may be blocked by an ad-blocker/privacy extension or your network. Check the browser console for a blocked request to payment.flywire.com, then try again.",
+        "error"
       );
-      totalPrice += totalTaxPrice;
+      return;
     }
 
-    return totalPrice ? totalPrice.toFixed(2) : 0;
-  };
+    const callbackId = "BP" + uuidv4();
+    const agent = JSON.parse(localStorage.getItem("agent") || "{}");
+    const travelAgency = JSON.parse(localStorage.getItem("travelAgency") || "{}");
+    const agencyName = travelAgency?.agencyName || agent?.agencyName;
+    if (!agent?.agent_id || !agent?.agency_id || !agencyName) {
+      swal("Session issue", "Your agent/agency profile is incomplete. Please re-login before taking payment.", "error");
+      return;
+    }
 
-  const getAllClients = async () => {
-    const clientResponse = await userRequest.get(`/client/get-clients`, {
-      params: { limit: "300", skip: "0", agent_id: 1 },
+    // The charge, resolved once and consistent with the Flywire config amount.
+    const charge = resolveFlywireCharge(sellingPrice, quoteCurrency);
+    if (charge.amount == null || !(charge.amount > 0)) {
+      swal("Currency unavailable", `No conversion rate for ${quoteCurrency}. Cannot take payment for this currency.`, "error");
+      return;
+    }
+
+    // Freeze the cancellation policy the guest is agreeing to (refund overlay
+    // reads this at cancel time). Base = the accommodation charged.
+    const _cx = property?.bookingTerms?.cancellation || null;
+    const cancellationSnapshot = {
+      windows: (_cx && _cx.windows) || null,
+      code: (_cx && _cx.code) || null,
+      text: (_cx && _cx.text) || null,
+      nonRefundable: detectNonRefundable(_cx),
+      refundBaseAmount: charge.amount,
+      propertyTimezone: property?.timezone || property?.address?.timezone || null,
+      capturedAt: new Date().toISOString(),
+    };
+
+    const vtbe = {
+      agent_id: agent.agent_id,
+      agency_id: agent.agency_id,
+      agencyName,
+      agentName: agent?.firstName,
+      agentEmail: agent?.email,
+      client_id: constants.BP_OPERATOR_CLIENT_ID,
+      bookedAt: new Date().toISOString(),
+      bookingId: callbackId,
+      confirmationCode: callbackId,
+      cancellationPolicyCategory: "string",
+      cancellationSnapshot,
+      currency: charge.chargeCurrency,
+      startDate: ddmmyyyy(startISO),
+      endDate: ddmmyyyy(endISO),
+      fees: "0",
+      guestFirstName: client.firstName.trim(),
+      guestMiddleName: client.middleName.trim(),
+      guestLastName: client.lastName.trim() || "-",
+      guestEmail: client.email.trim(),
+      guestPhoneNumbers: client.phone.trim(),
+      guestAddress: client.address.trim(),
+      guestCity: client.city.trim(),
+      guestState: client.state.trim(),
+      guestZip: client.postalCode.trim(),
+      guestCountry: client.country.trim(),
+      guestPreferredLocale: "en",
+      nightlyBasePrice: String(Math.max(1, Math.round(charge.amount / Math.max(1, Number(nights))))),
+      nights: Number(nights),
+      numberOfGuests: String(numberOfGuests),
+      payment_type: "instant",
+      propertyId: hubId,
+      status: "approved",
+      total: charge.amount,
+      flywireAmount: String(charge.amount),
+      propertyName: property?.title || "",
+      securityDeposit: 0,
+    };
+
+    const pending = {
+      listing_id: listingId,
+      start_date: startISO,
+      nights: Number(nights),
+      number_of_guests: Number(numberOfGuests),
+      currency: quoteCurrency,
+      netTotal,
+      guest: { name: `${client.firstName} ${client.lastName}`.trim(), email: client.email.trim(), phone: client.phone.trim() },
+      vtbe,
+    };
+    localStorage.setItem("bpPendingReservation", JSON.stringify(pending));
+
+    const returnUrl = `${window.location.origin}/request-to-book-flywire/?confirmation=${callbackId}&ptype=instant`;
+    const config = buildInstantConfig({
+      callbackId,
+      sellingPrice,
+      currency: quoteCurrency,
+      guest: { firstName: client.firstName.trim(), lastName: client.lastName.trim(), email: client.email.trim(), phone: client.phone.trim() },
+      returnUrl,
+      onError: () => setPaying(false),
     });
-    console.log("fetched Clients >>>>", clientResponse.data.clients);
-
-    // setClients(data);
-    setClients(clientResponse.data.clients);
-  };
-  console.log("clients", clients, client);
-  const handleClientChange = (e, name, fromSelect) => {
-    console.log("handleCLient change", e, name, fromSelect);
-    if (fromSelect) {
-      setClient({
-        firstName: e.firstName || e.value,
-        lastName: e.lastName,
-        phone: e.phone,
-        email: e.email,
-        id: e._id,
-      });
-    } else {
-      setClient((prev) => ({ ...prev, [name]: e.target.value }));
+    if (config.amount == null) {
+      swal("Currency unavailable", `No conversion rate for ${quoteCurrency}. Cannot take payment for this currency.`, "error");
+      localStorage.removeItem("bpPendingReservation");
+      return;
+    }
+    try {
+      setPaying(true);
+      window.FlywirePayment.initiate(config).render();
+    } catch (e) {
+      setPaying(false);
+      swal("Payment error", errText(e), "error");
     }
   };
-  //console.log(client);
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    return event;
-  };
 
+  // Load the SDK + FX rates and quote up-front on mount.
   useEffect(() => {
-    getAllClients();
+    loadFlywireSDK().catch((e) => console.error(e));
+    ensureExchangeRates();
+    if (isBP) getPrice();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const countries = [
-    {
-      _id: "64503228a1763a286c3ec9e9",
-      firstName: "Switzerland",
-      lastName: "antoher last",
-      phone: "3864903",
-      email: "anoither@fhjak.com",
-      agencyName: "VillaTracker",
-      agent_id: 1,
-      agency_id: 1,
-      client_id: 16,
-      createdAt: "2023-05-01T21:42:01.922Z",
-      updatedAt: "2023-05-01T21:42:01.922Z",
-      __v: 0,
-    },
-    {
-      _id: "645030dda1763a286c3ec9dc",
-      firstName: "Canada",
-      lastName: "antoher last",
-      phone: "3864903",
-      email: "anoither@fhjak.com",
-      agencyName: "VillaTracker",
-      agent_id: 1,
-      agency_id: 1,
-      client_id: 15,
-      createdAt: "2023-05-01T21:36:29.760Z",
-      updatedAt: "2023-05-01T21:36:29.760Z",
-      __v: 0,
-    },
-    {
-      _id: "645030b1a1763a286c3ec9d2",
-      firstName: "United State",
-      lastName: "antoher last",
-      phone: "3864903",
-      email: "anoither@fhjak.com",
-      agencyName: "VillaTracker",
-      agent_id: 1,
-      agency_id: 1,
-      client_id: 14,
-      createdAt: "2023-05-01T21:35:46.362Z",
-      updatedAt: "2023-05-01T21:35:46.362Z",
-      __v: 0,
-    },
-  ];
-  const nextPic = () => {
-    if (picIndex < property.pictures.length - 1) {
-      setPicIndex(picIndex + 1);
-    }
-  };
+  // Auto-open Flywire when we arrived from the detail-page Instant Book popup.
+  // Mount-only poller reading the latest state via a ref (so re-renders don't
+  // reset the timer) — matches the VT-FE reserve-page auto-open.
+  const firedRef = useRef(false);
+  const latest = useRef({});
+  latest.current = { priced, paying, client, bookAndPay };
+  useEffect(() => {
+    if (!autoInstant) return;
+    let tries = 0;
+    const timer = setInterval(() => {
+      if (firedRef.current) { clearInterval(timer); return; }
+      const s = latest.current;
+      const ready =
+        s.priced && !s.paying && window.FlywirePayment &&
+        s.client?.firstName && s.client?.lastName && s.client?.email &&
+        s.client?.phone && s.client?.address && s.client?.city && s.client?.country;
+      if (ready) { firedRef.current = true; clearInterval(timer); s.bookAndPay(); }
+      else if (++tries > 100) { clearInterval(timer); }
+    }, 200);
+    return () => clearInterval(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  const prevPic = () => {
-    if (picIndex > 0) {
-      setPicIndex(picIndex - 1);
-    }
-  };
-  const handleDotClick = (index) => {
-    setPicIndex(index);
-  };
-  return (
-    <>
+  if (!property) {
+    return (
       <div className="property-page-wrapper">
         <PageHeader bgColor="#133B71" />
-        <div className="top-line-small-device">
-          <div
-            className="link18-bold-no-line"
-            style={{ display: "flex", padding: "10px 20px" }}
-            onClick={doSearch}
-          >
-            <img src={goBack} alt="" />
-            <p>&nbsp;&nbsp;Back</p>
-          </div>
-          <div className="" style={{ width: "75%", textAlign: "center" }}>
-            <h1>Reservation Summary</h1>
-          </div>
-        </div>
-        <div className="property-page-container">
-          <div className="price-details-heading">
-            <h1>Price Details</h1>
-          </div>
-          <div className="container-fluid w-100 px-3">
-            <div className="reservation-slider-details w-100">
-              {/* <div className="col-lg-5">
-                <div className="img w-100 p-2">
-                  <img
-                    src={property?.pictures[0]?.original}
-                    className="w-100"
-                  />
-                </div>
-              </div> */}
-              <div className="property-slider col-lg-7">
-                {property.pictures.length > 0 && (
-                  <>
-                    <div className="images-container">
-                      <button onClick={prevPic} disabled={picIndex === 0}>
-                        <IoIosArrowBack />
-                      </button>
-                      <img
-                        src={property?.pictures[picIndex]?.original}
-                        alt="Property"
-                      />
-                      <button
-                        onClick={nextPic}
-                        disabled={picIndex === property.pictures.length - 1}
-                      >
-                        <IoIosArrowForward />
-                      </button>
-                    </div>
-                    <div className="dot-indicators">
-                      {property.pictures.map((picture, index) => (
-                        <div
-                          key={index}
-                          className={`dot ${
-                            index === picIndex ? "active" : ""
-                          }`}
-                          onClick={() => handleDotClick(index)}
-                        ></div>
-                      ))}
-                    </div>
-                  </>
-                )}
-              </div>
-              <div className="col-lg-5">
-                <div className="p-3 slider-details">
-                  <div className="title">
-                    <div className="property-page-body-top-title">
-                      {/* {property??.title} */}
-                      <LinesEllipsis
-                        text={property?.title}
-                        maxLine="2"
-                        ellipsis="..."
-                        trimRight
-                      />
-                    </div>
-                    <div className="property-page-body-top-subtitle">
-                      {prop.fullAddress}
-                    </div>
-                  </div>
-
-                  {/* <div className="description w-100 py-2">
-                    <div className="property py-1 d-flex ">
-                      <p className="w-25 h4 key">PropertyId:</p>
-                      <p className="h4 value">{property?._id}</p>
-                    </div>
-                    <div className="type py-1 d-flex ">
-                      <p className="w-25 h4 key">Type:</p>
-                      <p className="h4 value">
-                        {property?.propertyType}
-                      </p>
-                    </div>
-                    <div className="stay py-1 d-flex ">
-                      <p className="w-25 h4 key">Guests:</p>
-                      <p className="h4 value">
-                        {getStorageValue("adults")} Adults
-                        {getStorageValue("children") > 0
-                          ? "," + getStorageValue("children") + "children"
-                          : ""}
-                      </p>
-                    </div>
-                    <div className="stay py-1 d-flex ">
-                      <p className="w-25 h4 key">Minimum Stay:</p>
-                      <p className="h4 value">
-                        {property?.terms?.minNights} Nights
-                      </p>
-                    </div>
-                    <div className="stay py-1 d-flex ">
-                      <p className="w-25 h4 key">Booked nights:</p>
-                      <p className="h4 value" style={{ textAlign: "right" }}>
-                        {calculateTotalNights()} Nights, {countWeekendDays()}{" "}
-                        weekends, {calculateTotalNights() - countWeekendDays()}{" "}
-                        weekdays
-                        {calculateTotalNights() > 28
-                          ? property?.prices?.monthlyPriceFactor
-                            ? ", with " +
-                              (1 - property.prices.monthlyPriceFactor) *
-                                100 +
-                              "% discount!"
-                            : ", no month discont"
-                          : calculateTotalNights() > 6
-                          ? property?.prices?.weeklyPriceFactor
-                            ? ", with " +
-                              (1 - property.prices.weeklyPriceFactor) *
-                                100 +
-                              "% discount!"
-                            : ", no week discount"
-                          : ", without discounts"}
-                      </p>
-                    </div>
-                    <div className="stay py-1 d-flex ">
-                      <p className="w-25 h4 key">Included in regular fare:</p>
-                      <p className="h4 value">
-                        {property?.prices?.guestsIncludedInRegularFee}{" "}
-                        Guests
-                      </p>
-                    </div>
-                    <div className="stay py-1 d-flex ">
-                      <p className="w-25 h4 key">Weekdays fare:</p>
-                      <p className="h4 value">
-                        {property?.prices?.basePrice}{" "}
-                        {detectCurrency(property?.prices?.currency)}
-                      </p>
-                    </div>
-                    {property?.prices?.weekendBasePrice ? (
-                      <div className="stay py-1 d-flex ">
-                        <p className="w-25 h4 key">Weekends fare:</p>
-                        <p className="h4 value">
-                          {property?.prices?.weekendBasePrice}{" "}
-                          {detectCurrency(property?.prices?.currency)}
-                        </p>
-                      </div>
-                    ) : (
-                      ""
-                    )}
-                    {property?.prices?.weekendDays ? (
-                      <div className="stay py-1 d-flex ">
-                        <p className="w-25 h4 key">Weekends days:</p>
-                        <p className="h4 value">
-                          {property.prices.weekendDays
-                            .map((item) => item)
-                            .join(",")}
-                          {days[property.prices.weekendDays[0]]} ,{" "}
-                          {days[property.prices.weekendDays[1]]}
-                        </p>
-                      </div>
-                    ) : (
-                      ""
-                    )}
-                  </div> */}
-                  <hr
-                    style={{ color: "#D5D5D5", border: "2px solid #D5D5D5" }}
-                  />
-                  <div className="description w-75 py-3 checkIn-checkOut">
-                    <div className="property py-1  d-flex justify-content-between flex-wrap">
-                      <p className="h4 text-head-color fw-bold">Check-In:</p>
-                      <p className="h4">{getStorageValue("dateFrom")}</p>
-                      <p className="h4">
-                        Time: {property?.defaultCheckInTime} (24-hour)
-                      </p>
-                    </div>
-                    <div className="type py-1  d-flex justify-content-between">
-                      <p className="h4 text-head-color fw-bold">Check-Out:</p>
-                      <p className="h4">{getStorageValue("dateTo")}</p>
-                      <p className="h4">
-                        Time: {property?.defaultCheckOutTime} (24-hour)
-                      </p>
-                    </div>
-                  </div>
-                  <hr
-                    style={{ color: "#D5D5D5", border: "2px solid #D5D5D5" }}
-                  />
-                  <div className="py-4 icons">
-                    {renderAmount("Guests:", guests, property?.accommodates)}
-                    {renderAmount("Bedrooms:", bed, property?.bedrooms)}
-                    {renderAmount("Bedrooms:", bath, property?.bathrooms)}
-                    {prop.tags.indexOf("eventCollection") > -1
-                      ? renderAmount("Event Places", eventsIcon)
-                      : ""}
-                    {prop.tags.indexOf("familyCollection") > -1
-                      ? renderAmount("For Families", familyIcon)
-                      : ""}
-                    {prop.tags.indexOf("petsCollection") > -1
-                      ? renderAmount("Pets Welcome", petsIcon)
-                      : ""}
-                    {prop.tags.indexOf("sustainCollection") > -1
-                      ? renderAmount("Sustainable", sustainIcon)
-                      : ""}{" "}
-                  </div>
-                  {isOnDemandListing(prop) && (
-                    <div className="property-ondemand py-2">
-                      <h2 className="px-2">This property is</h2>
-                      <h1>"On demand"</h1>
-                    </div>
-                  )}
-                  <hr
-                    style={{ color: "#D5D5D5", border: "2px solid #D5D5D5" }}
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="container-fluid reservation-additional-fees w-100 p-3">
-            <div className="px-4 py-3 mx-auto">
-              <h3 className="p-2 text-head-color fw-bolder">Additional Fees</h3>
-            </div>
-            <div className="px-4 container-fluid w-100">
-              <div className="row w-100 pb-3 bg-light p-2">
-                <div className="col-lg-4 p-2">
-                  <div className="p-4">
-                    {getAdditionalFee("cleaningFee")}
-                    {getAdditionalFee("securityDeposit")}
-                    {getAdditionalFee("taxes")}
-                  </div>
-                </div>
-                <div
-                  className="col-lg-4 p-2"
-                  style={{
-                    borderLeft: !smallScreen ? "thick solid #E7E7E7" : "none",
-                  }}
-                >
-                  <div className="p-4">
-                    <div className="h3 py-3 d-flex justify-content-between text-head-color">
-                      <div className=" gap-3 agency-title">
-                        <BsCheckSquare />
-                        <h1>Agency Commission</h1>
-                      </div>
-                      <div>(-) $9160</div>
-                    </div>
-                    <div className="text-head-color h5">
-                      By clicking on this the client card will be chargers fully
-                      and Villa Tracker will compensate your back with the
-                      commission
-                    </div>
-                  </div>
-                </div>
-                <div
-                  className="col-lg-4 p-2"
-                  style={{
-                    borderLeft: !smallScreen ? "thick solid #E7E7E7" : "none",
-                    borderTop: smallScreen ? "thick solid #E7E7E7" : "none",
-                  }}
-                >
-                  <div className="p-4 text-head-color">
-                    <div className="h3 ">Total Booking Amount</div>
-                    <div className="d-flex justify-content-start">
-                      <div style={{ fontSize: "55px" }} className=" fw-bold">
-                        {detectCurrency(property?.prices?.currency)}
-                        {calculateTotalPrice()}
-                      </div>
-                      <div className="h5">
-                        For{" "}
-                        {selectedNights
-                          ? selectedNights
-                          : calculateTotalNights()}{" "}
-                        Nights
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          {/* <div className="container-fluid w-100 px-3">
-            <div className="px-4 pt-2 ">
-              <h3 className="p-2 text-head-color fw-bolder">Additional Fees</h3>
-            </div>
-            <div className="px-4 container-fluid w-100">
-              <hr style={{ color: "#D5D5D5", border: "2px solid #D5D5D5" }} />
-              <div className="row w-100 pb-3  bg-light p-2">
-                <div className="col-lg-4 p-2">
-                  <div className="p-4">
-                    {getAdditionalFee("cleaningFee")}
-                    {getAdditionalFee("securityDeposit")}
-                    {getAdditionalFee("taxes")}
-                  </div>
-                </div>
-                <div
-                  className="col-lg-4 p-2"
-                  style={{
-                    borderLeft: !smallScreen ? "thick solid #E7E7E7" : "none",
-                    borderTop: smallScreen ? "thick solid #E7E7E7" : "none",
-                  }}
-                >
-                  <div className="p-4">
-                    <div className="h3 d-flex justify-content-between text-head-color">
-                      <div>Agency Commission</div>
-                      <div>(-) $9160</div>
-                    </div>
-                    <div className="text-head-color h5">
-                      By clicking on this the client card will be chargers fully
-                      and Villa Tracker will compensate your back with the
-                      commission
-                    </div>
-                  </div>
-                </div>
-                <div
-                  className="col-lg-4 p-2"
-                  style={{
-                    borderLeft: !smallScreen ? "thick solid #E7E7E7" : "none",
-                    borderTop: smallScreen ? "thick solid #E7E7E7" : "none",
-                  }}
-                >
-                  <div className="p-4 text-head-color">
-                    <div className="h3 ">Total Booking Amount</div>
-                    <div className="d-flex justify-content-start">
-                      <div style={{ fontSize: "55px" }} className=" fw-bold">
-                        {detectCurrency(property?.prices?.currency)}
-                        {calculateTotalPrice()}
-                      </div>
-                      <div className="h5">
-                        For {calculateTotalNights()} Nights
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div> */}
-          <div className="container-fluid w-100 px-3">
-            <div className="price-details-heading">
-              <h1> House rules and a cancellation policy</h1>
-            </div>
-            <div className="container-fluid w-100">
-              <div className="row w-100 px-4 text-center py-3">
-                {/* <hr style={{ color: "#D5D5D5", border: "2px solid #D5D5D5" }} /> */}
-                <div className="px-2 pb-2 text-center house-details">
-                  <p className="w-75 h3 fw-medium mx-auto py-3">
-                    Cancellations 30 or more days before check-in follow this
-                    property's own cancellation terms. For cancellations less than
-                    30 days before check-in, a minimum of 50% of the accommodation
-                    total is non-refundable (or the property's terms, if stricter).
-                    Fully non-refundable properties are clearly marked before you book.
-                    {/* {property?.publicDescription?.space} */}
-                  </p>
-
-                  <p className="w-75 h5 py-1">
-                    {property?.publicDescription?.houseRules}
-                  </p>
-                  <p className="w-75 h5 py-1">
-                    {property?.terms?.cancellation}
-                  </p>
-                  <a href="javascript:none" className="h5 py-3">
-                    Click here to view complete property terms & conditions
-                  </a>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="container-fluid w-100 px-3 text-center">
-            <div className="mx-3 px-3">
-              <div className="pt-2 bg-light">
-                <h2 className="p-2 text-center text-head-color fw-bold">
-                  Book your Guest Trip!
-                </h2>
-                {/* <hr style={{ color: "#D5D5D5", border: "2px solid #D5D5D5" }} /> */}
-              </div>
-            </div>
-            <div className="container-fluid w-100 p-4 ">
-              <div className="row py-3 px-4 mx-auto">
-                {/* <form className="row g-3 " > */}
-                <div className="col-md-6 py-3 px-4">
-                  <label className="form-label">Guest First Name*</label>
-                  <NameSelect
-                    clients={clients}
-                    client={client}
-                    // className="form-select pt-3 pb-4"
-                    setClient={setClient}
-                    setClients={setClients}
-                    onClientChange={handleClientChange}
-                  />
-                </div>
-                <div className="col-md-6 py-3 px-4">
-                  <label className="form-label">Guest Last Name*</label>
-                  <input
-                    type="text"
-                    className="form-control p-3 border"
-                    defaultValue="Rockman"
-                    value={client?.lastName}
-                    name="lastName"
-                    onChange={(e) => handleClientChange(e, "lastName")}
-                  />
-                </div>
-                <div className="col-md-4 py-3 px-4">
-                  <label className="form-label">E-Mail*</label>
-                  <div className="input-group ">
-                    <input
-                      type="email"
-                      className="form-control p-3 border"
-                      defaultValue={"Ttavel@smilinghouse.ch"}
-                      placeholder="Ttavel@smilinghouse.ch"
-                      value={client?.email}
-                      name="email"
-                      onChange={(e) => handleClientChange(e, "email")}
-                    />
-                  </div>
-                </div>
-                <div className="col-md-4 py-3 px-4">
-                  <label className="form-label">Phone*</label>
-                  <input
-                    type="phone"
-                    className="form-control p-3 border"
-                    defaultValue={"+41-79-489-7021"}
-                    value={client?.phone}
-                    name="phone"
-                    onChange={(e) => handleClientChange(e, "phone")}
-                  />
-                </div>
-                <div className="col-md-4 py-3 px-4">
-                  <label className="form-label">Country*</label>
-                  <NameSelect
-                    clients={clients}
-                    client={countries}
-                    setClient={setClient}
-                    setClients={setClients}
-                    onClientChange={handleClientChange}
-                    padding={"0.5rem !important"}
-                  />
-                  {/* <select
-                    className="form-select pt-3 pb-4 border"
-                    name={"state"}
-                    value={client?.state}
-                  >
-                    <option>Switzerland</option>
-                  </select> */}
-                </div>
-                {/* </form> */}
-              </div>
-            </div>
-          </div>
-          <div className="container-fluid w-100 px-3">
-            <div className="mx-3 px-3">
-              <div className="pt-2 bg-light">
-                <div className="p-2">
-                  <h2 className="ps-2 text-head-color text-center fw-bold">
-                    Payment Information
-                  </h2>
-                </div>
-              </div>
-              {/* <hr style={{ color: "#D5D5D5", border: "2px solid #D5D5D5" }} /> */}
-            </div>
-            <div className="container-fluid w-100 p-4 ">
-              <div className="w-75 pb-3 px-4 ps-3 mx-auto">
-                <h3 className="text-head-color fw-bold pb-3">
-                  Payment Schedule
-                </h3>
-                <div className="h4 py-1 w-50 d-flex">
-                  <div className="pe-3">Amount Due Today:</div>
-                  <div className="text-head-color fw-bold">
-                    {detectCurrency(property?.prices?.currency)}
-                    {calculateTotalPrice()}
-                  </div>
-                </div>
-                <div className="h4 py-1 w-50 d-flex">
-                  <div className="pe-3">Total Booking Amount:</div>
-                  <div className="text-head-color fw-bold">
-                    {detectCurrency(property?.prices?.currency)}
-                    {calculateTotalPrice()}
-                  </div>
-                </div>
-                <div className="h4 py-1 w-50 d-flex">
-                  <div>Additional Fees due at check-in:</div>
-                  <div></div>
-                </div>
-                <div className="py-2 w-75 h4">
-                  *Any extra cost will be charged by the host at the property's
-                  currency. If people book more than 2 months ahead, we only
-                  charge or hold 50% of the booking amount… and rest due 2
-                  months before check-in.
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="container-fluid w-100 px-3">
-            <div className="mx-3 px-3">
-              <div className="pt-2 bg-light">
-                <h2 className="p-2 text-head-color fw-bold text-center">
-                  Book this Property Now
-                </h2>
-              </div>
-              {/* <hr style={{ color: "#D5D5D5", border: "2px solid #D5D5D5" }} /> */}
-            </div>
-            <div className="px-4 container-fluid w-100 pt-4">
-              <div className="row ps-4 h3 text-head-color fw-bold">
-                Please select the payment method
-              </div>
-              <div className="row w-100 pb-3">
-                <div
-                  className="col-lg-6 p-2"
-                  style={{ cursor: "pointer" }}
-                  onClick={() => setPaymentMethod("wire")}
-                >
-                  <div className="p-4">
-                    <div className="d-flex align-items-start">
-                      <div>
-                        <label>
-                          <input
-                            type="radio"
-                            checked={paymentMethod === "wire"}
-                          />
-                        </label>
-                      </div>
-                      <div className="d-flex flex-column">
-                        <div className="h3 d-flex justify-content-between  text-head-color fw-bold">
-                          <div> Wire Transfer</div>
-                        </div>
-                        <div className="text-head-color h5">
-                          Your request will be sent to the Villa Tracker team to
-                          review a contract will be sent to you with payment
-                          terms and details
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div
-                  className="col-lg-6 p-2"
-                  style={{
-                    borderLeft: !smallScreen ? "thick solid #E7E7E7" : "none",
-                    borderTop: smallScreen ? "thick solid #E7E7E7" : "none",
-                  }}
-                >
-                  <div
-                    className="p-4"
-                    style={{ cursor: "pointer" }}
-                    onClick={() => setPaymentMethod("hold")}
-                  >
-                    <div className="d-flex align-items-start">
-                      <div>
-                        {" "}
-                        <label>
-                          <input
-                            type="radio"
-                            checked={paymentMethod === "hold"}
-                          />
-                        </label>
-                      </div>
-                      <div className="d-flex flex-column">
-                        <div className="h3 d-flex justify-content-between text-head-color fw-bold">
-                          <div> 48 Hours Hold</div>
-                        </div>
-                        <div className="text-head-color h5 ">
-                          By holding this property for 48 hours, your Credit
-                          Card will not be charged, only authorized.
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {paymentMethod === "hold" && (
-            <div className="container-fluid w-100 px-3">
-              <div className="container-fluid w-100">
-                {/* <hr style={{ color: "#D5D5D5", border: "2px solid #D5D5D5" }} /> */}
-                <div className="d-flex flex-column align-items-center mx-auto w-75 py-3 px-4">
-                  <div className="h5">Credit Cards Accepted:</div>
-                  <div>
-                    <img src={creditCardsIcon} alt="credit cards" />
-                  </div>
-                </div>
-
-                <div className="row w-100 pb-3 px-4 mx-auto">
-                  {/* <Elements stripe={stripePromise}>
-                    <CheckoutForm
-                      amount={calculateTotalPrice()}
-                      minStay={
-                        selectedNights ? selectedNights : calculateTotalNights()
-                      }
-                      currency={property?.prices?.currency}
-                      onSubmit={handleSubmit}
-                      client={client}
-                      property={property}
-                      getAllClients={getAllClients}
-                    />
-                  </Elements> */}
-                </div>
-              </div>
-            </div>
-          )}
-          <div className="container-fluid w-100 px-3">
-            <hr style={{ color: "#D5D5D5", border: "2px solid #D5D5D5" }} />
-            <TermsFooter />
-          </div>
+        <div style={{ padding: 60, textAlign: "center" }}>
+          <h3>No property selected.</h3>
+          <button className="btn btn-primary mt-3" onClick={() => history.push(PATH_SEARCH)}>Back to search</button>
         </div>
       </div>
-    </>
+    );
+  }
+
+  const money = (cur, amt) => `${cur || ""} ${Number(amt || 0).toLocaleString()}`.trim();
+
+  return (
+    <div className="property-page-wrapper">
+      <PageHeader bgColor="#133B71" />
+      <div className="property-page-container" style={{ maxWidth: 980, margin: "0 auto", padding: "16px" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8, margin: "8px 0 16px" }}>
+          <h1 style={{ margin: 0 }}>Instant Book</h1>
+          <span className="text-primary" style={{ cursor: "pointer" }} onClick={() => history.goBack()}>&laquo; Back</span>
+        </div>
+
+        {/* Booking summary */}
+        <div style={{ border: "1px solid #e5e7eb", borderRadius: 10, padding: 18, marginBottom: 18 }}>
+          <h3 style={{ marginTop: 0 }}>{property?.title || "Property"}</h3>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 12, marginTop: 10 }}>
+            <div><div style={{ color: "#888", fontSize: 13 }}>Check-in</div><div style={{ fontWeight: 600 }}>{startISO || "—"}</div></div>
+            <div><div style={{ color: "#888", fontSize: 13 }}>Check-out</div><div style={{ fontWeight: 600 }}>{endISO || "—"}</div></div>
+            <div><div style={{ color: "#888", fontSize: 13 }}>Nights</div><div style={{ fontWeight: 600 }}>{nights || "—"}</div></div>
+            <div><div style={{ color: "#888", fontSize: 13 }}>Guests</div><div style={{ fontWeight: 600 }}>{numberOfGuests}</div></div>
+          </div>
+          <hr />
+          <div style={{ display: "flex", alignItems: "baseline", gap: 12, flexWrap: "wrap" }}>
+            <div style={{ color: "#888" }}>Charged now:</div>
+            {quoting ? (
+              <strong>Getting price…</strong>
+            ) : priced ? (
+              <strong style={{ fontSize: 26 }}>{money(chargeCurrency, chargeAmount)}</strong>
+            ) : (
+              <span style={{ color: "#b91c1c" }}>{priceError || "Price unavailable"}</span>
+            )}
+            {priced && chargeCurrency !== quoteCurrency && (
+              <span style={{ color: "#999" }}>(≈ {money(quoteCurrency, sellingPrice)})</span>
+            )}
+          </div>
+        </div>
+
+        {/* Cancellation policy */}
+        <div style={{ border: "1px solid #e5e7eb", borderRadius: 10, padding: 18, marginBottom: 18 }}>
+          <b>Cancellation policy:</b>
+          {shCancel.nonRefundable && (
+            <span style={{ marginLeft: 8, padding: "2px 8px", borderRadius: 4, background: "#fde8e8", color: "#b91c1c", fontWeight: 700, fontSize: 13 }}>
+              Non-refundable
+            </span>
+          )}
+          {shCancel.lines.map((line, i) => (
+            <div key={i} style={{ marginTop: 6 }}>{line}</div>
+          ))}
+          {shCancelForDates && (
+            <div style={{ marginTop: 8, padding: "6px 10px", borderRadius: 4, background: "#eef6ff", color: "#0b5cad", fontWeight: 600 }}>
+              {shCancelForDates.message}
+            </div>
+          )}
+          {shCancel.windows && (
+            <ul className="px-4" style={{ marginTop: 6, marginBottom: 0 }}>
+              {shCancel.windows.map((w, i) => (<li key={i}>{w.label}</li>))}
+            </ul>
+          )}
+          <div style={{ marginTop: 10 }}>
+            <a href="/terms-and-conditions" target="_blank" rel="noopener noreferrer">View complete terms &amp; conditions</a>
+          </div>
+        </div>
+
+        {/* Guest details (free-text) */}
+        <div style={{ border: "1px solid #e5e7eb", borderRadius: 10, padding: 18, marginBottom: 18 }}>
+          <h4 style={{ marginTop: 0 }}>Guest details</h4>
+          <div className="row">
+            <div className="col-md-4" style={{ marginBottom: 10 }}>
+              <label>First name *</label>
+              <input className="form-control" value={client.firstName} onChange={onField("firstName")} maxLength={60} />
+            </div>
+            <div className="col-md-4" style={{ marginBottom: 10 }}>
+              <label>Last name *</label>
+              <input className="form-control" value={client.lastName} onChange={onField("lastName")} maxLength={60} />
+            </div>
+            <div className="col-md-4" style={{ marginBottom: 10 }}>
+              <label>Middle name</label>
+              <input className="form-control" value={client.middleName} onChange={onField("middleName")} maxLength={60} />
+            </div>
+            <div className="col-md-4" style={{ marginBottom: 10 }}>
+              <label>E-mail *</label>
+              <input type="email" className="form-control" value={client.email} onChange={onField("email")} maxLength={120} />
+            </div>
+            <div className="col-md-4" style={{ marginBottom: 10 }}>
+              <label>Phone *</label>
+              <input type="tel" className="form-control" value={client.phone} onChange={onField("phone")} maxLength={18} placeholder="+41 79 123 45 67" />
+            </div>
+            <div className="col-md-4" style={{ marginBottom: 10 }}>
+              <label>Country *</label>
+              <input className="form-control" value={client.country} onChange={onField("country")} maxLength={60} />
+            </div>
+            <div className="col-md-6" style={{ marginBottom: 10 }}>
+              <label>Address *</label>
+              <input className="form-control" value={client.address} onChange={onField("address")} maxLength={120} />
+            </div>
+            <div className="col-md-3" style={{ marginBottom: 10 }}>
+              <label>City *</label>
+              <input className="form-control" value={client.city} onChange={onField("city")} maxLength={60} />
+            </div>
+            <div className="col-md-3" style={{ marginBottom: 10 }}>
+              <label>State / Region</label>
+              <input className="form-control" value={client.state} onChange={onField("state")} maxLength={60} />
+            </div>
+            <div className="col-md-3" style={{ marginBottom: 10 }}>
+              <label>Zip / Postal code</label>
+              <input className="form-control" value={client.postalCode} onChange={onField("postalCode")} maxLength={20} />
+            </div>
+          </div>
+        </div>
+
+        {/* Payment */}
+        <div style={{ border: "1px solid #e5e7eb", borderRadius: 10, padding: 18, marginBottom: 28 }}>
+          <h4 style={{ marginTop: 0 }}>Payment</h4>
+          <p style={{ color: "#555" }}>
+            Your card is charged immediately for {priced ? <strong>{money(chargeCurrency, chargeAmount)}</strong> : "the booking total"} to confirm this instant booking.
+          </p>
+          <button className="btn btn-success btn-lg" disabled={!priced || paying} onClick={bookAndPay}>
+            {paying ? "Opening secure payment…" : "Pay now — Instant Book"}
+          </button>
+          {!isBP && (
+            <div style={{ color: "#b91c1c", marginTop: 10 }}>
+              Instant booking isn’t available for this property.
+            </div>
+          )}
+        </div>
+
+        <TermsFooter />
+      </div>
+    </div>
   );
 };
 

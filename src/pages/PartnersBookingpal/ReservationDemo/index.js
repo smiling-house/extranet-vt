@@ -12,7 +12,7 @@ import { v4 as uuidv4 } from "uuid";
 import AuthService from "../../../services/auth.service";
 import constants from "../../../Util/constants";
 import { bpUpsell } from "../../../Util/bpUpsell";
-import { detectNonRefundable } from "../../../Util/bookingTerms";
+import { detectNonRefundable, smilingHouseCancellationCopy, cancellationForDates } from "../../../Util/bookingTerms";
 import { loadFlywireSDK, buildInstantConfig, resolveFlywireCharge } from "../../../Util/flywireInstant";
 import swal from "sweetalert";
 
@@ -375,6 +375,11 @@ const ReservationDemo = ({ listing, onClose }) => {
   const onCancel = () =>
     wrap("Cancel reservation", () => AuthService.bpCancelReservation({ confirmation_code: confirmationCode, confirmation_id: confirmationId }));
 
+  // Smiling House cancellation overlay — shown to the guest before they pay
+  // (same copy/helpers as the property detail page + VT-FE reserve page).
+  const shCancel = smilingHouseCancellationCopy(listing?.data?.bookingTerms);
+  const shCancelForDates = startDate ? cancellationForDates(listing?.data?.bookingTerms, startDate) : null;
+
   return (
     <div
       className="modal fade show"
@@ -445,6 +450,30 @@ const ReservationDemo = ({ listing, onClose }) => {
                     )}
                     <span style={{ color: "#999", marginLeft: 10 }}>(net {quoteCurrency} {netTotal} · agency {quoteCurrency} {Math.round(agencyCommission)})</span>
                   </div>
+                )}
+              </div>
+              {/* Smiling House cancellation policy — shown before payment */}
+              <div style={{ marginTop: 12, fontSize: 13, color: "#555" }}>
+                <b>Cancellation policy:</b>
+                {shCancel.nonRefundable && (
+                  <span style={{ marginLeft: 8, padding: "2px 8px", borderRadius: 4, background: "#fde8e8", color: "#b91c1c", fontWeight: 700, fontSize: 12 }}>
+                    Non-refundable
+                  </span>
+                )}
+                {shCancel.lines.map((line, i) => (
+                  <div key={i} style={{ marginTop: 4 }}>{line}</div>
+                ))}
+                {shCancelForDates && (
+                  <div style={{ marginTop: 6, padding: "6px 10px", borderRadius: 4, background: "#eef6ff", color: "#0b5cad", fontWeight: 600 }}>
+                    {shCancelForDates.message}
+                  </div>
+                )}
+                {shCancel.windows && (
+                  <ul className="px-4" style={{ marginTop: 4, marginBottom: 0 }}>
+                    {shCancel.windows.map((w, i) => (
+                      <li key={i}>{w.label}</li>
+                    ))}
+                  </ul>
                 )}
               </div>
               <div style={{ marginTop: 10 }}>

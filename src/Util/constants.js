@@ -39,6 +39,7 @@ export const PATH_WISH_LIST = '/wishlist';
 export const PATH_COLLECTIONS = '/collections';
 export const PATH_INTOUCH = '/intouch';
 export const PATH_FAQ = '/faq';
+export const PATH_TERMS_CONDITIONS = '/terms-and-conditions';
 export const PATH_ADMIN = '/admin';
 export const PATH_PARTNERS = '/partners';
 export const PATH_PARTNERS_RU = '/partners-ru';

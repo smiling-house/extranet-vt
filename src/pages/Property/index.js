@@ -48,6 +48,7 @@ import dayjs from "dayjs";
 import goBack from "../../assets/go-back.svg";
 import makeCalculations from "../../Hooks/makeCalculations.jsx";
 import { formatBookingTerms, smilingHouseCancellationCopy, cancellationForDates } from "../../Util/bookingTerms.js";
+import { instantBookState } from "../../Util/instantBook";
 import { UPSALE, AGENCY_COMMISION } from "../../Util/constants";
 import LoadingBox from '../../components/LoadingBox';
 import swal from "sweetalert";
@@ -225,6 +226,11 @@ property,
   const [exchangeRate, setExchangeRate] = useState(1);
   const [refreshPrice, setRefreshPrice] = useState((price?.totalAmount + price?.totalTaxes) * exchangeRate);
   const [modalIsOpen, setModalIsOpen] = useState(false);
+  // Instant Book: detail-page popup (free-text guest details) → reserve page → auto-open Flywire.
+  const emptyInstant = { firstName: "", lastName: "", middleName: "", email: "", phone: "", address: "", city: "", state: "", postalCode: "", country: "" };
+  const [instantOpen, setInstantOpen] = useState(false);
+  const [instantForm, setInstantForm] = useState(emptyInstant);
+  const [instantErr, setInstantErr] = useState("");
   const formatDates = (date) => {
     return dayjs(date).format('DD-MM-YYYY')
   };
@@ -579,6 +585,31 @@ property,
         activeRatePlan
       });
   };
+
+  // Instant Book flow — same nav-state as doBook, plus the free-text guest
+  // details + autoInstant so the reserve page opens Flywire automatically.
+  const onInstantField = (name) => (e) => setInstantForm((p) => ({ ...p, [name]: e.target.value }));
+  const closeInstant = () => { setInstantOpen(false); setInstantForm(emptyInstant); setInstantErr(""); };
+  const openInstant = () => { setInstantForm(emptyInstant); setInstantErr(""); setInstantOpen(true); };
+  const submitInstant = () => {
+    const f = instantForm;
+    const required = ["firstName", "lastName", "email", "phone", "address", "city", "country"];
+    if (required.some((k) => !String(f[k] || "").trim())) { setInstantErr("Please fill in all required (*) fields."); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email.trim())) { setInstantErr("Enter a valid email address."); return; }
+    setInstantErr("");
+    setInstantOpen(false);
+    history.push(PATH_RESERVE, {
+      property, xdata, agency, agent,
+      totalPrice: price?.totalAmount, security: price?.security,
+      selectedCurrency, activeRatePlan,
+      autoInstant: true,
+      client: { ...f },
+    });
+  };
+  // Show the Instant Book button for BookingPal listings unless instant book is
+  // explicitly turned OFF (mirrors the hub instant-book logic).
+  const _instantState = instantBookState({ xdata, hubId: property?._id });
+  const showInstant = String(property?._id || "").startsWith("BP-") && _instantState.override !== false;
 
   if (property && property !== undefined) {
     let searchPropertiesArray = [];
@@ -985,10 +1016,10 @@ property,
                           </ul>
                         )}
                         <br />
-                        <div className="link18-bold">
+                        <a className="link18-bold" href="/terms-and-conditions" target="_blank" rel="noopener noreferrer">
                           Click here to view complete property terms &
                           conditions
-                        </div>
+                        </a>
                       </div>
                     </div>
                   </div>
@@ -1118,6 +1149,19 @@ property,
                             text="Book this Property Now"
                           />
                         )}
+                      {showInstant &&
+                        dateFrom !== null &&
+                        dateTo !== null &&
+                        dateFrom !== "null" &&
+                        dateTo !== "null" &&
+                        prop?.tags.indexOf("onDemand") === -1 && (
+                          <Button
+                            onClick={openInstant}
+                            style={{ width: "100%", margin: "0 0 10px" }}
+                            variant="green"
+                            text="⚡ Instant Book"
+                          />
+                        )}
                       {dateFrom !== null &&
                         dateTo !== null &&
                         dateFrom !== "null" &&
@@ -1145,6 +1189,34 @@ property,
                           </>
                         )}
                     </div>
+                    {instantOpen && (
+                      <div onClick={closeInstant} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 1060, display: "flex", alignItems: "flex-start", justifyContent: "center", overflowY: "auto", padding: "60px 12px" }}>
+                        <div onClick={(e) => e.stopPropagation()} style={{ background: "#fff", borderRadius: 10, width: "100%", maxWidth: 640, padding: 20, boxShadow: "0 10px 40px rgba(0,0,0,0.25)" }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                            <h4 style={{ margin: 0 }}>Instant Book — guest details</h4>
+                            <button onClick={closeInstant} style={{ border: "none", background: "none", fontSize: 26, cursor: "pointer", lineHeight: 1 }}>&times;</button>
+                          </div>
+                          <p style={{ color: "#666", marginTop: 0 }}>Enter the guest's details — you'll be taken to secure payment to confirm the booking instantly.</p>
+                          <div className="row">
+                            <div className="col-md-4 mb-2"><label>First name *</label><input className="form-control" value={instantForm.firstName} onChange={onInstantField("firstName")} maxLength={60} /></div>
+                            <div className="col-md-4 mb-2"><label>Last name *</label><input className="form-control" value={instantForm.lastName} onChange={onInstantField("lastName")} maxLength={60} /></div>
+                            <div className="col-md-4 mb-2"><label>Middle name</label><input className="form-control" value={instantForm.middleName} onChange={onInstantField("middleName")} maxLength={60} /></div>
+                            <div className="col-md-4 mb-2"><label>E-mail *</label><input type="email" className="form-control" value={instantForm.email} onChange={onInstantField("email")} maxLength={120} /></div>
+                            <div className="col-md-4 mb-2"><label>Phone *</label><input type="tel" className="form-control" value={instantForm.phone} onChange={onInstantField("phone")} maxLength={18} placeholder="+41 79 123 45 67" /></div>
+                            <div className="col-md-4 mb-2"><label>Country *</label><input className="form-control" value={instantForm.country} onChange={onInstantField("country")} maxLength={60} /></div>
+                            <div className="col-md-6 mb-2"><label>Address *</label><input className="form-control" value={instantForm.address} onChange={onInstantField("address")} maxLength={120} /></div>
+                            <div className="col-md-2 mb-2"><label>City *</label><input className="form-control" value={instantForm.city} onChange={onInstantField("city")} maxLength={60} /></div>
+                            <div className="col-md-2 mb-2"><label>State</label><input className="form-control" value={instantForm.state} onChange={onInstantField("state")} maxLength={60} /></div>
+                            <div className="col-md-2 mb-2"><label>Zip</label><input className="form-control" value={instantForm.postalCode} onChange={onInstantField("postalCode")} maxLength={20} /></div>
+                          </div>
+                          {instantErr && <div style={{ color: "#b91c1c", margin: "6px 0" }}>{instantErr}</div>}
+                          <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 12 }}>
+                            <button className="btn btn-outline-secondary" onClick={closeInstant}>Cancel</button>
+                            <button className="btn btn-success" onClick={submitInstant}>Continue to payment</button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                     {/* <div className="d-flex justify-content-center mt-1">
                       <button onClick={openModal}>RESERVATION</button>
                       <Modal
