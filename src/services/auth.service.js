@@ -79,6 +79,19 @@ const getUnifiedQuote = async ({ listingId, checkIn, checkOut, guests, currency 
         headers: constants.X_API_KEY ? { 'x-api-key': constants.X_API_KEY } : {},
     })
 }
+// Unified reservation-CREATE — the create counterpart to getUnifiedQuote. POSTs
+// to <SHUB_URL>/api/booking/create; the hub dispatches by the listingId prefix,
+// re-quotes NET server-side, and returns { ok, source, reservationId,
+// confirmationCode }. Same auth as the quote. A stable idempotencyKey (the
+// flywireCallbackId) keeps the create replay-safe — no double channel booking.
+const bookingCreate = async ({ listingId, checkIn, checkOut, guests, currency, guest, idempotencyKey }) => {
+    return userRequest.post(constants.SHUB_URL + `/api/booking/create`,
+        { listingId, checkIn, checkOut, guests, currency, guest },
+        { headers: {
+            ...(constants.X_API_KEY ? { 'x-api-key': constants.X_API_KEY } : {}),
+            ...(idempotencyKey ? { 'Idempotency-Key': String(idempotencyKey) } : {}),
+        } })
+}
 const bpQuotePreview = async (params) => {
     // params: { reservation_id, start_date, nights, number_of_guests }
     return userRequest.get(constants.SHUB_URL + `/local/bookingpal/quote-preview`, { params })
@@ -700,6 +713,7 @@ const AuthService = {
     bpCheckAvailability,
     bpQuote,
     getUnifiedQuote,
+    bookingCreate,
     bpQuotePreview,
     bpCreateReservation,
     bpReservationDetails,

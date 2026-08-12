@@ -306,6 +306,7 @@ const ReservationDemo = ({ listing, onClose }) => {
     const pending = {
       listing_id: listingId,
       start_date: startDate,
+      check_out: endISO,                      // YYYY-MM-DD checkout for /api/booking/create
       nights: Number(nights),
       number_of_guests: Number(numberOfGuests),
       currency: quoteCurrency,                // native currency for the CHANNEL total
@@ -351,19 +352,17 @@ const ReservationDemo = ({ listing, onClose }) => {
     // Raw operator create (no Flywire). Payment for real bookings goes through
     // the "Book & Pay" flow above; this sends the quote NET to the channel.
     const body = await wrap("Create reservation", () =>
-      AuthService.bpCreateReservation({
-        listing_id: listingId,
-        start_date: startDate,
-        nights: Number(nights),
-        number_of_guests: Number(numberOfGuests),
-        total: Number(netTotal || 0),
+      AuthService.bookingCreate({
+        listingId: `BP-${listingId}`,
+        checkIn: startDate,
+        checkOut: addDaysISO(startDate, Number(nights)),
+        guests: Number(numberOfGuests),
         currency: quoteCurrency || "USD",
         guest: { name: guestName, email: guestEmail, phone: guestPhone },
       })
     );
-    const r = body?.result;
-    if (r?.confirmation_id) setConfirmationId(r.confirmation_id);
-    if (r?.confirmation_code) setConfirmationCode(r.confirmation_code);
+    if (body?.reservationId) setConfirmationId(body.reservationId);
+    if (body?.confirmationCode) setConfirmationCode(body.confirmationCode);
   };
 
   const onDetails = () =>

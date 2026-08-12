@@ -85,24 +85,25 @@ const RequestToBookFlywire = () => {
         let confirmationId = pending.bpConfirmationId || "";
         let confirmationCode = pending.bpConfirmationCode || "";
         if (!pending.bpDone) {
-          const bpResp = await AuthService.bpCreateReservation({
-            listing_id: pending.listing_id,
-            start_date: pending.start_date,
-            nights: Number(pending.nights),
-            number_of_guests: Number(pending.number_of_guests),
-            total: Number(pending.netTotal),        // NET to the channel; guest was charged the up-sell
+          // Unified channel create — the hub dispatches BP by the listingId prefix,
+          // re-quotes NET server-side, and returns { ok, source, reservationId,
+          // confirmationCode }. Idempotency-Key = the flywireCallbackId keeps the
+          // create replay-safe (replaces the old BP-side flywireCallbackId guard).
+          const bpResp = await AuthService.bookingCreate({
+            listingId: `BP-${pending.listing_id}`,
+            checkIn: pending.start_date,
+            checkOut: pending.check_out,
+            guests: Number(pending.number_of_guests),
             currency: pending.currency,
-            guest: pending.guest,
-            flywireCallbackId: confirmation,
-            flywireReference: reference,
+            guest: pending.guest,                    // { name, email, phone }
+            idempotencyKey: confirmation,
           });
           const bpBody = bpResp?.data;
-          if (bpBody && bpBody.success === false) {
-            throw new Error(bpBody.detail?.message || bpBody.detail || bpBody.error || "BookingPal create failed");
+          if (!bpBody || bpBody.ok !== true) {
+            throw new Error(bpBody?.detail || bpBody?.error || "BookingPal create failed");
           }
-          const bpResult = bpBody?.result || {};
-          confirmationId = bpResult.confirmation_id || "";
-          confirmationCode = bpResult.confirmation_code || "";
+          confirmationId = String(bpBody.reservationId || "");
+          confirmationCode = String(bpBody.confirmationCode || "");
           // Persist so a retry (after an addReservation failure) does NOT
           // re-book the channel — go straight to step (b).
           pending.bpDone = true;
