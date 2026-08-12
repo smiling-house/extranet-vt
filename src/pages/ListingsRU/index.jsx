@@ -878,7 +878,6 @@ return (
                 <option value="With watermark/Picture information">With watermark/Picture information</option>
                 <option value="Not feet quality">Not feet quality</option>
                 <option value="Existing as SH partner">Existing as SH partner</option>
-                <option value="Existing as SH partner">Existing as SH partner</option>
                 <option value="Other">Other</option>
             </select>
             </section>

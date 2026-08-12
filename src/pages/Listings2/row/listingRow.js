@@ -1,4 +1,5 @@
 import Checkbox from "../../../components/Checkbox";
+import { partnerStatusReason } from "../../../Util/statusReason";
 import React, { useCallback, useEffect, useState } from "react"
 import { PATH_PROPERTY } from "../../../Util/constants"
 import { useHistory } from "react-router-dom"
@@ -902,12 +903,18 @@ setCurrentListingStatusUpdatedBy(agentData.firstName);
       <h4>
         {currentListingStatus}
         
-        { (currentListingStatus==='Declined' && xdata.autodecline===true) &&
+        { (currentListingStatus==='Declined' && (xdata.autodecline===true || xdata.autoDecline===true)) &&
           <h4 style={{ backgroundColor: "red" }}>Auto Declined</h4>
         }
 
         { (extranet_vt_logged_in_role==='admin' && currentListingStatus==='Declined' &&  xdata.declineReason !== '') &&
           <p><i>({xdata.declineReason})</i></p>
+        }
+
+        { (extranet_vt_logged_in_role!=='admin' && partnerStatusReason(currentListingStatus, xdata) !== '') &&
+          <p style={{ fontSize: "13px", fontWeight: "normal", color: "#667085" }}>
+            <i>{partnerStatusReason(currentListingStatus, xdata)}</i>
+          </p>
         }
 
         {(extranet_vt_logged_in_role==='admin' && currentListingStatusUpdatedBy != null) &&

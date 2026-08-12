@@ -1,4 +1,5 @@
 import Checkbox from "../../../components/Checkbox";
+import { partnerStatusReason } from "../../../Util/statusReason";
 import React, { useCallback, useEffect, useState } from "react"
 import { PATH_PROPERTY } from "../../../Util/constants"
 import { useHistory } from "react-router-dom"
@@ -829,6 +830,12 @@ console.log('NEW REGION:::', response)
 
         { (extranet_vt_logged_in_role==='admin' && xdata.status==='Declined' &&  xdata.declineReason !== '') &&
           <p><i>({xdata.declineReason})</i></p>
+        }
+
+        { (extranet_vt_logged_in_role!=='admin' && partnerStatusReason(xdata.status, xdata) !== '') &&
+          <p style={{ fontSize: "13px", fontWeight: "normal", color: "#667085" }}>
+            <i>{partnerStatusReason(xdata.status, xdata)}</i>
+          </p>
         }
 
         {(extranet_vt_logged_in_role==='admin' && xdata?.statusUpdatedBy != null) &&
