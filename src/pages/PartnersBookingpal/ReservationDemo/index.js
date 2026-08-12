@@ -372,7 +372,7 @@ const ReservationDemo = ({ listing, onClose }) => {
     wrap("Modify reservation", () => AuthService.bpModifyReservation({ confirmation_id: confirmationId, start_date: startDate, nights: Number(nights), body: {} }));
 
   const onCancel = () =>
-    wrap("Cancel reservation", () => AuthService.bpCancelReservation({ confirmation_code: confirmationCode, confirmation_id: confirmationId }));
+    wrap("Cancel reservation", () => AuthService.cancelBooking(confirmationId));
 
   // Smiling House cancellation overlay — shown to the guest before they pay
   // (same copy/helpers as the property detail page + VT-FE reserve page).

@@ -1,7 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
 import AuthService from "../../services/auth.service";
-import axios from "axios";
-import moment from "moment/moment";
 import {
   FiCalendar,
   FiChevronLeft,
@@ -14,7 +12,6 @@ import { IoIosSearch, IoMdClose } from "react-icons/io";
 
 import Layout from "../../components/Layout/index.js";
 import Paging from "../../components/Paging";
-import constants from "../../Util/constants";
 // Reuse the PMS pages' design system (hero / toolbar / view-switcher / table /
 // grid / pills / paging), then a few reservation-specific overrides.
 import "../PartnersListView/PartnersListView.scss";
@@ -195,10 +192,6 @@ const Reservations = (props) => {
     const reservationID = r?.reservationID;
     if (!reservationID) return;
 
-    const pid = typeof r?.propertyId === "string" ? r.propertyId : "";
-    const isRUApiProperty = pid.startsWith("RU-") || pid.startsWith("G-");
-    const isHostawayApiProperty = pid.startsWith("HW-");
-    const isBookingpalProperty = pid.startsWith("BP-");
     const isApproved = String(r?.status || "").toLowerCase() === "approved";
     const wasCharged = r?.payment_type === "instant" && r?.flywireReference;
 
@@ -221,98 +214,20 @@ const Reservations = (props) => {
 
     setCancelingId(reservationID);
     try {
-      // 1) Cancel/decline on channel when required.
-      if (isHostawayApiProperty) {
-        // Hostaway: only cancel on channel if the reservation was approved.
-        if (isApproved) {
-          const partnerReservationID = r?.partnerReservationID;
-          if (!partnerReservationID) {
-            throw new Error("Missing partnerReservationID for Hostaway cancellation.");
+      // 1) Cancel on the channel via the unified endpoint — the hub finds the
+      //    reservation by its channelReservationId (= bpConfirmationId) and
+      //    dispatches the per-PM cancel (idempotent). A channel failure THROWS,
+      //    so the record is never declined while the channel stays booked.
+      //    Pending declines skip this (no channel booking yet).
+      if (isApproved && r?.bpConfirmationId) {
+        try {
+          await AuthService.cancelBooking(String(r.bpConfirmationId));
+        } catch (e) {
+          if (e?.response?.status === 404) {
+            throw new Error("This reservation predates the unified booking system and can't be cancelled automatically — cancel it directly on the PM portal, then it can be marked declined.");
           }
-          const cancelResp = await axios.put(
-            `${constants.SHUB_URL}/hostaway-cancel-reservation`,
-            {
-              propertyId: pid, // hub resolves accountId from this
-              reservationId: Number(partnerReservationID),
-              cancelledBy: "host",
-            },
-            { headers: { "x-api-key": constants.X_API_KEY } }
-          );
-          if (cancelResp?.data?.success !== true) {
-            throw new Error(cancelResp?.data?.error || "Failed to cancel reservation on Hostaway.");
-          }
-        }
-      } else if (isBookingpalProperty) {
-        // BookingPal: only cancel on channel if approved (the BP-side
-        // reservation + calendar block exist then). Same controller
-        // (cancelReservation) VT-FE's /bookingpal-cancel-reservation uses —
-        // cancels on channel, marks stored rows cancelled, frees the calendar.
-        if (isApproved) {
-          if (!r?.bpConfirmationCode) {
-            throw new Error("Missing BookingPal confirmation code for cancellation.");
-          }
-          const cancelResp = await AuthService.bpCancelReservation({
-            confirmation_code: String(r.bpConfirmationCode),
-            confirmation_id: r?.bpConfirmationId ? String(r.bpConfirmationId) : "",
-          });
-          const cancelData = cancelResp?.data;
-          if (cancelData && cancelData.success === false) {
-            throw new Error(cancelData?.error || "Failed to cancel reservation on BookingPal.");
-          }
-        }
-      } else if (isRUApiProperty) {
-        // RU / group: only cancel on channel if approved.
-        if (isApproved) {
-          const partnerReservationID = r?.partnerReservationID;
-          if (!partnerReservationID) {
-            throw new Error("Missing partnerReservationID for RU cancellation.");
-          }
-          const cancelResp = await axios.post(
-            `${constants.SHUB_URL}/ru-cancelreservation`,
-            {
-              partnerReservationID: String(partnerReservationID),
-              reservationId: String(partnerReservationID),
-            },
-            { headers: { "x-api-key": constants.X_API_KEY } }
-          );
-          const cancelData = cancelResp?.data;
-          const cancelOk = cancelData?.status === true || cancelData?.success === true;
-          if (!cancelOk) {
-            throw new Error(cancelData?.message || "Failed to cancel reservation on RU channel.");
-          }
-        }
-      } else {
-        // Legacy channel (Guesty / direct) — mirrors VT-FE's /reserve-cancel.
-        const body = JSON.stringify({
-          client: {
-            firstName: r?.guestFirstName,
-            lastName: r?.guestLastName,
-            phone: r?.guestPhoneNumbers,
-            email: r?.guestEmail,
-          },
-          dateFrom: moment(r?.startDate).format("MM.DD.YYYY"),
-          dateTo: moment(r?.endDate).format("MM.DD.YYYY"),
-          currency: r?.currency,
-          adults: r?.adults,
-          children: r?.children,
-          resChannel: "VT",
-          reservationId: "Villatracker_" + r?.reservationID,
-          ResStatus: "Cancel",
-        });
-        const channelResp = await axios.request({
-          method: "put",
-          maxBodyLength: Infinity,
-          url: constants.SHUB_URL + "/reserve-cancel/" + r?.propertyId,
-          headers: {
-            Authorization:
-              "bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2NvdW50X29iamVjdF9pZCI6Mzk5MTU4NzUsInVzZXJfaWQiOiI0MDY2NTAyMSIsInVzZXJfbmFtZSI6InN5c3RlbStsdW5hLTh5NXljIiwic2NvcGUiOlsiYnJpdm8uYXBpIl0sImlzc3VlZCI6IjE2NzUxMTI3NDYxMzYiLCJleHAiOjE2NzUxMTI4MDYsInNlcnZpY2VfdG9rZW4iOm51bGwsImF1dGhvcml0aWVzIjpbIlJPTEVfU1VQRVJfQURNSU4iLCJST0xFX0FETUlOIl0sImp0aSI6ImVmNzY1MDIyLTZhNzctNGZkMy04Njg1LTFhZTFhZmEzOTJhZSIsImNsaWVudF9pZCI6IjkzOTFlYjVkLWUwNmUtNDY4MS1iNTdhLWQwZTU3NDhhM2RlZSIsIndoaXRlX2xpc3RlZCI6ZmFsc2V9.N9MIeiLyrT3hBUtMJsTvwbYW5Z_o7ZSBuZmir2ytrb8DiE4MoXcmh8C6KriWhmnRqUnSMBRtuLcauVbqjFTorOcWMOd2RQGmisPgXBm1tHT30Hl0i57rQuLZHAVW201ot-TdQwW9oEZ3n2HTGu_A6tRhTizVmG6NRAd5KhOB2_c",
-            "Account-Id": "640625ea0620e40031b8597d",
-            "Content-Type": "application/json",
-          },
-          data: body,
-        });
-        if (!channelResp?.data?.success) {
-          throw new Error(channelResp?.data?.error || "Failed to cancel reservation on channel!");
+          const d = e?.response?.data;
+          throw new Error(d?.detail ? `Channel rejected the cancellation: ${typeof d.detail === 'string' ? d.detail : JSON.stringify(d.detail)}` : (d?.error || e?.message || 'Failed to cancel the reservation on the channel'));
         }
       }
 

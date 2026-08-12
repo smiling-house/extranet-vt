@@ -92,6 +92,16 @@ const bookingCreate = async ({ listingId, checkIn, checkOut, guests, currency, g
             ...(idempotencyKey ? { 'Idempotency-Key': String(idempotencyKey) } : {}),
         } })
 }
+// Unified reservation-CANCEL — the cancel counterpart to bookingCreate. POSTs
+// { reservationId } (the channelReservationId returned at create, stored on the
+// reservation-of-record as bpConfirmationId) to <SHUB_URL>/api/booking/cancel;
+// the hub finds the reservation and dispatches the per-PM cancel (idempotent, a
+// 2nd call → duplicate). Same auth as create. Throws on non-2xx (incl. 404 for a
+// reservation not born from the unified flow).
+const cancelBooking = async (reservationId) => {
+    return userRequest.post(constants.SHUB_URL + `/api/booking/cancel`, { reservationId },
+        { headers: constants.X_API_KEY ? { 'x-api-key': constants.X_API_KEY } : {} })
+}
 const bpQuotePreview = async (params) => {
     // params: { reservation_id, start_date, nights, number_of_guests }
     return userRequest.get(constants.SHUB_URL + `/local/bookingpal/quote-preview`, { params })
@@ -714,6 +724,7 @@ const AuthService = {
     bpQuote,
     getUnifiedQuote,
     bookingCreate,
+    cancelBooking,
     bpQuotePreview,
     bpCreateReservation,
     bpReservationDetails,
