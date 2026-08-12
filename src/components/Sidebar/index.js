@@ -119,6 +119,9 @@ const Sidebar = ({ activeMenu, setActiveMenu, handleToggleMenu, showOrHideSideBa
         id: 'partners',
         title: 'Partner Management',
         icon: <FiUsers size={20} />,
+        // Clicking the header itself opens Master Search (cross-hub, all PMS)
+        // in addition to expanding the per-source pages beneath it.
+        headerPath: PATH_MASTER_SEARCH,
         items: [
           // New RU/DH source-partitioned pages — primary going forward.
           { text: "Guesty PMs", path: PATH_PARTNERS_GUESTY_DH, icon: <InitialBadge letters="G" tint="green" /> },
@@ -197,7 +200,17 @@ const Sidebar = ({ activeMenu, setActiveMenu, handleToggleMenu, showOrHideSideBa
       <div
         key={group.id}
         className={`sidebar-group-header ${isExpanded || hasActiveItem ? 'active' : ''}`}
-        onClick={() => setExpandedGroup(isExpanded ? null : group.id)}
+        onClick={() => {
+          // A group with headerPath navigates on header click (and stays
+          // expanded); plain groups keep the expand/collapse toggle.
+          if (group.headerPath) {
+            setExpandedGroup(group.id);
+            if (screenSize < 800) handleToggleMenu(false);
+            history.push(group.headerPath);
+          } else {
+            setExpandedGroup(isExpanded ? null : group.id);
+          }
+        }}
         data-tooltip={group.title}
       >
         <div className="sidebar-group-icon">
