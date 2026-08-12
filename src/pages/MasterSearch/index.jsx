@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import React, { useRef, useState } from "react"
 import axios from "axios"
 import Layout from "../../components/Layout"
 import pageBg from '../../assets/bk_pool.png'
@@ -6,8 +6,11 @@ import constants from "../../Util/constants"
 import { ShubAuth } from "../../core"
 import "./MasterSearch.scss"
 
-// One search box across every source/PMS on BOTH hubs. Each hub is queried in
-// parallel with the same keyword; a failing hub reports its error without
+// One search box across every source/PMS on BOTH hubs, in two modes:
+//   properties — server-side keyword search on /local/listings (id/title/nickname)
+//   partners   — /local/partners fetched once per hub, filtered client-side
+//                across pmName/contactName/email/accountId/phone
+// Each hub is queried in parallel; a failing hub reports its error without
 // hiding the other hub's results.
 const HUBS = [
     { key: 'VT', label: 'VT Hub', url: constants.SHUB_URL },            // api.villatracker.com
@@ -33,6 +36,10 @@ const pmsOf = (item) => {
     return { label: src || cs || 'Unknown / Legacy', cls: 'pms-legacy' }
 }
 
+// Partner docs carry `source` (G/RU/BP/HW/...) and `provider`
+// (guesty_channel_api, smilinghouse_channel_api, bookingpal_api, ...).
+const partnerPmsOf = (p) => pmsOf({ source: p?.source, channelSource: '' })
+
 const statusCls = (status) => {
     const s = String(status || '').toLowerCase()
     if (s === 'approved') return 'st-approved'
@@ -43,20 +50,25 @@ const statusCls = (status) => {
 
 const MasterSearch = ({ agent, agency, token, screenSize, activeMenu, handleToggleMenu, setActiveMenu }) => {
 
+    const [mode, setMode] = useState('properties')   // 'properties' | 'partners'
     const [keyword, setKeyword] = useState('')
     const [statusFilter, setStatusFilter] = useState('')
     const [listedFilter, setListedFilter] = useState('All')
     const [hubsEnabled, setHubsEnabled] = useState({ VT: true, SH: true })
     const [isLoading, setIsLoading] = useState(false)
     const [rows, setRows] = useState([])
+    const [partnerRows, setPartnerRows] = useState([])
     const [hubResults, setHubResults] = useState({})   // key -> {count, shown, error}
     const [searched, setSearched] = useState(false)
+    // Partner lists are fetched once per hub then filtered locally per keystroke.
+    const partnersCache = useRef({})                   // key -> array of partner docs
 
     const hubRequest = axios.create({
         headers: { Authorization: `Bearer ${ShubAuth}` }
     })
 
-    const searchHub = async (hub) => {
+    // ── properties mode ────────────────────────────────────────────────────
+    const searchHubListings = async (hub) => {
         const params = {
             extranetSearchListingsKeyWord: keyword.trim(),
             isListed: listedFilter,
@@ -75,6 +87,27 @@ const MasterSearch = ({ agent, agency, token, screenSize, activeMenu, handleTogg
         }
     }
 
+    // ── partners mode ──────────────────────────────────────────────────────
+    const loadHubPartners = async (hub) => {
+        if (partnersCache.current[hub.key]) return partnersCache.current[hub.key]
+        const response = await hubRequest.get(`${hub.url}/local/partners`, { params: { limit: 5000 } })
+        const partners = response?.data?.partners || []
+        partnersCache.current[hub.key] = partners
+        return partners
+    }
+
+    const searchHubPartners = async (hub) => {
+        const kw = keyword.trim().toLowerCase()
+        const partners = await loadHubPartners(hub)
+        const matches = partners.filter(p =>
+            [p.pmName, p.contactName, p.email, p.accountId, p.pmPhone]
+                .some(f => String(f || '').toLowerCase().includes(kw)))
+        return {
+            count: matches.length,
+            items: matches.slice(0, RESULTS_PER_HUB).map(p => ({ ...p, __hub: hub.key })),
+        }
+    }
+
     const doSearch = async () => {
         const kw = keyword.trim()
         if (kw.length < 2) return
@@ -82,7 +115,8 @@ const MasterSearch = ({ agent, agency, token, screenSize, activeMenu, handleTogg
         setSearched(true)
 
         const activeHubs = HUBS.filter(h => hubsEnabled[h.key])
-        const settled = await Promise.allSettled(activeHubs.map(searchHub))
+        const searchFn = mode === 'partners' ? searchHubPartners : searchHubListings
+        const settled = await Promise.allSettled(activeHubs.map(searchFn))
 
         const nextRows = []
         const nextHubResults = {}
@@ -97,13 +131,27 @@ const MasterSearch = ({ agent, agency, token, screenSize, activeMenu, handleTogg
             }
         })
 
-        nextRows.sort((a, b) =>
-            String(a?.listing?.nickname || a?.listing?.title || '')
-                .localeCompare(String(b?.listing?.nickname || b?.listing?.title || '')))
-
-        setRows(nextRows)
+        if (mode === 'partners') {
+            nextRows.sort((a, b) => String(a?.pmName || '').localeCompare(String(b?.pmName || '')))
+            setPartnerRows(nextRows)
+            setRows([])
+        } else {
+            nextRows.sort((a, b) =>
+                String(a?.listing?.nickname || a?.listing?.title || '')
+                    .localeCompare(String(b?.listing?.nickname || b?.listing?.title || '')))
+            setRows(nextRows)
+            setPartnerRows([])
+        }
         setHubResults(nextHubResults)
         setIsLoading(false)
+    }
+
+    const switchMode = (m) => {
+        setMode(m)
+        setRows([])
+        setPartnerRows([])
+        setHubResults({})
+        setSearched(false)
     }
 
     const copyId = (id) => {
@@ -130,6 +178,8 @@ const MasterSearch = ({ agent, agency, token, screenSize, activeMenu, handleTogg
         )
     }
 
+    const emptyState = searched && !isLoading && rows.length === 0 && partnerRows.length === 0
+
     return (
         <Layout
             pageTitle="Master Search"
@@ -145,30 +195,50 @@ const MasterSearch = ({ agent, agency, token, screenSize, activeMenu, handleTogg
                 <div className="master-search-main">
                     <h1>Master Search — All Sources</h1>
                     <div className="master-search-subtitle">
-                        One search across both hubs and every PMS/channel (Guesty, RU-DH, Rentals United, BookingPal, Hostaway, BART, Invenio, External). Matches property ID, title or nickname.
+                        One search across both hubs and every PMS/channel (Guesty, RU-DH, Rentals United, BookingPal, Hostaway, BART, Invenio, External).
+                    </div>
+
+                    <div className="master-search-modes">
+                        <button
+                            className={`master-search-mode ${mode === 'properties' ? 'active' : ''}`}
+                            onClick={() => switchMode('properties')}
+                        >Properties</button>
+                        <button
+                            className={`master-search-mode ${mode === 'partners' ? 'active' : ''}`}
+                            onClick={() => switchMode('partners')}
+                        >Partners / PMs</button>
+                        <span className="master-search-mode-hint">
+                            {mode === 'properties'
+                                ? 'Searching properties by ID, title or nickname'
+                                : 'Searching partner accounts by company/PM name, contact, email, phone or account ID'}
+                        </span>
                     </div>
 
                     <div className="master-search-bar">
                         <input
                             type="text"
                             className="form-control"
-                            placeholder="Property ID / Title / Nickname (min 2 chars)"
+                            placeholder={mode === 'properties'
+                                ? 'Property ID / Title / Nickname (min 2 chars)'
+                                : 'PM name / Contact / Email / Account ID (min 2 chars)'}
                             value={keyword}
                             autoFocus
                             onChange={(e) => setKeyword(e.target.value)}
                             onKeyDown={(e) => { if (e.key === 'Enter') doSearch() }}
                         />
-                        <select className="form-control" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-                            <option value="">Status: All</option>
-                            <option value="Approved">Approved</option>
-                            <option value="Pending">Pending</option>
-                            <option value="Declined">Declined</option>
-                        </select>
-                        <select className="form-control" value={listedFilter} onChange={(e) => setListedFilter(e.target.value)}>
-                            <option value="All">Listed + Unlisted</option>
-                            <option value="Listed">Listed only</option>
-                            <option value="Unlisted">Unlisted only</option>
-                        </select>
+                        {mode === 'properties' && <>
+                            <select className="form-control" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+                                <option value="">Status: All</option>
+                                <option value="Approved">Approved</option>
+                                <option value="Pending">Pending</option>
+                                <option value="Declined">Declined</option>
+                            </select>
+                            <select className="form-control" value={listedFilter} onChange={(e) => setListedFilter(e.target.value)}>
+                                <option value="All">Listed + Unlisted</option>
+                                <option value="Listed">Listed only</option>
+                                <option value="Unlisted">Unlisted only</option>
+                            </select>
+                        </>}
                         <button className="master-search-btn" disabled={isLoading || keyword.trim().length < 2} onClick={doSearch}>
                             {isLoading ? 'Searching…' : 'Search'}
                         </button>
@@ -190,7 +260,7 @@ const MasterSearch = ({ agent, agency, token, screenSize, activeMenu, handleTogg
 
                     {renderCounts()}
 
-                    {rows.length > 0 &&
+                    {mode === 'properties' && rows.length > 0 &&
                         <div style={{ overflowX: 'auto' }}>
                             <table className="master-search-table">
                                 <thead>
@@ -239,9 +309,49 @@ const MasterSearch = ({ agent, agency, token, screenSize, activeMenu, handleTogg
                         </div>
                     }
 
-                    {searched && !isLoading && rows.length === 0 &&
+                    {mode === 'partners' && partnerRows.length > 0 &&
+                        <div style={{ overflowX: 'auto' }}>
+                            <table className="master-search-table">
+                                <thead>
+                                    <tr>
+                                        <th>Hub</th>
+                                        <th>Source / PMS</th>
+                                        <th>Account ID</th>
+                                        <th>PM / Company</th>
+                                        <th>Contact</th>
+                                        <th>Email</th>
+                                        <th>Phone</th>
+                                        <th>Approved</th>
+                                        <th>Pending</th>
+                                        <th>Declined</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {partnerRows.map((p, idx) => {
+                                        const pms = partnerPmsOf(p)
+                                        return (
+                                            <tr key={`${p.__hub}-${p.accountId}-${idx}`}>
+                                                <td><span className={`ms-badge hub-${p.__hub.toLowerCase()}`}>{p.__hub}</span></td>
+                                                <td><span className={`ms-badge ${pms.cls}`}>{pms.label}</span></td>
+                                                <td className="ms-id" title="Click to copy" onClick={() => copyId(p.accountId)}>{p.accountId || '-'}</td>
+                                                <td>{p.pmName || '-'}</td>
+                                                <td>{p.contactName || '-'}</td>
+                                                <td>{p.email || '-'}</td>
+                                                <td>{p.pmPhone || '-'}</td>
+                                                <td><span className="ms-badge st-approved">{p.approved_properties_count ?? '-'}</span></td>
+                                                <td><span className="ms-badge st-pending">{p.pending_properties_count ?? '-'}</span></td>
+                                                <td><span className="ms-badge st-declined">{p.declined_properties_count ?? '-'}</span></td>
+                                            </tr>
+                                        )
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+
+                    {emptyState &&
                         <div style={{ color: '#6b7f92', padding: '30px 0', textAlign: 'center' }}>
-                            No listings matched "{keyword.trim()}" on the selected hubs.
+                            No {mode === 'partners' ? 'partners' : 'listings'} matched "{keyword.trim()}" on the selected hubs.
                         </div>
                     }
                 </div>
