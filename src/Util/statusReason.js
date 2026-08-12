@@ -6,8 +6,9 @@
 // comma-joined by the hubs ("TOO CHEAP, pmName APEEARS IN TITLE"). The
 // misspelled keys below are the values actually stored in Mongo — keep them.
 const REASON_MAP = {
+	// Their price is their price — state the floor, no "change your rate" ask.
 	'TOO CHEAP':
-		'Nightly rate is below the USD 400/night minimum — update the rate in your PMS and the listing goes live on the next sync.',
+		'Below our USD 400/night minimum nightly rate.',
 	'PMNAME APEEARS IN TITLE':
 		'Your company name appears in the listing title — titles must describe the property only. Rename it and it will be re-reviewed.',
 	'PMNAME APPEARS IN TITLE':
