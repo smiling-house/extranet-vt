@@ -10,6 +10,7 @@ import React, { useState } from "react";
 import { useHistory } from "react-router-dom";
 import { PATH_PROPERTY } from "../../../Util/constants";
 import { instantBookState, partnerInstantBookLabel } from "../../../Util/instantBook";
+import { partnerStatusReason, partnerStatusReasonList } from "../../../Util/statusReason";
 import "./listings-redesign.css";
 
 /* ── Inline icons (Phosphor-ish, currentColor) ───────────────────────────── */
@@ -36,6 +37,7 @@ const I = {
   search: <path d="M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16ZM21 21l-4.3-4.3" />,
   layers: <path d="M12 3 3 8l9 5 9-5-9-5ZM3 13l9 5 9-5M3 17.5l9 5 9-5" />,
   x: <path d="M18 6 6 18M6 6l12 12" />,
+  info: <path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18ZM12 11v5M12 7.6v.6" />,
   rows: <path d="M4 6h16M4 12h16M4 18h16" />,
   grid: <path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z" />,
   tableI: <path d="M3 5h18v14H3zM3 10h18M9 5v14" />,
@@ -87,6 +89,16 @@ const statusBadge = (status) => {
   return { cls: "warn", label: status || "Pending", icon: null };
 };
 
+/* Admins keep seeing the raw internal reason ("TOO CHEAP"); partners only ever
+   see the mapped wording from Util/statusReason.js. Both extranets are checked
+   so this file stays byte-identical between extranet-vt and extranet-sh. */
+const isAdminRole = () => {
+  try {
+    return ["extranet-vt-logged-in-role", "extranet-sh-logged-in-role"]
+      .some((k) => localStorage.getItem(k) === "admin");
+  } catch (e) { return false; }
+};
+
 /* Partner doc for the instant-book account default — the page stores it in
    localStorage on drill-down; read per render so a partner switch (which
    reloads or re-navigates) is always current. */
@@ -113,7 +125,11 @@ export const normalize = (it) => {
     country: a.country, region: a.state || xdata.region, city: a.city, zip: a.zipcode,
     weekday: p.basePrice, weekend: p.weekendBasePrice, currency: p.currency,
     weekDisc: p.weeklyPriceFactor, monthDisc: p.monthlyPriceFactor,
-    status: xdata.status, autodecline: xdata.autodecline,
+    status: xdata.status,
+    autodecline: xdata.autodecline === true || xdata.autoDecline === true,
+    rawReason: (xdata.declineReason || "").trim(),
+    reason: partnerStatusReason(xdata.status, xdata),
+    reasons: partnerStatusReasonList(xdata.status, xdata),
     mapped: !!(xdata.region && xdata.region !== "unmapped" && xdata.region !== ""),
     geo: !!a.zipcode,
     tags: xdata.tags || [],
@@ -192,11 +208,35 @@ const Cols = ({ d, mini }) => {
   );
 };
 
+/* ── Why a listing is not live ────────────────────────────────────────────────
+   Partners used to see a bare "Declined" chip with no explanation. The chip now
+   carries the mapped reason as its tooltip (works in every view, incl. the tight
+   grid/table cells) and the note below spells it out in full so nobody has to
+   hover to find out. Admins additionally get the raw internal reason. */
+const StatusNote = ({ d, compact }) => {
+  if (!d.reason) return null;
+  const admin = isAdminRole();
+  const declined = String(d.status).toLowerCase() === "declined";
+  return (
+    <div className={`lr-note ${declined ? "bad" : "warn"}${compact ? " sm" : ""}`}>
+      <span className="ic"><Icon d={I.info} size={compact ? 13 : 14} /></span>
+      <div className="tx">
+        <b>{declined ? "Why this listing was declined" : "Why this listing is not live yet"}</b>
+        {d.reasons.length > 1
+          ? <ul>{d.reasons.map((r, i) => <li key={i}>{r}</li>)}</ul>
+          : <span>{d.reasons[0] || d.reason}</span>}
+        {admin && d.rawReason &&
+          <em className="raw">Internal: {d.rawReason}{d.autodecline ? " · auto-declined" : ""}</em>}
+      </div>
+    </div>
+  );
+};
+
 const StatusBadges = ({ d, full }) => {
   const s = statusBadge(d.status);
   return (
     <>
-      <span className={`lr-badge ${s.cls}`}>{s.icon && <Icon d={s.icon} size={13} />}{s.label}</span>
+      <span className={`lr-badge ${s.cls}`} title={d.reason || s.label}>{s.icon && <Icon d={s.icon} size={13} />}{s.label}</span>
       {full && <span className={`lr-badge ${d.mapped ? "info" : "neutral"}`}><Icon d={I.link} size={13} />{d.mapped ? "Mapped" : "Unmapped"}</span>}
       {full && <span className="lr-badge neutral"><Icon d={I.geo} size={13} />{d.geo ? "Geo synced" : "No geo"}</span>}
     </>
@@ -270,6 +310,7 @@ export const ExpandedRow = ({ item, onView }) => {
       </div>
       <div className="lr-exp-rail">
         <div className="badges"><StatusBadges d={d} full /><InstantBookBadge ib={d.instantBook} /></div>
+        <StatusNote d={d} />
         <div className="spacer" />
         <button className="lr-btn primary" onClick={onView}><Icon d={I.eye} size={16} />View details</button>
         <div className="row2">
@@ -292,8 +333,9 @@ export const GridCard = ({ item, onView }) => {
       <div className="lr-card-body">
         <div className="lr-card-head">
           <span className="lr-card-title">{d.title}</span>
-          <span className={`lr-badge ${s.cls}`}>{s.icon && <Icon d={s.icon} size={12} />}{s.label}</span>
+          <span className={`lr-badge ${s.cls}`} title={d.reason || s.label}>{s.icon && <Icon d={s.icon} size={12} />}{s.label}</span>
         </div>
+        <StatusNote d={d} compact />
         <Loc d={d} />
         <div className="lr-card-caps"><Caps d={d} small /></div>
         <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}><InstantBookBadge ib={d.instantBook} compact /></div>
@@ -341,6 +383,7 @@ export const TableRow = ({ item, onView }) => {
           <StatusBadges d={d} full={false} />
           <span className={`lr-badge ${d.mapped ? "info" : "neutral"}`}><Icon d={I.link} size={12} />{d.mapped ? "Mapped" : "Unmapped"}</span>
           <InstantBookBadge ib={d.instantBook} compact />
+          <StatusNote d={d} compact />
           <div className="acts">
             <button className="lr-icobtn sm" title="View details" onClick={onView}><Icon d={I.eye} size={14} /></button>
             <button className="lr-icobtn sm" title="Share"><Icon d={I.share} size={14} /></button>

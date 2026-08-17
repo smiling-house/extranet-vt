@@ -40,16 +40,22 @@ function friendlyParts(raw) {
 	return out;
 }
 
-export function partnerStatusReason(status, xdata) {
+// One entry per distinct reason. Callers that have room (the listing-card status
+// note) render these as a list; the joined string form is below for tight spots.
+export function partnerStatusReasonList(status, xdata) {
 	const s = (status || '').toLowerCase();
-	if (s === 'approved') return '';
+	if (s === 'approved') return [];
 	const raw = (xdata?.declineReason || '').trim();
 	if (s === 'declined') {
-		if (!raw) return 'Declined by our onboarding team — contact us if you believe this is a mistake.';
-		return friendlyParts(raw).join(' • ');
+		if (!raw) return ['Declined by our onboarding team — contact us if you believe this is a mistake.'];
+		return friendlyParts(raw);
 	}
 	if (s === 'pending') {
-		return 'Awaiting review by our onboarding team. Note: listings priced below USD 400/night cannot go live.';
+		return ['Awaiting review by our onboarding team. Note: listings priced below USD 400/night cannot go live.'];
 	}
-	return '';
+	return [];
+}
+
+export function partnerStatusReason(status, xdata) {
+	return partnerStatusReasonList(status, xdata).join(' • ');
 }

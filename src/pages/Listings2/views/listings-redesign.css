@@ -180,6 +180,32 @@
   background: currentColor; opacity: 0.9;
 }
 
+/* ── Status explanation note (why a listing is declined / not live yet) ────── */
+.lr-note {
+  display: flex; align-items: flex-start; gap: 8px;
+  padding: 9px 11px; border-radius: 10px;
+  border: 1px solid transparent;
+  font-family: "Manrope", sans-serif;
+}
+.lr-note.bad { background: var(--bad-bg); border-color: rgba(192, 52, 77, 0.16); color: var(--bad-fg); }
+.lr-note.warn { background: var(--warn-bg); border-color: rgba(178, 106, 0, 0.16); color: var(--warn-fg); }
+.lr-note .ic { flex: 0 0 auto; margin-top: 1px; opacity: 0.85; }
+.lr-note .tx { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.lr-note .tx b {
+  font: 800 10px/1.2 "Manrope", sans-serif;
+  letter-spacing: 0.06em; text-transform: uppercase; opacity: 0.85;
+}
+.lr-note .tx span { font: 600 12px/1.45 "Manrope", sans-serif; color: var(--navy); }
+.lr-note .tx ul { margin: 0; padding-left: 15px; list-style: disc; }
+.lr-note .tx li { font: 600 12px/1.45 "Manrope", sans-serif; color: var(--navy); margin-top: 2px; }
+.lr-note.sm .tx li { font-size: 11.5px; line-height: 1.4; }
+.lr-note .tx .raw {
+  font: 600 11px/1.4 "Manrope", sans-serif; font-style: normal;
+  color: var(--muted-2); word-break: break-word;
+}
+.lr-note.sm { padding: 7px 9px; gap: 6px; }
+.lr-note.sm .tx span { font-size: 11.5px; line-height: 1.4; }
+
 .lr-type {
   font: 700 10px/1 "Manrope", sans-serif;
   text-transform: uppercase;
@@ -376,6 +402,7 @@ table.lr-table tbody tr:hover td { background: #fafcfe; }
 .lr-tbl-sub .code { color: var(--cyan-ink); }
 .lr-tbl-price { display: flex; flex-direction: column; gap: 3px; }
 .lr-tbl-status { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
+.lr-tbl-status .lr-note { max-width: 268px; }
 .lr-tbl-status .acts { display: flex; gap: 6px; margin-top: 2px; }
 
 /* ── States: empty / loading / error ─────────────────────────────────────── */
@@ -405,6 +432,8 @@ table.lr-table tbody tr:hover td { background: #fafcfe; }
     padding-left: 0; padding-top: 14px; flex-direction: row; flex-wrap: wrap; align-items: center; }
   .lr-exp-rail .spacer { display: none; }
   .lr-exp-rail .badges { flex-direction: row; }
+  /* rail turns into a wrapping row here — keep the note on its own full line */
+  .lr-exp-rail .lr-note { flex: 1 0 100%; }
   .lr-exp-rail .lr-btn.primary { width: auto; }
 }
 @media (max-width: 720px) {
