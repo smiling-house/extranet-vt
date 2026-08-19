@@ -5,13 +5,22 @@
 // `null` when absent so callers can fall back to generic copy. Byte-identical
 // across VT-FE + the two extranets (like the other duplicated client utils).
 
+// Every code that appears in the data or that the backend bucketer
+// (api/services/bookingTerms.js cancellationCodeFromWindows) can emit must have a
+// label here, else buildCancellation falls back to an ugly capitalize (e.g. "Strict_60").
 const CANCELLATION_LABELS = {
   flexible: 'Flexible',
+  flex: 'Flexible',
+  semi_flexible: 'Semi-Flexible',
   moderate: 'Moderate',
-  strict: 'Strict',
+  semi_moderate: 'Semi-Moderate',
   firm: 'Firm',
+  strict: 'Strict',
+  strict_60: 'Strict (60 days)',
+  super_strict: 'Super Strict',
   super_strict_30: 'Super Strict (30 days)',
   super_strict_60: 'Super Strict (60 days)',
+  free: 'Free / Fully refundable',
   non_refundable: 'Non-refundable',
   nonRefundable: 'Non-refundable',
 };
