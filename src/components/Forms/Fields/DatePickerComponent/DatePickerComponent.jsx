@@ -137,6 +137,16 @@ const DatePickerComponent = ({ arrivalDate, departDate, fullCalendar, onChange, 
       if (diffDays > maxNights) {
         return true
     }
+      // Per-day minimum stay: a departure closer than the CHECK-IN day's minStay is not
+      // selectable. Honors whatever the PMS set per day (e.g. 30 for a long-term-only villa).
+      // The global `minimumNights` guard is inert here (localStorage.minNights is never
+      // stamped on the extranet), so this block is the real min-stay enforcement.
+      const arrKey = dayjs(startDate).format("YYYY-MM-DD");
+      const arrEntry = (fullCalendar || []).find((e) => (e?.date || "").substring(0, 10) === arrKey);
+      const arrMin = Number(arrEntry?.minStay) || 0;
+      if (arrMin > 0 && diffDays > 0 && diffDays < arrMin) {
+        return true;
+      }
     return false;
   }
 }
