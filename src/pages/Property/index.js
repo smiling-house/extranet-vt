@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useMemo, useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useLocation, useHistory } from "react-router-dom";
 import { GoogleMap, LoadScript, Marker } from "@react-google-maps/api";
@@ -142,6 +142,35 @@ property,
       .catch((e) => console.error("load-fullcalendar failed:", e?.message || e));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [property?._id]);
+
+  // ── shareable URL state ───────────────────────────────────────────────────
+  // Dates/guests/currency lived ONLY in localStorage, so a copied property link
+  // carried none of it: the recipient opened the page on whatever their own
+  // browser last held. Hydrate from the query string BEFORE the localStorage
+  // reads below (useMemo runs during the first render, so there is no flash of
+  // the wrong dates), then mirror changes back into the URL.
+  //   ?checkIn=YYYY-MM-DD&checkOut=YYYY-MM-DD&adults=N&children=N&currency=EUR
+  // dateFrom/dateTo are accepted as aliases for checkIn/checkOut.
+  useMemo(() => {
+    const q = new URLSearchParams(location.search || "");
+    const isYmd = (v) => /^\d{4}-\d{2}-\d{2}$/.test(v || "");
+    const num = (v) => (/^\d{1,2}$/.test(v || "") ? String(parseInt(v, 10)) : null);
+    const checkIn = q.get("checkIn") || q.get("dateFrom");
+    const checkOut = q.get("checkOut") || q.get("dateTo");
+    // Both dates or neither — a lone date would half-apply and read as a bug.
+    if (isYmd(checkIn) && isYmd(checkOut) && checkIn < checkOut) {
+      localStorage.setItem("dateFrom", checkIn);
+      localStorage.setItem("dateTo", checkOut);
+    }
+    const a = num(q.get("adults"));
+    if (a && Number(a) > 0) localStorage.setItem("adults", a);
+    const c = num(q.get("children"));
+    if (c !== null) localStorage.setItem("children", c);
+    const cur = (q.get("currency") || "").toUpperCase();
+    if (/^[A-Z]{3}$/.test(cur)) localStorage.setItem("currency", cur);
+    return true;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const [startDate, setStartDate] = useState(
     dayjs(getStorageValue("dateFrom")) || null
@@ -510,6 +539,32 @@ property,
     setStartDate(arrivalDate);
     setEndDate(departDate);
   };
+
+  // Mirror the current selection into the address bar so the link is shareable.
+  // replaceState, not navigate(): this must not push history entries or
+  // re-render the page on every date tweak.
+  useEffect(() => {
+    const ymd = (d) => {
+      if (!d) return "";
+      const m = dayjs(d);
+      return m.isValid() ? m.format("YYYY-MM-DD") : "";
+    };
+    const q = new URLSearchParams(window.location.search || "");
+    const set = (k, v) => { if (v) q.set(k, v); else q.delete(k); };
+    set("checkIn", ymd(startDate));
+    set("checkOut", ymd(endDate));
+    // Drop the aliases so we never emit both spellings of the same thing.
+    q.delete("dateFrom"); q.delete("dateTo");
+    set("adults", localStorage.getItem("adults") || "");
+    const kids = localStorage.getItem("children");
+    set("children", kids && kids !== "0" ? kids : "");
+    set("currency", selectedCurrency || "");
+    const search = q.toString();
+    const next = window.location.pathname + (search ? `?${search}` : "");
+    if (next !== window.location.pathname + window.location.search) {
+      window.history.replaceState(null, "", next);
+    }
+  }, [startDate, endDate, selectedCurrency]);
 
   const handleCloseSaveSearch = () => {
     setShowSaveSearch(false);

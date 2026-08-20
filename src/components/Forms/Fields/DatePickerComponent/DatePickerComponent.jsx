@@ -17,6 +17,34 @@ const DatePickerComponent = ({ arrivalDate, departDate, fullCalendar, onChange, 
   const isDayBooked = (e) =>
     e?.allotment === 0 || e?.allotment === "0" || e?.allotment === false;
   const blockedDates = fullCalendar ? fullCalendar.filter(isDayBooked).map((x) => x.date.substring(0, 10)) : [];
+
+  // ── changeover (cta/ctd) + sentinel min-stay ──────────────────────────────
+  // cta/ctd are PERMISSIONS: "ON" = allowed, only an explicit off-value closes
+  // the day. Without this the picker offered arrivals the PMS rejects outright:
+  // RU marks whole peak weeks closed to changeover while leaving allotment at 1,
+  // so a Saturday-to-Saturday chalet looked bookable on any day of the week.
+  // Lockstep with VT-Front's Util/calendarAvailability.js isFlagOff.
+  const isFlagOff = (value) => {
+    if (value === undefined || value === null) return false;
+    if (typeof value === "boolean") return !value;
+    if (typeof value === "number") return value === 0;
+    const v = String(value).trim().toLowerCase();
+    return v === "off" || v === "false" || v === "0" || v === "no";
+  };
+  const _cal = Array.isArray(fullCalendar) ? fullCalendar : [];
+  // Degenerate-flag guard: some feeds stamp EVERY day OFF, which carries no
+  // signal — honouring it would black out the whole calendar.
+  const _ctaDegenerate = _cal.length > 0 && _cal.every((e) => isFlagOff(e?.cta));
+  const _ctdDegenerate = _cal.length > 0 && _cal.every((e) => isFlagOff(e?.ctd));
+  const ctaOffDates = _ctaDegenerate ? [] : _cal.filter((e) => isFlagOff(e?.cta)).map((x) => x.date.substring(0, 10));
+  const ctdOffDates = _ctdDegenerate ? [] : _cal.filter((e) => isFlagOff(e?.ctd)).map((x) => x.date.substring(0, 10));
+  // A per-day minStay at or beyond the 365-night ceiling is not a minimum, it is
+  // a "do not book" sentinel (Emerald Stay ships 999 on closed dates while
+  // leaving allotment at 1). Ordinary weekly/monthly minimums are far below it.
+  const UNSATISFIABLE_MIN_STAY = 365;
+  const sentinelDates = _cal
+    .filter((e) => (Number(e?.minStay) || 0) >= UNSATISFIABLE_MIN_STAY)
+    .map((x) => x.date.substring(0, 10));
   const [startDate, setArrivalDate] = useState(null);
   const [minNights, setMinNights] = useState(0);
   const [endDate, setDepartDate] = useState(null);
@@ -125,6 +153,18 @@ const DatePickerComponent = ({ arrivalDate, departDate, fullCalendar, onChange, 
     if ((day.isBefore(today, "day")) || blockedDates.includes(currentDate) ||day.isBefore(startDate, "day") ) {
       return true;
     }
+    // Sentinel min-stay closes the day outright, whichever end is being picked.
+    if (sentinelDates.includes(currentDate)) {
+      return true;
+    }
+    // Changeover applies per END: closed-to-arrival only blocks the check-in
+    // day, closed-to-departure only the check-out day. `focusedInput` tells us
+    // which the user is choosing; before either is focused, gate on arrival.
+    if (focusedInput === "endDate") {
+      if (ctdOffDates.includes(currentDate)) return true;
+    } else if (ctaOffDates.includes(currentDate)) {
+      return true;
+    }
     if (firstBlock && startDate) {
       const blockDay = dayjs(firstBlock);
       if (blockDay.isBefore(day)) {
@@ -151,6 +191,30 @@ const DatePickerComponent = ({ arrivalDate, departDate, fullCalendar, onChange, 
   }
 }
 
+  // Why a day is unselectable, on hover. Without this a greyed-out Saturday-only
+  // chalet just looks broken — the guest sees dead cells and no reason.
+  // Mirrors VT-Front's dayTooltip.
+  const dayTooltip = (day) => {
+    const key = dayjs(day).format("YYYY-MM-DD");
+    const entry = _cal.find((e) => (e?.date || "").substring(0, 10) === key);
+    const parts = [];
+    if (blockedDates.includes(key)) parts.push("Booked");
+    if (sentinelDates.includes(key)) parts.push("Not available");
+    else {
+      if (ctaOffDates.includes(key)) parts.push("No check-in on this day");
+      if (ctdOffDates.includes(key)) parts.push("No check-out on this day");
+      const ms = Number(entry?.minStay) || 0;
+      if (ms > 1) parts.push(`Minimum stay: ${ms} nights`);
+    }
+    return parts.join(" · ");
+  };
+
+  // Tooltip layer only — react-dates' own selection logic is untouched.
+  const renderDayContents = (day) => {
+    const t = dayTooltip(day);
+    return t ? <span title={t}>{day.format("D")}</span> : day.format("D");
+  };
+
   const dateInputStyle = {
     padding: isPropertyPath ? '0' : '0 10px'
   };
@@ -174,6 +238,7 @@ const DatePickerComponent = ({ arrivalDate, departDate, fullCalendar, onChange, 
         customArrowIcon={null}
         customCloseIcon={<CloseTwoToneIcon fontSize="medium" />}
         isDayBlocked={shouldDisableDate}
+        renderDayContents={renderDayContents}
         startDatePlaceholderText="Arrive"
         endDatePlaceholderText="Depart"
         startDateId={isPropertyPath ? "property-arrivedate" : "arrivedate"}
