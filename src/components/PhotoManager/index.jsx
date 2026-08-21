@@ -91,7 +91,7 @@ const SortableCard = (props) => {
     return <div ref={setNodeRef}><PhotoCard {...props} style={style} dragging={isDragging} dragHandle={{ ...attributes, ...listeners }} /></div>
 }
 
-const PhotoManager = ({ listingId, title, bedrooms, bathrooms, open = true, inline = false, onClose, isAdmin = false, actor = "extranet", onChanged }) => {
+const PhotoManager = ({ listingId, title, bedrooms, bathrooms, open = true, inline = false, showHero = true, showHeader = true, onClose, isAdmin = false, actor = "extranet", onChanged }) => {
     const [data, setData] = useState(null)
     const [error, setError] = useState("")
     const [busy, setBusy] = useState(false)
@@ -241,8 +241,8 @@ const PhotoManager = ({ listingId, title, bedrooms, bathrooms, open = true, inli
     }, [images])
 
     const body = (
-        <div className="pm-root">
-            <div className="pm-head">
+        <div className={`pm-root ${inline ? "pm-inline" : ""}`}>
+            {showHeader && <div className="pm-head">
                 <div>
                     <h2>Photos{title ? ` — ${title}` : ""}</h2>
                     <div className="pm-sub">
@@ -258,12 +258,13 @@ const PhotoManager = ({ listingId, title, bedrooms, bathrooms, open = true, inli
                     </>}
                     {!inline && <button className="pm-btn" onClick={onClose}>Close</button>}
                 </div>
-            </div>
+            </div>}
 
             {error && <div className="pm-error">{error}</div>}
 
             {data && (
                 <>
+                    {showHero && (<>
                     <div className="pm-hero">
                         <div className="pm-hero-main">
                             {hero[0] ? <img src={hero[0].thumbnail || hero[0].url} alt="" /> : <div className="pm-empty">No visible photo</div>}
@@ -279,6 +280,7 @@ const PhotoManager = ({ listingId, title, bedrooms, bathrooms, open = true, inli
                     </div>
                     <div className="pm-hint">The first {HERO_COUNT} visible photos are the cover and carousel on every site and channel. Drag to reorder, or use ★ Cover.</div>
 
+                    </>)}
                     <div className="pm-tabs">
                         <button className={tab === "all" ? "active" : ""} onClick={() => setTab("all")}>All ({visible.length})</button>
                         <button className={tab === "hidden" ? "active" : ""} onClick={() => setTab("hidden")}>Hidden ({hidden.length})</button>

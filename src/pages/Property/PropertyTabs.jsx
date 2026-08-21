@@ -19,9 +19,11 @@ export const TABS = [
   { key: "photos", label: "Photos" },
   { key: "calendar", label: "Calendar" },
   { key: "reviews", label: "Reviews" },
-  { key: "raw", label: "Raw data" },
-  { key: "sync", label: "Sync data" },
+  { key: "raw", label: "Raw data", admin: true },
+  { key: "sync", label: "Sync data", admin: true },
 ];
+export const isAdminUser = () => { try { return ["extranet-vt-logged-in-role", "extranet-sh-logged-in-role"].some((k) => localStorage.getItem(k) === "admin") && !localStorage.getItem("partnerLogin"); } catch (e) { return false; } };
+export const canSeeTab = (key, admin) => { const t = TABS.find((x) => x.key === key); return !!t && (!t.admin || admin); };
 
 const statusPill = (status) => {
   const s = String(status || "Pending");
@@ -29,7 +31,7 @@ const statusPill = (status) => {
   return <span className={`pt-pill ${cls}`}>{s}</span>;
 };
 
-const SOURCE_LABEL = { RU: "Rentals United", G: "Rentals United (DH)", BP: "BookingPal", HW: "Hostaway", guesty_channel_api: "Guesty (legacy)", guesty_partner_api: "Guesty", smiling_house_api: "Smiling House", VillasInStBarth: "Villas in St Barth", InvenioHomes: "Invenio Homes" };
+const SOURCE_LABEL = { SH: "Smiling House", RU: "Rentals United", G: "Rentals United (DH)", BP: "BookingPal", HW: "Hostaway", guesty_channel_api: "Guesty (legacy)", guesty_partner_api: "Guesty", smiling_house_api: "Smiling House", VillasInStBarth: "Villas in St Barth", InvenioHomes: "Invenio Homes" };
 export const sourceLabel = (src) => SOURCE_LABEL[src] || src || "PMS";
 
 export const PropertyHeader = ({ title, subtitle, status, source, id, photos, instantBook, actions }) => (
@@ -66,9 +68,9 @@ export const PropertyHero = ({ photos = [], onOpen }) => {
   );
 };
 
-export const TabBar = ({ tab, onChange, counts = {} }) => (
+export const TabBar = ({ tab, onChange, counts = {}, admin = false }) => (
   <div className="pt-tabs" role="tablist">
-    {TABS.map((t) => (
+    {TABS.filter((t) => !t.admin || admin).map((t) => (
       <button key={t.key} role="tab" type="button" aria-selected={tab === t.key} className={tab === t.key ? "active" : ""} onClick={() => onChange(t.key)}>
         {t.label}{counts[t.key] !== undefined && counts[t.key] !== null ? <em>{counts[t.key]}</em> : null}
       </button>
@@ -110,7 +112,7 @@ export const FlagsCard = ({ xdata = {}, property = {}, source, instantBook, tags
 const dayKey = (d) => d.toISOString().slice(0, 10);
 const isAvail = (e) => (e ? (typeof e.status === "string" ? /avail/i.test(e.status) && !/un/i.test(e.status) : (e.allotment ?? 1) > 0) : null);
 
-export const CalendarTab = ({ fullCalendar = [], currency = "", months = 3 }) => {
+export const CalendarTab = ({ fullCalendar = [], currency = "", months = 12 }) => {
   const [offset, setOffset] = useState(0);
   const byDay = useMemo(() => {
     const m = new Map();

@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState, useRef } from "react";
 import PhotoManager from "../../components/PhotoManager";
-import { PropertyHeader, PropertyHero, TabBar, FlagsCard, CalendarTab, ReviewsTab, RawDataTab, SyncDataTab } from "./PropertyTabs";
+import { PropertyHeader, PropertyHero, TabBar, FlagsCard, CalendarTab, ReviewsTab, RawDataTab, SyncDataTab, isAdminUser, canSeeTab } from "./PropertyTabs";
 import { useDispatch, useSelector } from "react-redux";
 import { useLocation, useHistory } from "react-router-dom";
 import { GoogleMap, LoadScript, Marker } from "@react-google-maps/api";
@@ -107,17 +107,22 @@ property,
     if (location?.state?.property) return;
     const coldParams = new URLSearchParams(location.search || "");
     const coldId = coldParams.get("id");
-    const coldAcc = coldParams.get("acc") || localStorage.getItem("accountId") || "";
     if (!coldId) return;
     const COLD_TOKEN = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2NvdW50X29iamVjdF9pZCI6Mzk5MTU4NzUsInVzZXJfaWQiOiI0MDY2NTAyMSIsInVzZXJfbmFtZSI6InN5c3RlbStsdW5hLTh5NXljIiwic2NvcGUiOlsiYnJpdm8uYXBpIl0sImF0aSI6ImI5MTliYmJiLTA1ZWItNDlmOC05MjlhLWM0MTJlYzY3NWI2YyIsImlzc3VlZCI6IjE2NzUzNzA2NDMzNzMiLCJleHAiOjIyOTczMzM3MjcsInNlcnZpY2VfdG9rZW4iOm51bGwsImF1dGhvcml0aWVzIjpbIlJPTEVfU1VQRVJfQURNSU4iLCJST0xFX0FETUlOIl0sImp0aSI6IjExODQzYjg2LWIyYzUtNGMwNS1hYWZlLTcxZTI4NGIyNjNlOCIsImNsaWVudF9pZCI6IjkzOTFlYjVkLWUwNmUtNDY4MS1iNTdhLWQwZTU3NDhhM2RlZSIsIndoaXRlX2xpc3RlZCI6ZmFsc2V9.Mqmx7onIVz_EVAunhwqBAhAmlsGXMQ18hh_EV_61KQIpaGXlrgXgx1hOOdNWLFriG3Un6jfS7H7vwMAYmBT6-8yl9L7VB7Cpxva49XozuSJazQ42UDDlTOsnWAmatzmFna-Uzjc8MDfVQbR8AwMiFq_Jb9ViaJ4XBkj2KhEKs1g";
     const req = axios.create({ baseURL: constants.SHUB_URL, headers: { Authorization: `Bearer ${COLD_TOKEN}` } });
-    req.get(`/local/listings?accountId=${coldAcc}&searchPropertyId=${coldId}`)
+    // /local/listings?id= returns the full hub doc (curated pictures applied);
+    // the list shape {listings:[{listing,xdata,…}]} only comes back for searches.
+    req.get(`/local/listings?id=${encodeURIComponent(coldId)}`)
       .then((res) => {
-        const item = ((res && res.data && res.data.listings) || [])[0];
+        const d = res && res.data
+        const doc = d && d.data ? d : (((d && d.listings) || [])[0] || null)
+        const item = doc && doc.data
+          ? { listing: { ...doc.data, _id: doc.data._id || doc.id }, xdata: doc.xdata, fullCalendar: doc.fullCalendar, channelSource: doc.channelSource, source: doc.source, ratePlans: doc.ratePlans, isListed: doc.isListed, lastUpdated: doc.lastUpdated }
+          : doc
         if (item && item.listing) {
           history.replace(
             { pathname: location.pathname, search: location.search },
-            { property: item.listing, xdata: item.xdata, fullCalendar: item.fullCalendar, source: item.channelSource || item.source, channelSource: item.channelSource, ratePlans: item.ratePlans, isListed: item.isListed, lastUpdated: item.lastUpdated }
+            { property: item.listing, xdata: item.xdata, fullCalendar: item.fullCalendar, source: item.source || item.channelSource, channelSource: item.channelSource, ratePlans: item.ratePlans, isListed: item.isListed, lastUpdated: item.lastUpdated }
           );
         }
       })
@@ -817,19 +822,20 @@ property,
               title={xdata?.title || property?.title}
               subtitle={[prop?.city, prop?.state, prop?.countryName].filter(Boolean).join(", ")}
               status={xdata?.status}
-              source={location?.state?.source || location?.state?.channelSource || xdata?.source || (String(property?._id || "").split("-")[0].length <= 3 ? String(property?._id || "").split("-")[0] : undefined)}
+              source={xdata?.source || location?.state?.source || location?.state?.channelSource || (String(property?._id || "").split("-")[0].length <= 3 ? String(property?._id || "").split("-")[0] : undefined)}
               id={property?._id || property?.id}
               photos={(property?.pictures?.length ? property.pictures : prop?.photos || []).length}
               instantBook={_instantState}
             />
             {/* property.pictures = hub-curated (hidden/branded stripped); xdata.pictures is a legacy copy */}
             <PropertyHero photos={(property?.pictures?.length ? property.pictures : prop?.photos) || []} onOpen={() => setTab("photos")} />
-            <TabBar tab={tab} onChange={setTab} counts={{ photos: (property?.pictures?.length ? property.pictures : prop?.photos || []).length, calendar: Array.isArray(fullCalendar) ? fullCalendar.length : null }} />
+            <div className="pt-tabs-wrap"><TabBar tab={tab} onChange={setTab} admin={isAdminUser()} counts={{ photos: (property?.pictures?.length ? property.pictures : prop?.photos || []).length, calendar: Array.isArray(fullCalendar) ? fullCalendar.length : null }} /></div>
 
             {tab === "photos" && (
               <div className="pt-panel">
                 <PhotoManager
                   inline
+                  showHero={false}
                   listingId={property?._id || property?.id}
                   title={xdata?.title || property?.title}
                   bedrooms={property?.bedrooms}
@@ -841,8 +847,8 @@ property,
             )}
             {tab === "calendar" && <div className="pt-panel"><CalendarTab fullCalendar={fullCalendar} currency={property?.prices?.currency} /></div>}
             {tab === "reviews" && <div className="pt-panel"><ReviewsTab property={property} xdata={xdata} /></div>}
-            {tab === "raw" && <div className="pt-panel"><RawDataTab property={property} xdata={xdata} fullCalendar={fullCalendar} ratePlans={location?.state?.ratePlans} /></div>}
-            {tab === "sync" && <div className="pt-panel"><SyncDataTab listing={location?.state || {}} xdata={xdata} property={property} /></div>}
+            {tab === "raw" && canSeeTab("raw", isAdminUser()) && <div className="pt-panel"><RawDataTab property={property} xdata={xdata} fullCalendar={fullCalendar} ratePlans={location?.state?.ratePlans} /></div>}
+            {tab === "sync" && canSeeTab("sync", isAdminUser()) && <div className="pt-panel"><SyncDataTab listing={location?.state || {}} xdata={xdata} property={property} /></div>}
 
             {tab === "details" && (<>
             <div className="container pt-panel" style={{ paddingBottom: 0 }}>
