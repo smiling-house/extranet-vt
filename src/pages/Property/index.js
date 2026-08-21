@@ -856,7 +856,7 @@ property,
             </div>
             <div className="container">
               <div className="row m-5">
-                <div className="col-12 col-md-8 order-md-first order-last ">
+                <div className="col-12 col-md-8 pr-details-col order-md-first order-last ">
                   <div className="row">
                     <div className="col">
                       <div className="property-page-body-top-subtitle text-start">
@@ -1078,6 +1078,8 @@ property,
                   </div>
                 </div>
 
+                {/* Booking / pricing widget — not for the extranet (decision 2026-08-21); kept for the embedded/PDF (noMenu) render only */}
+                {noMenu && (
                 <div className="col-12 col-md-4 p-3 pt-0 order-md-last order-first">
                   <div className="property-page-body-top-right">
                     {((!dateFrom || !dateTo) && !onDemand) && (
@@ -1297,6 +1299,7 @@ property,
                     </div> */}
                   </div>
                 </div>
+                )}
               </div>
             </div>
 

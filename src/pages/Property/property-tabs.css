@@ -120,3 +120,6 @@
 
 .pt-sync { display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: 0 14px; }
 @media (max-width: 900px) { .pt-sync { grid-template-columns: 1fr; } }
+
+/* Booking widget hidden in the extranet → details column takes the full row */
+.property-page-wrapper .row.m-5 > .col-md-8.pr-details-col { width: 100% !important; max-width: 100%; }
