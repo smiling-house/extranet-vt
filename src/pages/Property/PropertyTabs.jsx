@@ -45,7 +45,11 @@ export const PropertyHeader = ({ title, subtitle, status, source, id, photos, in
         {Number.isFinite(photos) && <><span className="pt-dot">·</span><span>{photos} photos</span></>}
       </div>
     </div>
-    {actions && <div className="pt-header-actions">{actions}</div>}
+    <div className="pt-header-actions">
+      {id && <a className="pt-btn" href={`https://www.smilinghouse.ch/property/${encodeURIComponent(id)}/`} target="_blank" rel="noreferrer" title="Public page on smilinghouse.ch">smilinghouse.ch ↗</a>}
+      {id && <a className="pt-btn" href={`https://login.villatracker.com/property/${encodeURIComponent(id)}`} target="_blank" rel="noreferrer" title="Public page on Villa Tracker">villatracker.com ↗</a>}
+      {actions}
+    </div>
   </div>
 );
 
