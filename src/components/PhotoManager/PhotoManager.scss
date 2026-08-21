@@ -1,0 +1,99 @@
+.pm-dialog { background: #f6f8f9; }
+
+.pm-root {
+  padding: 18px 22px 26px;
+  font-family: inherit;
+  color: #1b2a2f;
+
+  h2 { font-size: 20px; margin: 0; font-weight: 600; }
+  .pm-sub { font-size: 12.5px; color: #6b7f92; margin-top: 2px; }
+  .pm-id { font-family: monospace; }
+  .pm-busy { color: #0f7bb0; }
+}
+
+.pm-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 14px; }
+.pm-head-actions { display: flex; gap: 8px; }
+
+.pm-btn {
+  border: 1px solid #cfd8dd; background: #fff; color: #1b2a2f; border-radius: 5px;
+  padding: 7px 14px; font-size: 13px; cursor: pointer;
+  &.primary { background: #0f7bb0; border-color: #0f7bb0; color: #fff; }
+  &:disabled { opacity: .6; cursor: default; }
+}
+
+.pm-error { background: #fbe5e2; color: #b3342c; padding: 8px 12px; border-radius: 4px; margin-bottom: 12px; font-size: 13px; }
+.pm-hint { font-size: 12.5px; color: #6b7f92; margin: 8px 0 14px; }
+.pm-none { color: #6b7f92; padding: 30px; text-align: center; }
+
+.pm-hero {
+  display: grid; grid-template-columns: 2fr 1fr; gap: 8px; height: 260px;
+  .pm-hero-main, .pm-hero-small { position: relative; background: #e4eaee; border-radius: 6px; overflow: hidden; }
+  .pm-hero-side { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 8px; }
+  img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .pm-empty { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #9db0bc; font-size: 13px; }
+  .pm-badge { position: absolute; top: 8px; left: 8px; }
+}
+
+.pm-tabs {
+  display: flex; align-items: center; gap: 6px; border-bottom: 1px solid #d7e0e3; margin-bottom: 12px; flex-wrap: wrap;
+  > button {
+    border: 0; background: transparent; padding: 8px 12px; font-size: 13.5px; cursor: pointer; color: #5f7380;
+    border-bottom: 2px solid transparent; margin-bottom: -1px;
+    &.active { color: #0f7bb0; border-bottom-color: #0f7bb0; font-weight: 600; }
+  }
+}
+.pm-bulk {
+  margin-left: auto; display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: #1b2a2f;
+  background: #e0f1fa; padding: 4px 10px; border-radius: 4px;
+  button, select { font-size: 12px; padding: 3px 8px; border: 1px solid #cfd8dd; background: #fff; border-radius: 4px; cursor: pointer; }
+  button.danger { color: #b3342c; }
+}
+
+.pm-rooms {
+  display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px;
+  button {
+    border: 1px solid #cfd8dd; background: #fff; border-radius: 14px; padding: 3px 10px; font-size: 12px; cursor: pointer;
+    em { font-style: normal; color: #6b7f92; margin-left: 3px; }
+    &.active { background: #0f7bb0; border-color: #0f7bb0; color: #fff; em { color: #d9eefa; } }
+  }
+}
+
+.pm-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; }
+
+.pm-card {
+  background: #fff; border: 1px solid #d7e0e3; border-radius: 6px; overflow: hidden; cursor: grab;
+  &.dragging { cursor: grabbing; }
+  &.selected { border-color: #0f7bb0; box-shadow: 0 0 0 2px #e0f1fa; }
+  &.hidden { cursor: default; .pm-thumb img { filter: grayscale(1) brightness(.75); } }
+  .pm-thumb { position: relative; aspect-ratio: 4 / 3; background: #e4eaee; }
+  .pm-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .pm-select { position: absolute; top: 6px; right: 6px; width: 16px; height: 16px; cursor: pointer; }
+  .pm-hidden-overlay {
+    position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+    color: #fff; font-size: 11.5px; text-align: center; padding: 8px; background: rgba(20, 30, 35, .45);
+    strong { font-size: 12px; }
+  }
+  .pm-card-actions {
+    display: flex; flex-wrap: wrap; gap: 4px; padding: 6px; border-top: 1px solid #eef2f4; cursor: default;
+    select { flex: 1 1 100%; font-size: 11.5px; padding: 3px 4px; border: 1px solid #d7e0e3; border-radius: 3px; color: #1b2a2f; background: #fff; }
+    button {
+      font-size: 11.5px; padding: 3px 7px; border: 1px solid #d7e0e3; background: #fff; border-radius: 3px; cursor: pointer;
+      &.danger { color: #b3342c; }
+      &:hover { border-color: #0f7bb0; }
+    }
+  }
+}
+
+.pm-badge {
+  position: absolute; top: 6px; left: 6px; font-size: 10.5px; font-weight: 600; letter-spacing: .02em;
+  padding: 2px 7px; border-radius: 10px; color: #fff; background: rgba(20, 30, 35, .7); pointer-events: none;
+  &.cover { background: #0f7bb0; }
+  &.carousel { background: #2e7d4f; }
+  &.pos { background: rgba(20, 30, 35, .55); }
+  &.upload { top: auto; bottom: 6px; left: 6px; background: #6b4fbb; }
+  &.ai { top: auto; bottom: 6px; right: 6px; left: auto; background: #b9711a; }
+}
+
+@media (max-width: 700px) {
+  .pm-hero { grid-template-columns: 1fr; height: auto; .pm-hero-main { height: 200px; } .pm-hero-side { height: 120px; } }
+}

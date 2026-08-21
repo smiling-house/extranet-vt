@@ -18,6 +18,7 @@ import switchOff from "../../../assets/property/switch.svg";
 import switchOn from "../../../assets/property/switch-on.svg";
 import Button from "../../../components/Buttons/Button/Button"
 import ImageWithHover from "../../../components/ImageWithHover";
+import PhotoManager from "../../../components/PhotoManager";
 import VTChannelIcon from "../../../assets/channels/icons/VTChannel.svg"
 import VTChannelIconOn from "../../../assets/channels/icons/VTChannel-on.svg"
 import VTChannelIconOnBlue from "../../../assets/channels/icons/VTChannel-on-blue.svg"
@@ -88,6 +89,10 @@ const exchangeRatesData = JSON.parse( localStorage.getItem("exchangeRatesData") 
   const [region, setNewRegion] = useState(xdata?.region)
   const [subRegion, setNewSubRegion] = useState(xdata?.subRegion)
   const [picIndex, setPicIndex] = useState(0);
+  // Photo manager (listing_images curation on the hub). When it has been opened
+  // the row slider follows the curated visible order instead of raw pictures.
+  const [photosOpen, setPhotosOpen] = useState(false);
+  const [curatedPics, setCuratedPics] = useState(null);
   const history = useHistory()
   const [title, setTitle] = useState(xdata.title || property.title)
 
@@ -630,6 +635,11 @@ console.log('NEW REGION:::', response)
   let pic = null;
   let picPosition = 0
   let picLength = 0
+  if (!isNullOrEmptyArray(curatedPics) && picIndex != null) {
+    pic = curatedPics[picIndex % curatedPics.length].url
+    picPosition = picIndex % curatedPics.length;
+    picLength = curatedPics.length
+  } else
   if (!isNullOrEmptyArray(xdata.pictures) && picIndex != null) {
     pic = xdata.pictures[picIndex % xdata.pictures?.length].original
     picPosition = picIndex % xdata.pictures?.length;
@@ -722,14 +732,24 @@ setCurrentListingStatusUpdatedBy(agentData.firstName);
             </div>*/}
 
           <div className="garbage-can">
-            {!partnerLogin && <ImageWithHover
-              path={starOff}
-              pathOver={starOn}
-              tooltip={'set as Main PIC'}
-              className="garabage-icon"
-              onClick={mainPic}
-            />}
+            <button
+              type="button"
+              className="row-photos-btn"
+              title="Reorder, hide, categorise or upload photos"
+              onClick={() => setPhotosOpen(true)}
+            >Photos</button>
           </div>
+          {photosOpen && <PhotoManager
+            listingId={id}
+            title={property.nickname || property.title}
+            bedrooms={property.bedrooms}
+            bathrooms={property.bathrooms}
+            open={photosOpen}
+            onClose={() => setPhotosOpen(false)}
+            isAdmin={extranet_vt_logged_in_role === 'admin' && !partnerLogin}
+            actor={agentData?.email || agentData?.firstName || 'extranet'}
+            onChanged={(d) => { setCuratedPics((d?.images || []).filter(i => !i.hidden)); setPicIndex(0) }}
+          />}
         </div>
         <div className="property-main-picture-container">
           <div className="img-slider">

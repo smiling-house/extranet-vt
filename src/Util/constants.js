@@ -85,6 +85,7 @@ export const PATH_SEARCH_LISTINGS = '/search-listings';
 // One box, every source: queries VTHub AND SHub in parallel so admins never
 // have to guess which PMS/channel page a listing lives on.
 export const PATH_MASTER_SEARCH = '/master-search';
+export const PATH_LISTING_PHOTOS = '/photos';
 export const PATH_PROPERTIES_NEEDS_ATTENTION = '/properties-needs-attention';
 
 // Agoda (YCS) distribution — see extranet-vt/AGODA-UI-PLAN.md

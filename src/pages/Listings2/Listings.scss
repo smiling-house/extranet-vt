@@ -108,3 +108,13 @@
 		}
 	}
 }
+.row-photos-btn {
+	border: 1px solid #0f7bb0;
+	background: #fff;
+	color: #0f7bb0;
+	border-radius: 4px;
+	font-size: 11px;
+	padding: 2px 8px;
+	cursor: pointer;
+	&:hover { background: #0f7bb0; color: #fff; }
+}

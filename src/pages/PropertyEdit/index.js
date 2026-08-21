@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { useLocation, useHistory } from "react-router-dom";
+import PhotoManager from "../../components/PhotoManager";
 import { GoogleMap, LoadScript } from "@react-google-maps/api";
 import { Marker } from "@react-google-maps/api";
 //const ScriptLoaded = require("../../docs/ScriptLoaded").default;
@@ -59,6 +60,7 @@ const PropertyEdit = (props, propertyId) => {
   const location = useLocation();
   const [loading, setLoading] = useState(false);
   const property = location.state && location.state.property;
+  const [photosOpen, setPhotosOpen] = useState(false);
   const ref = React.createRef();
   let prop = props;
   const AnyReactComponent = ({ text }) => <div>{text}</div>;
@@ -691,6 +693,22 @@ const PropertyEdit = (props, propertyId) => {
                 src={iconLike}
                 alt=""
               />
+              <button
+                type="button"
+                className="row-photos-btn"
+                style={{ marginLeft: '8px', border: '1px solid #0f7bb0', background: '#fff', color: '#0f7bb0', borderRadius: '4px', fontSize: '12px', padding: '3px 10px', cursor: 'pointer' }}
+                onClick={() => setPhotosOpen(true)}
+              >Manage photos</button>
+              {photosOpen && <PhotoManager
+                listingId={property?.listing?._id || property?.id}
+                title={property?.listing?.nickname || property?.listing?.title}
+                bedrooms={property?.listing?.bedrooms}
+                bathrooms={property?.listing?.bathrooms}
+                open={photosOpen}
+                onClose={() => setPhotosOpen(false)}
+                isAdmin={(JSON.parse(localStorage.getItem('agent') || '{}')?.role === 'admin') && !localStorage.getItem('partnerLogin')}
+                actor={JSON.parse(localStorage.getItem('agent') || '{}')?.email || 'extranet'}
+              />}
 
             </div>
           </div>

@@ -68,6 +68,7 @@ import PartnersGuestyDH from "./PartnersGuestyDH";
 import PartnersRuDH from "./PartnersRuDH";
 import SearchListings from "./SearchListings";
 import MasterSearch from "./MasterSearch";
+import ListingPhotos from "./ListingPhotos";
 
 import PropertiesNeedsAttention from "./PropertiesNeedsAttention";
 
@@ -138,6 +139,7 @@ import {
   PATH_PARTNERS_HOSTAWAY,
   PATH_SEARCH_LISTINGS,
   PATH_MASTER_SEARCH,
+  PATH_LISTING_PHOTOS,
   PATH_PROPERTIES_NEEDS_ATTENTION
 } from "../Util/constants";
 import AuthService from "../services/auth.service";
@@ -843,6 +845,17 @@ if(partnerAccountId) {
 
         <Route path={[PATH_MASTER_SEARCH]}>
           <MasterSearch
+            agent={agent}
+            agency={agency}
+            token={token}
+            screenSize={screenSize}
+            activeMenu={activeMenu}
+            handleToggleMenu={handleToggleMenu}
+            setActiveMenu={setActiveMenu}
+          />
+        </Route>
+        <Route path={`${PATH_LISTING_PHOTOS}/:id`}>
+          <ListingPhotos
             agent={agent}
             agency={agency}
             token={token}
