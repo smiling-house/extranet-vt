@@ -163,11 +163,34 @@ const goToPartnersPage = () => {
         if (urlAcc && String(haveAcc || '') !== String(urlAcc)) {
             (async () => {
                 try {
+                    // Hostaway partners live in HostawayAccount (not the users
+                    // collection behind local/partners), keyed by the numeric
+                    // id without the canonical "HW-" prefix.
+                    if (String(urlAcc).startsWith('HW-')) {
+                        const hwRes = await AuthService.listHostawayPartners();
+                        const hwId = String(urlAcc).slice(3);
+                        const hw = (hwRes?.data?.accounts || []).find(a => String(a.accountId) === hwId);
+                        if (hw) {
+                            const p = {
+                                ...hw,
+                                accountId: urlAcc,
+                                source: 'Hostaway',
+                                pmName: hw.pmName || hw.contactName || 'Hostaway',
+                            };
+                            localStorage.setItem('partner', JSON.stringify(p));
+                            localStorage.setItem('accountId', urlAcc);
+                            window.location.reload();
+                        }
+                        return;
+                    }
                     const req = axios.create({ baseURL: constants.SHUB_URL, headers: { Authorization: `Bearer ${token2}` } });
                     const res = await req.get(`local/partners?accountId=${urlAcc}`);
                     const list = res?.data?.partners || res?.data || [];
                     const p = Array.isArray(list) ? (list.find(x => String(x.accountId) === String(urlAcc)) || list[0]) : list;
                     if (p && p.accountId) {
+                        // Guesty-DH (G) and RU partners' listings live under this
+                        // hub's own channelSource (see PartnersListView drill-down).
+                        if (p.source === 'G' || p.source === 'RU') p.source = 'VT';
                         localStorage.setItem('partner', JSON.stringify(p));
                         localStorage.setItem('accountId', String(p.accountId));
                         window.location.reload();

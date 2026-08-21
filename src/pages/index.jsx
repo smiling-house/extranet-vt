@@ -139,6 +139,7 @@ import {
   PATH_PARTNERS_HOSTAWAY,
   PATH_SEARCH_LISTINGS,
   PATH_MASTER_SEARCH,
+  PATH_PARTNER_SEARCH,
   PATH_LISTING_PHOTOS,
   PATH_PROPERTIES_NEEDS_ATTENTION
 } from "../Util/constants";
@@ -845,6 +846,18 @@ if(partnerAccountId) {
 
         <Route path={[PATH_MASTER_SEARCH]}>
           <MasterSearch
+            agent={agent}
+            agency={agency}
+            token={token}
+            screenSize={screenSize}
+            activeMenu={activeMenu}
+            handleToggleMenu={handleToggleMenu}
+            setActiveMenu={setActiveMenu}
+          />
+        </Route>
+        <Route path={[PATH_PARTNER_SEARCH]}>
+          <MasterSearch
+            mode="partners"
             agent={agent}
             agency={agency}
             token={token}

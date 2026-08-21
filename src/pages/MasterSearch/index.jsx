@@ -5,7 +5,7 @@ import Layout from "../../components/Layout"
 import pageBg from '../../assets/bk_pool.png'
 import constants from "../../Util/constants"
 import { ShubAuth } from "../../core"
-import { PATH_LISTINGS } from "../../Util/constants"
+import { PATH_LISTINGS, PATH_LISTINGS_BP } from "../../Util/constants"
 import "./MasterSearch.scss"
 
 // One search box across every source/PMS on BOTH hubs, in two modes:
@@ -56,10 +56,10 @@ const statusCls = (status) => {
     return 'st-other'
 }
 
-const MasterSearch = ({ agent, agency, token, screenSize, activeMenu, handleToggleMenu, setActiveMenu }) => {
+// `mode` is fixed per route: /master-search = properties, /partner-search = partners.
+const MasterSearch = ({ mode = 'properties', agent, agency, token, screenSize, activeMenu, handleToggleMenu, setActiveMenu }) => {
 
     const history = useHistory()
-    const [mode, setMode] = useState('properties')   // 'properties' | 'partners'
     const [keyword, setKeyword] = useState('')
     const [statusFilter, setStatusFilter] = useState('')
     const [listedFilter, setListedFilter] = useState('All')
@@ -155,14 +155,6 @@ const MasterSearch = ({ agent, agency, token, screenSize, activeMenu, handleTogg
         setIsLoading(false)
     }
 
-    const switchMode = (m) => {
-        setMode(m)
-        setRows([])
-        setPartnerRows([])
-        setHubResults({})
-        setSearched(false)
-    }
-
     const copyId = (id) => {
         try { navigator.clipboard.writeText(id) } catch (e) { /* older browsers */ }
     }
@@ -178,13 +170,18 @@ const MasterSearch = ({ agent, agency, token, screenSize, activeMenu, handleTogg
             return
         }
         const { __hub, ...partnerDoc } = p
-        const drillChannelSource = partnerDoc.source === 'G' ? 'SH' : partnerDoc.source
+        // Listings2 filters on channelSource = partner.source. Partner docs say
+        // G / RU, but the hub writes BOTH Guesty-DH and RU listings under its
+        // own channelSource (SH on SHub, VT on VTHub — see PartnersListView and
+        // PartnersRuDH). BP partners have their own listings page.
+        const drillChannelSource = (partnerDoc.source === 'G' || partnerDoc.source === 'RU') ? OWN_HUB : partnerDoc.source
         const partner = { ...partnerDoc, source: drillChannelSource }
         localStorage.setItem('partner', JSON.stringify(partner))
         localStorage.setItem('accountId', String(accountId))
         localStorage.removeItem('partnerPropertiesUniqueZipcodes')
         localStorage.setItem('property_status_to_filter_listings', '')
-        history.push(`${PATH_LISTINGS}?accountId=${encodeURIComponent(accountId)}`, { partner, accountId, source: drillChannelSource })
+        const path = partnerDoc.source === 'BP' ? PATH_LISTINGS_BP : PATH_LISTINGS
+        history.push(`${path}?accountId=${encodeURIComponent(accountId)}`, { partner, accountId, source: drillChannelSource })
     }
 
     const renderCounts = () => {
@@ -211,7 +208,7 @@ const MasterSearch = ({ agent, agency, token, screenSize, activeMenu, handleTogg
 
     return (
         <Layout
-            pageTitle="Master Search"
+            pageTitle={mode === 'partners' ? "Partner Search" : "Master Search"}
             agency={agency}
             agent={agent}
             token={token}
@@ -222,25 +219,11 @@ const MasterSearch = ({ agent, agency, token, screenSize, activeMenu, handleTogg
         >
             <div className="master-search-container" style={{ backgroundImage: `url(${pageBg})` }}>
                 <div className="master-search-main">
-                    <h1>Master Search — All Sources</h1>
+                    <h1>{mode === 'partners' ? 'Partner Search — All Sources' : 'Master Search — All Sources'}</h1>
                     <div className="master-search-subtitle">
-                        One search across both hubs and every PMS/channel (Guesty, RU-DH, Rentals United, BookingPal, Hostaway, BART, Invenio, External).
-                    </div>
-
-                    <div className="master-search-modes">
-                        <button
-                            className={`master-search-mode ${mode === 'properties' ? 'active' : ''}`}
-                            onClick={() => switchMode('properties')}
-                        >Properties</button>
-                        <button
-                            className={`master-search-mode ${mode === 'partners' ? 'active' : ''}`}
-                            onClick={() => switchMode('partners')}
-                        >Partners / PMs</button>
-                        <span className="master-search-mode-hint">
-                            {mode === 'properties'
-                                ? 'Searching properties by ID, title or nickname'
-                                : 'Searching partner accounts by company/PM name, contact, email, phone or account ID'}
-                        </span>
+                        {mode === 'partners'
+                            ? 'Find a partner account across both hubs and every PMS by company/PM name, contact, email, phone or account ID. Click a row to open the account.'
+                            : 'One search across both hubs and every PMS/channel (Guesty, RU-DH, Rentals United, BookingPal, Hostaway, BART, Invenio, External) by ID, title or nickname.'}
                     </div>
 
                     <div className="master-search-bar">

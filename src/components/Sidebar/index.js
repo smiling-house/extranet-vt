@@ -57,6 +57,7 @@ import {
   PATH_PARTNERS_HOSTAWAY,
   PATH_SEARCH_LISTINGS,
   PATH_MASTER_SEARCH,
+  PATH_PARTNER_SEARCH,
   PATH_PROPERTIES_NEEDS_ATTENTION,
   PATH_AGODA_LISTINGS,
   PATH_AGODA_SYNC,
@@ -162,6 +163,7 @@ const Sidebar = ({ activeMenu, setActiveMenu, handleToggleMenu, showOrHideSideBa
           /*{ text: "Listing Search", path: PATH_SHUB, icon: <FiSearch size={18} /> }, */
           /* { text: "General Search", path: PATH_SEARCH, icon: <FiSearch size={18} /> }, */
           { text: "Master Search (All Sources)", path: PATH_MASTER_SEARCH, icon: <FiSearch size={18} /> },
+          { text: "Partner Search (All Sources)", path: PATH_PARTNER_SEARCH, icon: <FiSearch size={18} /> },
           { text: "Search Listings", path: PATH_SEARCH_LISTINGS, icon: <FiSearch size={18} /> },
           { text: "Interactive Map", path: PATH_MAP, icon: <FiMap size={18} /> },
           { text: "Hot Destinations", path: PATH_HOT_DESTINATIONS, icon: <MdLocationOn size={18} /> },
