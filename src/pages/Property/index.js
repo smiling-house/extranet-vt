@@ -3,7 +3,7 @@ import PhotoManager from "../../components/PhotoManager";
 import { PropertyHeader, PropertyHero, TabBar, FlagsCard, CalendarTab, ReviewsTab, RawDataTab, SyncDataTab, isAdminUser, canSeeTab } from "./PropertyTabs";
 import { useDispatch, useSelector } from "react-redux";
 import { useLocation, useHistory } from "react-router-dom";
-import { GoogleMap, LoadScript, Marker } from "@react-google-maps/api";
+import LeafletMap from "../../components/LeafletMap";
 import picLeft from "../../assets/property/pic-left-dark.png";
 import picLeftOn from "../../assets/property/pic-left-on-dark.png";
 import picRight from "../../assets/property/pic-right-dark.png";
@@ -768,7 +768,6 @@ property,
       lng: prop.lng,
     };
 
-    const onLoad = (marker) => { };
 
     const calculateSummaryLines = () => {
       const sentences = summary
@@ -1310,24 +1309,7 @@ property,
               <div style={{ padding: "0 40px" }}>
                 <h1>Location</h1>
                 <div>
-                  <LoadScript googleMapsApiKey="AIzaSyDJZiBl3NStDg82QA7I1t4La0Dqnwj7cb0">
-                    <GoogleMap
-                      id="marker-example"
-                      mapContainerStyle={{ width: "100%", height: "500px" }}
-                      zoom={14}
-                      center={center}
-                      options={{
-                        mapTypeId: "terrain",
-                        mapTypeControl: false,
-                        zoomControl: true,
-                        fullscreenControl: false,
-                        rotateControl: false,
-                        streetViewControl: false,
-                      }}
-                    >
-                      <Marker onLoad={onLoad} position={position} />
-                    </GoogleMap>
-                  </LoadScript>
+                  <LeafletMap lat={prop.lat} lng={prop.lng} zoom={14} height={500} />
                 </div>
               </div>
             </div>
