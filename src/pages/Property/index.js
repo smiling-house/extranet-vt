@@ -68,6 +68,8 @@ const Property = (props) => {
   const links = localStorage.getItem("noMenu") === 'true';
   const { agent, agency, noMenu } = props;
   const [showAll, setShowAll] = useState(false);
+  // Curated photo set pushed by the Photos tab so the hero/count update live
+  const [curatedPics, setCuratedPics] = useState(null);
   // CloudStay-style tabs; ?tab= deep-links (emails point at ?tab=photos)
   const [tab, setTabState] = useState(() => { try { return new URLSearchParams(window.location.search).get("tab") || "details"; } catch (e) { return "details"; } });
   const setTab = (t) => { setTabState(t); try { const u = new URL(window.location.href); u.searchParams.set("tab", t); window.history.replaceState(null, "", u.toString()); } catch (e) {} };
@@ -824,18 +826,19 @@ property,
               status={xdata?.status}
               source={xdata?.source || location?.state?.source || location?.state?.channelSource || (String(property?._id || "").split("-")[0].length <= 3 ? String(property?._id || "").split("-")[0] : undefined)}
               id={property?._id || property?.id}
-              photos={(property?.pictures?.length ? property.pictures : prop?.photos || []).length}
+              photos={(curatedPics || (property?.pictures?.length ? property.pictures : prop?.photos) || []).length}
               instantBook={_instantState}
             />
             {/* property.pictures = hub-curated (hidden/branded stripped); xdata.pictures is a legacy copy */}
-            <PropertyHero photos={(property?.pictures?.length ? property.pictures : prop?.photos) || []} onOpen={() => setTab("photos")} />
-            <div className="pt-tabs-wrap"><TabBar tab={tab} onChange={setTab} admin={isAdminUser()} counts={{ photos: (property?.pictures?.length ? property.pictures : prop?.photos || []).length, calendar: Array.isArray(fullCalendar) ? fullCalendar.length : null }} /></div>
+            <PropertyHero photos={curatedPics || (property?.pictures?.length ? property.pictures : prop?.photos) || []} onOpen={() => setTab("photos")} />
+            <div className="pt-tabs-wrap"><TabBar tab={tab} onChange={setTab} admin={isAdminUser()} counts={{ photos: (curatedPics || (property?.pictures?.length ? property.pictures : prop?.photos) || []).length, calendar: Array.isArray(fullCalendar) ? fullCalendar.length : null }} /></div>
 
             {tab === "photos" && (
               <div className="pt-panel">
                 <PhotoManager
                   inline
                   showHero={false}
+                  onChanged={(d) => { const vis = (d?.images || []).filter((i) => !i.hidden).map((i) => ({ original: i.url, thumbnail: i.thumbnail || i.url })); if (vis.length) setCuratedPics(vis); }}
                   listingId={property?._id || property?.id}
                   title={xdata?.title || property?.title}
                   bedrooms={property?.bedrooms}
