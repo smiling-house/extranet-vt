@@ -848,6 +848,23 @@ property,
                   prop?.photos.map((pic, i) => bullet(i))}
               </div>
             </div>
+            {/* CloudStay-style photo management, inline: cover + carousel strip, drag to
+                reorder, hide/unhide (admins), upload, rooms. Hidden photos stay visible
+                to partners greyed with the reason so they know what to replace. */}
+            {(property?._id || property?.id) && (
+              <div className="container pr-photos-inline" style={{ marginTop: 8 }}>
+                <PhotoManager
+                  inline
+                  listingId={property?._id || property?.id}
+                  title={xdata?.title || property?.title}
+                  bedrooms={property?.bedrooms}
+                  bathrooms={property?.bathrooms}
+                  isAdmin={(() => { try { return ["extranet-vt-logged-in-role", "extranet-sh-logged-in-role"].some((k) => localStorage.getItem(k) === "admin") && !localStorage.getItem("partnerLogin"); } catch (e) { return false; } })()}
+                  actor={(() => { try { const a = JSON.parse(localStorage.getItem("agent") || "{}"); return a.email || a.firstName || "extranet"; } catch (e) { return "extranet"; } })()}
+                  onChanged={() => { try { window.dispatchEvent(new Event("listing-photos-changed")); } catch (e) {} }}
+                />
+              </div>
+            )}
             <div className="container">
               <div className="row m-5">
                 <div className="col-12 col-md-8 order-md-first order-last ">

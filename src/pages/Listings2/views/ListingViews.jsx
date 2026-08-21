@@ -11,6 +11,7 @@ import { useHistory } from "react-router-dom";
 import { PATH_PROPERTY } from "../../../Util/constants";
 import { instantBookState, partnerInstantBookLabel } from "../../../Util/instantBook";
 import { partnerStatusReason, partnerStatusReasonList } from "../../../Util/statusReason";
+import PhotoManager from "../../../components/PhotoManager";
 import "./listings-redesign.css";
 
 /* ── Inline icons (Phosphor-ish, currentColor) ───────────────────────────── */
@@ -72,8 +73,10 @@ const sym = (c) => CUR[c] || (c ? c + " " : "");
 const money = (n, c) => (n || n === 0) ? `${sym(c)}${Number(n).toLocaleString()}` : "—";
 const pct = (f) => (f || f === 0) ? `${Math.round(f * 100)}%` : "—";
 
+/* property.pictures is the hub-curated set (hidden/branded photos already
+   removed by /local/listings); xdata.pictures is a legacy, uncurated copy. */
 const pics = (property, xdata) =>
-  (xdata?.pictures?.length ? xdata.pictures : property?.pictures) || [];
+  (property?.pictures?.length ? property.pictures : xdata?.pictures) || [];
 const picUrl = (arr, i) => arr.length ? arr[((i % arr.length) + arr.length) % arr.length]?.original : "";
 
 const COLLECTIONS = [
@@ -252,7 +255,6 @@ const Carousel = ({ d, h, sm, onView }) => {
   return (
     <div className="lr-img" style={{ height: h }} onClick={onView} role="button">
       <div className="ph" style={url ? { backgroundImage: `url(${url})` } : undefined}>{!url && "Exterior"}</div>
-      {d.code && <span className="idtag">{d.code}{d.type ? ` · ${d.type}` : ""}</span>}
       <button className={`heart${fav ? " on" : ""}`} title="Favourite"
         onClick={(e) => { e.stopPropagation(); setFav((v) => !v); }}>
         <Icon d={I.heart} size={17} fill={fav ? "currentColor" : "none"} />
@@ -263,6 +265,31 @@ const Carousel = ({ d, h, sm, onView }) => {
       </>}
       <span className="counter"><Icon d={I.camera} size={12} />{arr.length ? `${(((i % arr.length) + arr.length) % arr.length) + 1} / ${arr.length}` : "0"}</span>
     </div>
+  );
+};
+
+/* "Photos" → per-listing photo manager (reorder, hero, hide/unhide for admins;
+   partners see hidden photos greyed with the reason). */
+const PhotosButton = ({ d, icon = false }) => {
+  const [open, setOpen] = useState(false);
+  const agent = (() => { try { return JSON.parse(localStorage.getItem("agent") || "{}"); } catch (e) { return {}; } })();
+  const partnerLogin = (() => { try { return !!localStorage.getItem("partnerLogin"); } catch (e) { return false; } })();
+  return (
+    <>
+      {icon
+        ? <button className="lr-icobtn" title="Photos — reorder, hide, upload" onClick={(e) => { e.stopPropagation(); setOpen(true); }}><Icon d={I.camera} size={15} /></button>
+        : <button className="lr-btn ghost" onClick={(e) => { e.stopPropagation(); setOpen(true); }}><Icon d={I.camera} size={15} />Photos{d.photos ? ` (${d.photos})` : ""}</button>}
+      {open && <PhotoManager
+        listingId={d.id}
+        title={d.title}
+        bedrooms={d.beds}
+        bathrooms={d.baths}
+        open={open}
+        onClose={() => setOpen(false)}
+        isAdmin={isAdminRole() && !partnerLogin}
+        actor={agent?.email || agent?.firstName || "extranet"}
+      />}
+    </>
   );
 };
 
@@ -314,7 +341,7 @@ export const ExpandedRow = ({ item, onView }) => {
         <div className="spacer" />
         <button className="lr-btn primary" onClick={onView}><Icon d={I.eye} size={16} />View details</button>
         <div className="row2">
-          <button className="lr-btn ghost"><Icon d={I.chat} size={15} />Contact</button>
+          <PhotosButton d={d} />
           <button className="lr-icobtn" title="Share"><Icon d={I.share} size={15} /></button>
           <button className="lr-icobtn" title="Compare"><Icon d={I.compare} size={15} /></button>
         </div>
@@ -346,6 +373,7 @@ export const GridCard = ({ item, onView }) => {
         <div className="lr-card-foot">
           <button className="lr-btn primary" onClick={onView}><Icon d={I.eye} size={15} />View details</button>
           <span className="lr-exp-select"><Select d={d} /></span>
+          <PhotosButton d={d} icon />
           <button className="lr-icobtn" title="Share"><Icon d={I.share} size={15} /></button>
         </div>
       </div>
@@ -386,6 +414,7 @@ export const TableRow = ({ item, onView }) => {
           <StatusNote d={d} compact />
           <div className="acts">
             <button className="lr-icobtn sm" title="View details" onClick={onView}><Icon d={I.eye} size={14} /></button>
+            <PhotosButton d={d} icon />
             <button className="lr-icobtn sm" title="Share"><Icon d={I.share} size={14} /></button>
             <button className="lr-icobtn sm" title="Compare"><Icon d={I.compare} size={14} /></button>
           </div>
