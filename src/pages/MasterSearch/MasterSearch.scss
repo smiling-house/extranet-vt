@@ -195,3 +195,8 @@
   &.listed-yes { background: #e2f7e6; color: #1e7e34; }
   &.listed-no  { background: #fdecea; color: #c0392b; }
 }
+
+.master-search-table tbody tr.ms-row-link {
+  cursor: pointer;
+  &:hover td { background: #eef6fc; }
+}

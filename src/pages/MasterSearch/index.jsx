@@ -1,9 +1,11 @@
 import React, { useRef, useState } from "react"
+import { useHistory } from "react-router-dom"
 import axios from "axios"
 import Layout from "../../components/Layout"
 import pageBg from '../../assets/bk_pool.png'
 import constants from "../../Util/constants"
 import { ShubAuth } from "../../core"
+import { PATH_LISTINGS } from "../../Util/constants"
 import "./MasterSearch.scss"
 
 // One search box across every source/PMS on BOTH hubs, in two modes:
@@ -18,6 +20,12 @@ const HUBS = [
 ]
 
 const RESULTS_PER_HUB = 100
+
+// Which hub THIS extranet talks to natively. Rows from the other hub open
+// that hub's own extranet in a new tab (its /listings page cold-loads the
+// partner from ?accountId).
+const OWN_HUB = 'VT'
+const EXTRANET_URL = { VT: 'https://extra.villatracker.com', SH: 'https://extra.smilinghouse.ch' }
 
 // Raw listing.source values as they exist in both hubs' Mongo (verified against
 // live data): G, guesty_channel_api, RU, BP, HW, VillasInStBarth, InvenioHomes,
@@ -50,6 +58,7 @@ const statusCls = (status) => {
 
 const MasterSearch = ({ agent, agency, token, screenSize, activeMenu, handleToggleMenu, setActiveMenu }) => {
 
+    const history = useHistory()
     const [mode, setMode] = useState('properties')   // 'properties' | 'partners'
     const [keyword, setKeyword] = useState('')
     const [statusFilter, setStatusFilter] = useState('')
@@ -156,6 +165,26 @@ const MasterSearch = ({ agent, agency, token, screenSize, activeMenu, handleTogg
 
     const copyId = (id) => {
         try { navigator.clipboard.writeText(id) } catch (e) { /* older browsers */ }
+    }
+
+    // Open the partner's account page (= their listings view). Same drill-down
+    // contract as the Partners pages: partner + accountId in localStorage and
+    // router state, with G- partners drilled under channelSource 'SH'.
+    const openPartner = (p) => {
+        const accountId = p?.accountId
+        if (!accountId) return
+        if (p.__hub !== OWN_HUB) {
+            window.open(`${EXTRANET_URL[p.__hub]}/listings?accountId=${encodeURIComponent(accountId)}`, '_blank', 'noopener')
+            return
+        }
+        const { __hub, ...partnerDoc } = p
+        const drillChannelSource = partnerDoc.source === 'G' ? 'SH' : partnerDoc.source
+        const partner = { ...partnerDoc, source: drillChannelSource }
+        localStorage.setItem('partner', JSON.stringify(partner))
+        localStorage.setItem('accountId', String(accountId))
+        localStorage.removeItem('partnerPropertiesUniqueZipcodes')
+        localStorage.setItem('property_status_to_filter_listings', '')
+        history.push(`${PATH_LISTINGS}?accountId=${encodeURIComponent(accountId)}`, { partner, accountId, source: drillChannelSource })
     }
 
     const renderCounts = () => {
@@ -330,10 +359,15 @@ const MasterSearch = ({ agent, agency, token, screenSize, activeMenu, handleTogg
                                     {partnerRows.map((p, idx) => {
                                         const pms = partnerPmsOf(p)
                                         return (
-                                            <tr key={`${p.__hub}-${p.accountId}-${idx}`}>
+                                            <tr
+                                                key={`${p.__hub}-${p.accountId}-${idx}`}
+                                                className="ms-row-link"
+                                                title={p.__hub === OWN_HUB ? 'Open partner account' : `Open in ${p.__hub} extranet (new tab)`}
+                                                onClick={() => openPartner(p)}
+                                            >
                                                 <td><span className={`ms-badge hub-${p.__hub.toLowerCase()}`}>{p.__hub}</span></td>
                                                 <td><span className={`ms-badge ${pms.cls}`}>{pms.label}</span></td>
-                                                <td className="ms-id" title="Click to copy" onClick={() => copyId(p.accountId)}>{p.accountId || '-'}</td>
+                                                <td className="ms-id" title="Click to copy" onClick={(e) => { e.stopPropagation(); copyId(p.accountId) }}>{p.accountId || '-'}</td>
                                                 <td>{p.pmName || '-'}</td>
                                                 <td>{p.contactName || '-'}</td>
                                                 <td>{p.email || '-'}</td>
