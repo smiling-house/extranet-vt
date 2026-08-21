@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState, useRef } from "react";
 import PhotoManager from "../../components/PhotoManager";
+import { PropertyHeader, PropertyHero, TabBar, FlagsCard, CalendarTab, ReviewsTab, RawDataTab, SyncDataTab } from "./PropertyTabs";
 import { useDispatch, useSelector } from "react-redux";
 import { useLocation, useHistory } from "react-router-dom";
 import { GoogleMap, LoadScript, Marker } from "@react-google-maps/api";
@@ -67,6 +68,9 @@ const Property = (props) => {
   const links = localStorage.getItem("noMenu") === 'true';
   const { agent, agency, noMenu } = props;
   const [showAll, setShowAll] = useState(false);
+  // CloudStay-style tabs; ?tab= deep-links (emails point at ?tab=photos)
+  const [tab, setTabState] = useState(() => { try { return new URLSearchParams(window.location.search).get("tab") || "details"; } catch (e) { return "details"; } });
+  const setTab = (t) => { setTabState(t); try { const u = new URL(window.location.href); u.searchParams.set("tab", t); window.history.replaceState(null, "", u.toString()); } catch (e) {} };
   const [showAllSummary, setShowAllSummary] = useState(false);
   const [showShareAsPdf, setShowShareAsPdf] = useState(false);
   const [picIndex, setPicIndex] = useState(0);
@@ -113,7 +117,7 @@ property,
         if (item && item.listing) {
           history.replace(
             { pathname: location.pathname, search: location.search },
-            { property: item.listing, xdata: item.xdata, fullCalendar: item.fullCalendar }
+            { property: item.listing, xdata: item.xdata, fullCalendar: item.fullCalendar, source: item.channelSource || item.source, channelSource: item.channelSource, ratePlans: item.ratePlans, isListed: item.isListed, lastUpdated: item.lastUpdated }
           );
         }
       })
@@ -809,51 +813,21 @@ property,
                 {(xdata?.title || property?.title) && <><span className="pr-crumb-sep">›</span><span className="pr-crumb-cur">{xdata?.title || property?.title}</span></>}
               </nav>
             </div>
-            <div className="property-main-top py-2 pr-gallery">
-              <div
-                id="carouselExampleControlsNoTouching"
-                className="carousel slide"
-                data-bs-touch="false"
-                data-bs-interval="false"
-              >
-                <div className="carousel-inner">
-                  <div className="carousel-item active">
-                    <img
-                      src={pic}
-                      className="d-block w-100"
-                      style={{ height: "100%" }}
-                      alt={pic}
-                    />
-                  </div>
-                </div>
-                {prop?.photos && !isNullOrEmptyArray(prop?.photos) && (
-                  <span className="pr-photo-count">📷 {(picIndex % prop.photos.length) + 1} / {prop.photos.length}</span>
-                )}
-                <ImageWithHover
-                  path={picLeft}
-                  pathOver={picLeftOn}
-                  className="property-page-prev-next-pic position-absolute top-50 start-0 translate-middle-y"
-                  onClick={setPrevPic}
-                />
-                <ImageWithHover
-                  path={picRight}
-                  pathOver={picRightOn}
-                  className="property-page-prev-next-pic position-absolute top-50 end-0 translate-middle-y"
-                  onClick={setNextPic}
-                />
-              </div>
-              <div className="property-main-picture-bullets mobile-dots">
-                {property &&
-                  prop?.photos &&
-                  !isNullOrEmptyArray(prop?.photos) &&
-                  prop?.photos.map((pic, i) => bullet(i))}
-              </div>
-            </div>
-            {/* CloudStay-style photo management, inline: cover + carousel strip, drag to
-                reorder, hide/unhide (admins), upload, rooms. Hidden photos stay visible
-                to partners greyed with the reason so they know what to replace. */}
-            {(property?._id || property?.id) && (
-              <div className="container pr-photos-inline" style={{ marginTop: 8 }}>
+            <PropertyHeader
+              title={xdata?.title || property?.title}
+              subtitle={[prop?.city, prop?.state, prop?.countryName].filter(Boolean).join(", ")}
+              status={xdata?.status}
+              source={location?.state?.source || location?.state?.channelSource || xdata?.source || (String(property?._id || "").split("-")[0].length <= 3 ? String(property?._id || "").split("-")[0] : undefined)}
+              id={property?._id || property?.id}
+              photos={(property?.pictures?.length ? property.pictures : prop?.photos || []).length}
+              instantBook={_instantState}
+            />
+            {/* property.pictures = hub-curated (hidden/branded stripped); xdata.pictures is a legacy copy */}
+            <PropertyHero photos={(property?.pictures?.length ? property.pictures : prop?.photos) || []} onOpen={() => setTab("photos")} />
+            <TabBar tab={tab} onChange={setTab} counts={{ photos: (property?.pictures?.length ? property.pictures : prop?.photos || []).length, calendar: Array.isArray(fullCalendar) ? fullCalendar.length : null }} />
+
+            {tab === "photos" && (
+              <div className="pt-panel">
                 <PhotoManager
                   inline
                   listingId={property?._id || property?.id}
@@ -862,25 +836,25 @@ property,
                   bathrooms={property?.bathrooms}
                   isAdmin={(() => { try { return ["extranet-vt-logged-in-role", "extranet-sh-logged-in-role"].some((k) => localStorage.getItem(k) === "admin") && !localStorage.getItem("partnerLogin"); } catch (e) { return false; } })()}
                   actor={(() => { try { const a = JSON.parse(localStorage.getItem("agent") || "{}"); return a.email || a.firstName || "extranet"; } catch (e) { return "extranet"; } })()}
-                  onChanged={() => { try { window.dispatchEvent(new Event("listing-photos-changed")); } catch (e) {} }}
                 />
               </div>
             )}
+            {tab === "calendar" && <div className="pt-panel"><CalendarTab fullCalendar={fullCalendar} currency={property?.prices?.currency} /></div>}
+            {tab === "reviews" && <div className="pt-panel"><ReviewsTab property={property} xdata={xdata} /></div>}
+            {tab === "raw" && <div className="pt-panel"><RawDataTab property={property} xdata={xdata} fullCalendar={fullCalendar} ratePlans={location?.state?.ratePlans} /></div>}
+            {tab === "sync" && <div className="pt-panel"><SyncDataTab listing={location?.state || {}} xdata={xdata} property={property} /></div>}
+
+            {tab === "details" && (<>
+            <div className="container pt-panel" style={{ paddingBottom: 0 }}>
+              <FlagsCard xdata={xdata} property={property} source={location?.state?.source || xdata?.source} instantBook={_instantState} tags={prop?.tags || []} />
+            </div>
             <div className="container">
               <div className="row m-5">
                 <div className="col-12 col-md-8 order-md-first order-last ">
                   <div className="row">
                     <div className="col">
-                      <div className="property-page-body-top-title text-start property-title">
-                        <span>
-                          {xdata?.title||property?.title +
-                            "(" +
-                            property?.propertyType +
-                            ")"}
-                        </span>
-                      </div>
                       <div className="property-page-body-top-subtitle text-start">
-                        {prop?.city}, {prop?.state}, {prop?.countryName}
+                        {property?.propertyType}{prop?.accommodates ? ` · up to ${prop.accommodates} guests` : ""}
                       </div>
                     </div>
                     <div className="col-2">
@@ -1345,10 +1319,9 @@ property,
                 </div>
               </div>
             </div>
+            </>)}
           </div>
         </div>
-
-        )}
       </>
     );
 
