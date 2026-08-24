@@ -79,3 +79,31 @@ export function buildInstantConfig({ callbackId, sellingPrice, currency, guest, 
     // INSTANT ⇒ paymentAuthorization is intentionally OMITTED (VT-FE parity).
   };
 }
+
+// Build the SCHEDULED (50/50 instalment / Payment Request) Flywire config. The
+// backend (`POST /reservation/scheduled/create`) authoritatively decides
+// eligibility and returns `scheduled` = { env, recipientCode, bookingReference,
+// nonce, amount:0, scheduledPayments:{type,data:{instalments,serviceDescription}} }.
+// Flywire does NOT fire the callback for scheduled — the popup returns the
+// Payment Request UUID via onCompleteCallback({ reference }), which the caller
+// posts to `POST /reservation/scheduled/record-reference`.
+export function buildScheduledConfig({ scheduled, guest, onComplete, onError }) {
+  return {
+    env: scheduled.env,
+    recipientCode: scheduled.recipientCode,
+    amount: 0,
+    firstName: guest?.firstName,
+    lastName: guest?.lastName,
+    email: guest?.email,
+    phone: guest?.phone,
+    requestPayerInfo: true,
+    requestRecipientInfo: true,
+    payment_method: { type: "card" },
+    recipientFields: { booking_reference: scheduled.bookingReference },
+    nonce: scheduled.nonce,
+    scheduledPayments: scheduled.scheduledPayments,
+    onCompleteCallback: (data) => { if (typeof onComplete === "function") onComplete(data); },
+    onInvalidInput: (errors) => { (errors || []).forEach((e) => console.error(e?.msg || "Invalid payment input")); },
+    onCancel: () => { if (typeof onError === "function") onError("cancel"); },
+  };
+}

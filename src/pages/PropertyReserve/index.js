@@ -20,7 +20,7 @@ import AuthService from "../../services/auth.service";
 import constants, { PATH_SEARCH } from "../../Util/constants";
 import { bpUpsell } from "../../Util/bpUpsell";
 import { detectNonRefundable, smilingHouseCancellationCopy, cancellationForDates } from "../../Util/bookingTerms";
-import { loadFlywireSDK, buildInstantConfig, resolveFlywireCharge } from "../../Util/flywireInstant";
+import { loadFlywireSDK, buildInstantConfig, buildScheduledConfig, resolveFlywireCharge } from "../../Util/flywireInstant";
 import { getStorageValue } from "../../Util/general";
 import "./PropertyReserve.scss";
 
@@ -268,6 +268,48 @@ const PropertyReservationPage = (props) => {
       vtbe,
     };
     localStorage.setItem("bpPendingReservation", JSON.stringify(pending));
+
+    // ── Scheduled payment (50/50) when eligible: check-in > 60 days out +
+    // instant book. The hub (VT-BE) is authoritative on portal/currency
+    // eligibility; a 409 (or any create error) falls back to the instant charge.
+    const daysToCheckIn = Math.round((new Date(`${startISO}T00:00:00Z`).getTime() - Date.now()) / 86400000);
+    if (daysToCheckIn > 60) {
+      try {
+        setPaying(true);
+        const createRes = await AuthService.createScheduledReservation({
+          ...vtbe,
+          payment_type: "scheduled",
+          instantBook: true,
+          authType: "direct",
+          checkInISO: startISO,
+          total: charge.amount,
+          currency: charge.chargeCurrency,
+        });
+        const sc = createRes?.data?.scheduled;
+        const reservationID = createRes?.data?.reservationID;
+        if (sc && reservationID) {
+          const scheduledConfig = buildScheduledConfig({
+            scheduled: sc,
+            guest: { firstName: client.firstName.trim(), lastName: client.lastName.trim(), email: client.email.trim(), phone: client.phone.trim() },
+            onComplete: async (data) => {
+              const paymentRequestId = data?.reference || data?.paymentRequestId || data?.payment_request_id || data?.id;
+              try {
+                await AuthService.recordScheduledReference({ reservationID, paymentRequestId });
+              } catch (e) { console.error("record-reference failed:", e?.message || e); }
+              localStorage.removeItem("bpPendingReservation");
+              swal("Deposit received", "Your 50% deposit is confirming now. The remaining 50% will be charged automatically about 60 days before check-in.", "success")
+                .then(() => history.push("/reservations"));
+            },
+            onError: () => setPaying(false),
+          });
+          window.FlywirePayment.initiate(scheduledConfig).render();
+          return; // scheduled path handled — skip the instant charge below.
+        }
+      } catch (err) {
+        if (err?.response?.status !== 409) console.warn("scheduled create failed — using instant:", err?.message);
+        setPaying(false);
+      }
+    }
 
     const returnUrl = `${window.location.origin}/request-to-book-flywire/?confirmation=${callbackId}&ptype=instant`;
     const config = buildInstantConfig({

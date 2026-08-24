@@ -130,6 +130,13 @@ const addReservation = async (payload) => {
         headers: { authorization: `Bearer ${userToken}` },
     })
 }
+// Scheduled-payment (Flywire Payment Request / 50-50 instalment) flow.
+const createScheduledReservation = async (payload) =>
+    axios.post(`${constants.RESERVATION_API}/reservation/scheduled/create`, payload, { headers: { authorization: `Bearer ${userToken}` } })
+const recordScheduledReference = async (payload) =>
+    axios.post(`${constants.RESERVATION_API}/reservation/scheduled/record-reference`, payload, { headers: { authorization: `Bearer ${userToken}` } })
+const getScheduledStatus = async (reservationID) =>
+    axios.get(`${constants.RESERVATION_API}/reservation/scheduled/status`, { params: { id: reservationID }, headers: { authorization: `Bearer ${userToken}` } })
 // Currency exchange rates (for the BP reserve modal's USD conversion when the
 // charge portal is USD-only, e.g. the Flywire demo portal). Same hub endpoint
 // the Partners page uses; returns an array of { currency_code, conversion_rates }.
@@ -693,6 +700,9 @@ const AuthService = {
     AgentSignup,
     GetReservation,
     addReservation,
+    createScheduledReservation,
+    recordScheduledReference,
+    getScheduledStatus,
     getExchangeRates,
     updateProfileApi,
     AddNewClientApi,
