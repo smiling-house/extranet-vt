@@ -282,6 +282,9 @@ const PropertyReservationPage = (props) => {
           instantBook: true,
           authType: "direct",
           checkInISO: startISO,
+          // Payer's local "today" so the deposit instalment is dated from the payer's
+          // date perspective (Flywire rejects past instalment dates).
+          bookingDateISO: dayjs().format("YYYY-MM-DD"),
           total: charge.amount,
           currency: charge.chargeCurrency,
         });
@@ -294,7 +297,9 @@ const PropertyReservationPage = (props) => {
             onComplete: async (data) => {
               const paymentRequestId = data?.reference || data?.paymentRequestId || data?.payment_request_id || data?.id;
               try {
-                await AuthService.recordScheduledReference({ reservationID, paymentRequestId });
+                // Pass the FULL Payment Request the popup returned so the hub settles
+                // the deposit keylessly (no Flywire API key); webhook reconciles behind.
+                await AuthService.recordScheduledReference({ reservationID, paymentRequestId, paymentRequest: data });
               } catch (e) { console.error("record-reference failed:", e?.message || e); }
               localStorage.removeItem("bpPendingReservation");
               swal("Deposit received", "Your 50% deposit is confirming now. The remaining 50% will be charged automatically about 60 days before check-in.", "success")
