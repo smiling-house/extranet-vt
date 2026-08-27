@@ -10,7 +10,7 @@ import React, { useState } from "react";
 import { useHistory } from "react-router-dom";
 import { PATH_PROPERTY } from "../../../Util/constants";
 import { instantBookState, partnerInstantBookLabel } from "../../../Util/instantBook";
-import { partnerStatusReason, partnerStatusReasonList } from "../../../Util/statusReason";
+import { partnerStatusReason, partnerStatusReasonList, seasonalStatusLabel } from "../../../Util/statusReason";
 import PhotoManager from "../../../components/PhotoManager";
 import "./listings-redesign.css";
 
@@ -133,6 +133,8 @@ export const normalize = (it) => {
     rawReason: (xdata.declineReason || "").trim(),
     reason: partnerStatusReason(xdata.status, xdata),
     reasons: partnerStatusReasonList(xdata.status, xdata),
+    seasonal: seasonalStatusLabel(xdata),
+    seasonalHidden: xdata.seasonalLiveNow === false,
     mapped: !!(xdata.region && xdata.region !== "unmapped" && xdata.region !== ""),
     geo: !!a.zipcode,
     tags: xdata.tags || [],
@@ -217,21 +219,32 @@ const Cols = ({ d, mini }) => {
    grid/table cells) and the note below spells it out in full so nobody has to
    hover to find out. Admins additionally get the raw internal reason. */
 const StatusNote = ({ d, compact }) => {
-  if (!d.reason) return null;
+  if (!d.reason && !d.seasonal) return null;
   const admin = isAdminRole();
   const declined = String(d.status).toLowerCase() === "declined";
   return (
-    <div className={`lr-note ${declined ? "bad" : "warn"}${compact ? " sm" : ""}`}>
-      <span className="ic"><Icon d={I.info} size={compact ? 13 : 14} /></span>
-      <div className="tx">
-        <b>{declined ? "Why this listing was declined" : "Why this listing is not live yet"}</b>
-        {d.reasons.length > 1
-          ? <ul>{d.reasons.map((r, i) => <li key={i}>{r}</li>)}</ul>
-          : <span>{d.reasons[0] || d.reason}</span>}
-        {admin && d.rawReason &&
-          <em className="raw">Internal: {d.rawReason}{d.autodecline ? " · auto-declined" : ""}</em>}
-      </div>
-    </div>
+    <>
+      {/* Seasonal listings (part-year above the $400 floor) are shown in season
+          and hidden off-season instead of being declined — one factual line,
+          amber while hidden, blue while live. */}
+      {d.seasonal &&
+        <div className={`lr-note ${d.seasonalHidden ? "warn" : "info"}${compact ? " sm" : ""}`}>
+          <span className="ic"><Icon d={I.info} size={compact ? 13 : 14} /></span>
+          <div className="tx"><span>{d.seasonal}</span></div>
+        </div>}
+      {d.reason &&
+        <div className={`lr-note ${declined ? "bad" : "warn"}${compact ? " sm" : ""}`}>
+          <span className="ic"><Icon d={I.info} size={compact ? 13 : 14} /></span>
+          <div className="tx">
+            <b>{declined ? "Why this listing was declined" : "Why this listing is not live yet"}</b>
+            {d.reasons.length > 1
+              ? <ul>{d.reasons.map((r, i) => <li key={i}>{r}</li>)}</ul>
+              : <span>{d.reasons[0] || d.reason}</span>}
+            {admin && d.rawReason &&
+              <em className="raw">Internal: {d.rawReason}{d.autodecline ? " · auto-declined" : ""}</em>}
+          </div>
+        </div>}
+    </>
   );
 };
 

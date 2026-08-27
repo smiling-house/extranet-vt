@@ -189,6 +189,7 @@
 }
 .lr-note.bad { background: var(--bad-bg); border-color: rgba(192, 52, 77, 0.16); color: var(--bad-fg); }
 .lr-note.warn { background: var(--warn-bg); border-color: rgba(178, 106, 0, 0.16); color: var(--warn-fg); }
+.lr-note.info { background: var(--info-bg); border-color: rgba(14, 124, 168, 0.16); color: var(--info-fg); }
 .lr-note .ic { flex: 0 0 auto; margin-top: 1px; opacity: 0.85; }
 .lr-note .tx { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
 .lr-note .tx b {

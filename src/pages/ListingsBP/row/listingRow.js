@@ -1,5 +1,5 @@
 import Checkbox from "../../../components/Checkbox";
-import { partnerStatusReason } from "../../../Util/statusReason";
+import { partnerStatusReason, seasonalStatusLabel } from "../../../Util/statusReason";
 import React, { useCallback, useEffect, useState } from "react"
 import { PATH_PROPERTY } from "../../../Util/constants"
 import { useHistory } from "react-router-dom"
@@ -835,6 +835,14 @@ console.log('NEW REGION:::', response)
         { (extranet_vt_logged_in_role!=='admin' && partnerStatusReason(xdata.status, xdata) !== '') &&
           <p style={{ fontSize: "13px", fontWeight: "normal", color: "#667085" }}>
             <i>{partnerStatusReason(xdata.status, xdata)}</i>
+          </p>
+        }
+
+        {/* Seasonal listing (part-year above the $400 floor): shown in season,
+            hidden off-season instead of declined — label for partners+admins. */}
+        { seasonalStatusLabel(xdata) !== '' &&
+          <p style={{ fontSize: "13px", fontWeight: "normal", color: "#0e7ca8" }}>
+            <i>{seasonalStatusLabel(xdata)}</i>
           </p>
         }
 
