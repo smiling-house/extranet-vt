@@ -101,6 +101,12 @@ export function buildScheduledConfig({ scheduled, guest, onComplete, onError }) 
     payment_method: { type: "card" },
     recipientFields: { booking_reference: scheduled.bookingReference },
     nonce: scheduled.nonce,
+    // callback-v2: Flywire posts the deposit PAYMENT (incl. the SHE… id) to the
+    // backend so it captures it — needed for the keyless decline void
+    // (cancel_payment.php scheme) and the deposit payment notification.
+    callbackId: scheduled.callbackId || scheduled.bookingReference,
+    callbackUrl: constants.FLYWIRE_CALLBACK_URL,
+    callbackVersion: "2",
     scheduledPayments: scheduled.scheduledPayments,
     onCompleteCallback: (data) => { if (typeof onComplete === "function") onComplete(data); },
     onInvalidInput: (errors) => { (errors || []).forEach((e) => console.error(e?.msg || "Invalid payment input")); },
