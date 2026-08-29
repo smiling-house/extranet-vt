@@ -136,7 +136,7 @@ const constants = {
 	// Flywire posts the callback-v2 event (server-to-server).
 	RESERVATION_API: 'https://backend.villatracker.com',                       // VT-BE
 	FLYWIRE_CALLBACK_URL: 'https://backend.villatracker.com/reservation/flywire-response',
-	FLYWIRE_ENV: process.env.REACT_APP_FLYWIRE_ENV || 'prod',                  // 'prod' | 'demo'
+	FLYWIRE_ENV: process.env.REACT_APP_FLYWIRE_ENV || 'demo',                  // TEST WINDOW: coded 'demo' (Vercel has no env); REVERT to 'prod' to go live. 'prod' | 'demo'
 	// SmilingHouse Flywire portals (single-currency in prod; demo = SHE, USD).
 	FLYWIRE_RECIPIENTS: {
 		prod: { USD: 'UXH', CHF: 'RXH', EUR: 'YXH' },
