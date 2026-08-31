@@ -75,8 +75,10 @@ const EditPropDetails = ({ pict,formData, handleInputField, onClose }) => {
             />
 				<div className="row mb-5 mt-5">
 					<div className="text-center">
-						<Button style={{ fontSize: '25px', marginRight: '30px' }} variant="link" text="Cancel" onClick={onClose} />
-						<Button style={{ fontSize: '25px' }} text="Save" onClick={onClose} />
+						{/* Save removed (parity 5.4): it was bound to onClose — a no-op identical
+						    to Cancel — and these fields aren't editable (no handleInputField is
+						    passed), so it only gave a false "saved" impression. */}
+						<Button style={{ fontSize: '25px' }} text="Close" onClick={onClose} />
 					</div>
 
 				</div>

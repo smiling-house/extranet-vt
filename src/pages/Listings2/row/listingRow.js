@@ -853,17 +853,21 @@ setCurrentListingStatusUpdatedBy(agentData.firstName);
         }
         <div className="text-title">
           <hr />
+          {/* parity 5.3: custom title/description is an admin-only editor — gate
+              the entry point so partner/non-admin logins can't open or save it. */}
+          {(extranet_vt_logged_in_role === 'admin' && !partnerLogin) &&
           <div onClick={ ()=> showCustomTitleDescForListingId(property._id)}>
           Custom Title & Description:
-          <svg xmlns="http://www.w3.org/2000/svg" 
-              width="18" height="18" 
-              viewBox="0 0 24 24" 
-              fill="none" stroke="currentColor" 
+          <svg xmlns="http://www.w3.org/2000/svg"
+              width="18" height="18"
+              viewBox="0 0 24 24"
+              fill="none" stroke="currentColor"
               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M12 20h9"/>
             <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/>
           </svg>
           </div>
+          }
 
         </div>
         {/*//Custom Title & Desc - END*/}
@@ -950,7 +954,9 @@ setCurrentListingStatusUpdatedBy(agentData.firstName);
         }
       </h4>
 
-{(currentListingStatus?.toLowerCase() !== 'approved' && currentListingRegion !== 'unmapped') &&
+{/* parity 5.3: Approve is an admin-only action — gate it behind the same
+    role guard used elsewhere in this row (not just status/region). */}
+{(extranet_vt_logged_in_role === 'admin' && !partnerLogin && currentListingStatus?.toLowerCase() !== 'approved' && currentListingRegion !== 'unmapped') &&
   <Button
     style={{ fontSize: "15px"}}
     text="Approve"
