@@ -50,6 +50,30 @@ async function patch({ scope, key, mode, actor }) {
 export const setAccountBookingMode = ({ accountId, mode, actor }) =>
     patch({ scope: 'partner', key: accountId, mode, actor })
 
+/**
+ * Set (or clear, with max = null) the account's D6 price bracket.
+ *
+ * Sent WITHOUT `mode`, which the hub reads as "leave the mode alone" — so a
+ * partner can change the bracket without their booking mode being cleared as a
+ * side effect.
+ */
+export async function setAccountPriceBracket({ accountId, max, currency, actor }) {
+    const rules = (max === null || max === undefined || max === '')
+        ? null
+        : { instantBookMaxTotal: Number(max), currency: currency || 'CHF' }
+    if (rules && !(Number.isFinite(rules.instantBookMaxTotal) && rules.instantBookMaxTotal > 0)) {
+        throw new Error('the bracket must be a number greater than zero, or empty to remove it')
+    }
+    const { data } = await hub().patch('/api/instant-book', {
+        scope: 'partner',
+        key: accountId,
+        rules,
+        actor: actor || 'extranet',
+    })
+    if (!data?.ok) throw new Error(data?.error || 'the hub refused the change')
+    return data
+}
+
 /** Set (or clear, with mode = null) one listing's override. */
 export const setListingBookingMode = ({ hubId, mode, actor }) =>
     patch({ scope: 'listing', key: hubId, mode, actor })

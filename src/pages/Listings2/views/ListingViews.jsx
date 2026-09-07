@@ -11,7 +11,7 @@ import { useHistory } from "react-router-dom";
 import { PATH_PROPERTY } from "../../../Util/constants";
 import { instantBookState } from "../../../Util/instantBook";
 import { ACCOUNT_OPTIONS, MODE_HELP, scopeMode } from "../../../Util/bookingMode";
-import { setAccountBookingMode, getBookingMode } from "../../../Util/bookingModeApi";
+import { setAccountBookingMode, setAccountPriceBracket, getBookingMode } from "../../../Util/bookingModeApi";
 import { storedPartner, storedAccountId, currentActor } from "../../../Util/partner";
 import { partnerStatusReason, partnerStatusReasonList, seasonalStatusLabel } from "../../../Util/statusReason";
 import PhotoManager from "../../../components/PhotoManager";
@@ -108,6 +108,84 @@ const isAdminRole = () => {
 /* storedPartner moved to Util/partner so the PROPERTY page can use the same
    one. It could not before, which is why an inheriting listing read ON here
    and "inherits account (OFF)" there. */
+
+/**
+ * The optional price bracket (D6 Phase 5) — one number beside the account
+ * dropdown.
+ *
+ * "Above this total, hand the booking to a concierge instead of charging it."
+ * A stay over the bracket is downgraded one step at checkout: Instant Book
+ * becomes Instant confirmation, so the card is held and someone calls the guest.
+ * It can only ever make a booking MORE cautious, which is why an empty field is
+ * safe and why there is no confirm on it.
+ *
+ * Blur, not keystroke: a number field that saved on every keypress would write
+ * "1", "15", "150"… and briefly leave a CHF 1 bracket live.
+ */
+const PriceBracket = ({ accountId, partner }) => {
+  const existing = partner?.bookingModeRules || null;
+  const [max, setMax] = useState(existing?.instantBookMaxTotal ?? "");
+  const [currency] = useState(existing?.currency || "CHF");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState(null);
+  const [saved, setSaved] = useState(false);
+
+  const commit = async () => {
+    const next = String(max).trim();
+    const before = existing?.instantBookMaxTotal ?? "";
+    if (next === String(before)) return;         // nothing typed
+    setSaving(true); setError(null); setSaved(false);
+    try {
+      await setAccountPriceBracket({
+        accountId,
+        max: next === "" ? null : Number(next),
+        currency,
+        actor: currentActor(),
+      });
+      setSaved(true);
+      try {
+        const p = JSON.parse(localStorage.getItem("partner")) || null;
+        if (p) {
+          p.bookingModeRules = next === ""
+            ? undefined
+            : { instantBookMaxTotal: Number(next), currency };
+          localStorage.setItem("partner", JSON.stringify(p));
+        }
+      } catch (e) { /* the hub is the truth; a stale cache costs a refresh */ }
+    } catch (e) {
+      setMax(before);
+      setError(e?.response?.data?.error || e?.message || "the bracket did not save");
+    } finally { setSaving(false); }
+  };
+
+  return (
+    <div className="lr-bm-bracket">
+      <label className="lr-bm-label" htmlFor="lr-bm-max">Hand to a concierge above</label>
+      <input
+        id="lr-bm-max"
+        className="lr-bm-max"
+        type="number"
+        min="1"
+        step="100"
+        inputMode="numeric"
+        placeholder="no limit"
+        value={max}
+        disabled={saving}
+        onChange={(e) => setMax(e.target.value)}
+        onBlur={commit}
+      />
+      <span className="lr-bm-note">{currency}</span>
+      {saving ? <span className="lr-bm-note">saving…</span> : null}
+      {saved && !saving ? <span className="lr-bm-note">saved</span> : null}
+      {error ? <span className="lr-bm-error">{error}</span> : null}
+      <div className="lr-bm-help">
+        Stays above this total are confirmed instantly but <strong>not charged</strong> — the card
+        is held and a concierge calls the guest, exactly as Instant confirmation does. Leave it
+        empty for no limit.
+      </div>
+    </div>
+  );
+};
 
 /**
  * The ACCOUNT-level booking mode (D6) — the default every listing without its
@@ -216,6 +294,11 @@ const AccountBookingMode = ({ partner }) => {
       </select>
       {saving ? <span className="lr-bm-note">saving…</span> : null}
       {error ? <span className="lr-bm-error">{error}</span> : null}
+      {/* D6 Phase 5 — only shown once the account is actually on Instant Book,
+          because that is the only mode the bracket can act on. Showing it beside
+          "Request to book" would be offering a control that provably does
+          nothing. */}
+      {value === "instant_book" ? <PriceBracket accountId={accountId} partner={partner} /> : null}
       {result && !saving ? (
         <span className="lr-bm-note">
           {result.listingsAffected} of {result.listingsUnderAccount} properties now inherit this
