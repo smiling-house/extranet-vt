@@ -125,7 +125,17 @@ const isAdminRole = () => {
 const PriceBracket = ({ accountId, partner }) => {
   const existing = partner?.bookingModeRules || null;
   const [max, setMax] = useState(existing?.instantBookMaxTotal ?? "");
-  const [currency] = useState(existing?.currency || "CHF");
+  // The partner picks the currency. It used to be hardcoded to CHF with no
+  // setter, which was honest (the label said CHF) but unchangeable — a partner
+  // pricing in euros typed 40000 and got a CHF ceiling roughly 6% away from what
+  // they meant. The API has always accepted and stored `currency`; this was a
+  // UI-only limitation.
+  //
+  // EUR first because that is what stays are actually priced in — measured
+  // 2026-09-08: 115 of 163 checkout sessions and 9,652 listings in EUR against
+  // 1,174 in CHF. It also matters during an FX outage, when the only comparisons
+  // that still work are the ones where the stay's currency equals the bracket's.
+  const [currency, setCurrency] = useState(existing?.currency || "EUR");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
   const [saved, setSaved] = useState(false);
@@ -133,7 +143,11 @@ const PriceBracket = ({ accountId, partner }) => {
   const commit = async () => {
     const next = String(max).trim();
     const before = existing?.instantBookMaxTotal ?? "";
-    if (next === String(before)) return;         // nothing typed
+    const currencyChanged = !!existing && (existing.currency || "EUR") !== currency;
+    // Re-save when the CURRENCY moved even if the number did not: 15000 CHF and
+    // 15000 EUR are different ceilings, and leaving the new currency showing
+    // beside an unsaved old one would misreport what is live.
+    if (next === String(before) && !currencyChanged) return;
     setSaving(true); setError(null); setSaved(false);
     try {
       await setAccountPriceBracket({
@@ -174,14 +188,22 @@ const PriceBracket = ({ accountId, partner }) => {
         onChange={(e) => setMax(e.target.value)}
         onBlur={commit}
       />
-      <span className="lr-bm-note">{currency}</span>
+      <select
+        className="lr-bm-select"
+        value={currency}
+        disabled={saving}
+        onChange={(e) => setCurrency(e.target.value)}
+        aria-label="Currency the bracket is set in"
+      >
+        {["EUR", "CHF", "USD", "GBP"].map((c) => <option key={c} value={c}>{c}</option>)}
+      </select>
       {saving ? <span className="lr-bm-note">saving…</span> : null}
       {saved && !saving ? <span className="lr-bm-note">saved</span> : null}
       {error ? <span className="lr-bm-error">{error}</span> : null}
       <div className="lr-bm-help">
         Stays above this total are confirmed instantly but <strong>not charged</strong> — the card
         is held and a concierge calls the guest, exactly as Instant confirmation does. Leave it
-        empty for no limit.
+        empty for no limit. Stays priced in another currency are converted before comparing.
       </div>
     </div>
   );
