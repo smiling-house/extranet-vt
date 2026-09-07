@@ -11,7 +11,7 @@ import { useHistory } from "react-router-dom";
 import { PATH_PROPERTY } from "../../../Util/constants";
 import { instantBookState } from "../../../Util/instantBook";
 import { ACCOUNT_OPTIONS, MODE_HELP, scopeMode } from "../../../Util/bookingMode";
-import { setAccountBookingMode } from "../../../Util/bookingModeApi";
+import { setAccountBookingMode, getBookingMode } from "../../../Util/bookingModeApi";
 import { storedPartner, storedAccountId, currentActor } from "../../../Util/partner";
 import { partnerStatusReason, partnerStatusReasonList, seasonalStatusLabel } from "../../../Util/statusReason";
 import PhotoManager from "../../../components/PhotoManager";
@@ -132,14 +132,61 @@ const AccountBookingMode = ({ partner }) => {
 
   if (!accountId) return null;
 
+  /**
+   * Confirm ONLY when moving to instant_book, and only when more than one
+   * listing would change.
+   *
+   * Not a blanket confirm — a dialog on every save trains people to click
+   * through it, and then it protects nothing. The asymmetry that justifies this
+   * one: moving to enquiry or instant_confirmation is the cautious direction and
+   * is reversible with no consequence, while moving to instant_book means real
+   * cards get charged on stays the partner thought they would be asked about
+   * first. And that mistake is INVISIBLE to the partner — they see a success
+   * message with a plausible number in it — and visible only to guests.
+   *
+   * The count comes from the hub rather than the page, because the page shows a
+   * filtered/paginated view and the write applies to the whole account.
+   */
+  const confirmWidening = async (next) => {
+    if (next !== "instant_book") return true;
+    let count = null;
+    try {
+      const state = await getBookingMode({ accountId });
+      // Only listings that INHERIT are moved; ones with their own override are not.
+      count = state?.totals?.inheriting;
+    } catch (e) {
+      // Could not count. Ask anyway rather than skipping the gate — failing
+      // open on the money-moving direction is the wrong way round.
+    }
+    if (count !== null && count !== undefined && count <= 1) return true;
+    const howMany = (count === null || count === undefined)
+      ? "every property that inherits the account default"
+      : `${count} properties`;
+    // eslint-disable-next-line no-alert
+    return window.confirm(
+      `Switch ${howMany} to Instant Book?\n\n` +
+      `Guests will be able to book those properties instantly and their cards will be CHARGED, ` +
+      `with no request for you to accept first.\n\n` +
+      `Properties with their own booking mode are not affected.`
+    );
+  };
+
   const change = async (next) => {
     const previous = value;
+    if (!(await confirmWidening(next))) return;   // leave the select as it was
     setValue(next); setSaving(true); setError(null); setResult(null);
     try {
       const res = await setAccountBookingMode({ accountId, mode: next || null, actor: currentActor() });
       setResult(res);
       // Keep localStorage's partner doc in step so a navigation back to a
       // property page inherits the value just set rather than the stale one.
+      //
+      // NOTE on `instantBook: false` when clearing: that asserts "explicitly
+      // enquiry" where the hub now has nothing at all. Safe HERE only because
+      // nothing sits above an account default, so absent and enquiry resolve
+      // identically. DO NOT COPY THIS TO LISTING SCOPE — there, absent means
+      // "inherit the account" and false means "pinned off", and writing the
+      // derived boolean instead of removing it would silently pin the listing.
       try {
         const p = JSON.parse(localStorage.getItem("partner")) || null;
         if (p) {
