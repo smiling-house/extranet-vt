@@ -127,3 +127,20 @@
 
 /* Booking widget hidden in the extranet → details column takes the full row */
 .property-page-wrapper .row.m-5 > .col-md-8.pr-details-col { width: 100% !important; max-width: 100%; }
+
+/* ── D6 booking mode (per property) ──────────────────────────────────────────
+   Lives in the Listing settings card. The help line is deliberately full-width
+   under the select: the difference between the two instant modes is whether the
+   card is charged, and that does not fit in an option label. */
+.pt-bm { margin-top: 6px; }
+.pt-bm-select {
+  font: inherit;
+  padding: 5px 8px;
+  border: 1px solid var(--pt-line, #d9d9d9);
+  border-radius: 4px;
+  background: #fff;
+  max-width: 320px;
+}
+.pt-bm-select:disabled { opacity: .6; cursor: progress; }
+.pt-bm-help { margin-top: 6px; max-width: 52ch; line-height: 1.45; }
+.pt-bm-error { color: #b42318; margin-top: 4px; }

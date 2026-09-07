@@ -441,3 +441,19 @@ table.lr-table tbody tr:hover td { background: #fafcfe; }
   .lr-exp { grid-template-columns: 1fr; }
   .lr-exp-pc { grid-template-columns: 1fr; }
 }
+
+/* ── D6 booking mode (account level) ─────────────────────────────────────────
+   Replaces the read-only "Instant Book default" badge in the listings header. */
+.lr-bm { margin-top: 8px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.lr-bm-label { font-weight: 600; }
+.lr-bm-select {
+  font: inherit;
+  padding: 5px 8px;
+  border: 1px solid var(--lr-line, #d9d9d9);
+  border-radius: 4px;
+  background: #fff;
+}
+.lr-bm-select:disabled { opacity: .6; cursor: progress; }
+.lr-bm-note { opacity: .75; }
+.lr-bm-error { color: #b42318; }
+.lr-bm-help { flex-basis: 100%; opacity: .8; max-width: 62ch; line-height: 1.45; }

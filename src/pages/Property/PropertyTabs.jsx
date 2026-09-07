@@ -9,6 +9,9 @@
 //   <SyncDataTab>     every sync/bookkeeping field on xdata, flat table
 // Kept byte-identical between extranet-sh and extranet-vt.
 import React, { useMemo, useState } from "react";
+import { MODE_HELP, MODE_LABEL, listingOptions } from "../../Util/bookingMode";
+import { setListingBookingMode } from "../../Util/bookingModeApi";
+import { currentActor } from "../../Util/partner";
 import "./property-tabs.css";
 
 const esc = (v) => (v === null || v === undefined ? "" : String(v));
@@ -86,7 +89,73 @@ const Row = ({ k, children, tone }) => (
   <tr><td className="pt-k">{k}</td><td className={`pt-v ${tone || ""}`}>{children}</td></tr>
 );
 
-export const FlagsCard = ({ xdata = {}, property = {}, source, instantBook, tags = [], dashboardUrl = "https://dashboard.villatracker.com" }) => {
+/**
+ * The per-property booking-mode control (D6).
+ *
+ * Writes straight to the hub — the hub owns this setting, so there is nothing
+ * local to keep in step. The select is disabled while the write is in flight and
+ * REVERTS on failure: a control that silently keeps the value it failed to save
+ * is how a partner ends up believing a property is on Instant Book when it is
+ * not, which for this particular setting means believing a card will be charged.
+ *
+ * `bookingMode.override` is the stored value (null = inheriting), NOT the
+ * effective one — the dropdown must show what this listing itself says, with
+ * inheritance offered as its own option.
+ */
+const BookingModeRow = ({ hubId, bookingMode, onChanged }) => {
+  const [saving, setSaving] = useState(false);
+  const [value, setValue] = useState(bookingMode?.override || "");
+  const [error, setError] = useState(null);
+  const [saved, setSaved] = useState(false);
+
+  const options = listingOptions(bookingMode?.partnerDefault);
+
+  const change = async (next) => {
+    const previous = value;
+    setValue(next); setSaving(true); setError(null); setSaved(false);
+    try {
+      // "" is the inherit option; the hub takes null and $unsets the override.
+      const res = await setListingBookingMode({ hubId, mode: next || null, actor: currentActor() });
+      setSaved(true);
+      if (onChanged) onChanged(res);
+    } catch (e) {
+      setValue(previous);
+      setError(e?.response?.data?.error || e?.message || "the change did not save");
+    } finally { setSaving(false); }
+  };
+
+  const effective = value || bookingMode?.partnerDefault || "enquiry";
+  return (
+    <div className="pt-bm">
+      <select
+        className="pt-bm-select"
+        value={value}
+        disabled={saving}
+        onChange={(e) => change(e.target.value)}
+        aria-label="Booking mode for this property"
+      >
+        {options.map((o) => <option key={o.value || "inherit"} value={o.value}>{o.label}</option>)}
+      </select>
+      {saving ? <span className="pt-muted"> · saving…</span> : null}
+      {saved && !saving ? <span className="pt-muted"> · saved</span> : null}
+      {error ? <span className="pt-bm-error"> · {esc(error)}</span> : null}
+      {/* What the guest actually gets. Spelled out because "Instant Book" and
+          "Instant confirmation" differ in exactly one way a partner cares about
+          — whether the card is charged — and the words alone do not say it. */}
+      <div className="pt-muted pt-bm-help">{MODE_HELP[effective]}</div>
+      {bookingMode?.inert ? (
+        <div className="pt-bm-error">
+          This source has no reservation API, so the setting is stored but inert — the listing stays enquiry-only.
+        </div>
+      ) : null}
+      {bookingMode?.setBy ? (
+        <div className="pt-muted">Last changed by {esc(bookingMode.setBy)}{bookingMode.setAt ? ` · ${esc(String(bookingMode.setAt).slice(0, 10))}` : ""}</div>
+      ) : null}
+    </div>
+  );
+};
+
+export const FlagsCard = ({ xdata = {}, property = {}, source, instantBook, bookingMode, tags = [], dashboardUrl = "https://dashboard.villatracker.com" }) => {
   const id = property._id || property.id;
   const collections = [["eventCollection", "Events"], ["familyCollection", "Family"], ["petsCollection", "Pets"], ["sustainCollection", "Sustainable"], ["ecoCollection", "Eco"]].filter(([k]) => tags.includes(k)).map(([, l]) => l);
   const onDemand = tags.includes("onDemand") || xdata?.qod?.enabled === true;
@@ -95,10 +164,22 @@ export const FlagsCard = ({ xdata = {}, property = {}, source, instantBook, tags
       <h3>Listing settings</h3>
       <table className="pt-table"><tbody>
         <Row k="Status">{statusPill(xdata.status)}{xdata.declineReason ? <span className="pt-muted"> · {esc(xdata.declineReason)}</span> : null}</Row>
-        <Row k="Instant book">
-          {instantBook ? <span className={`pt-pill ${instantBook.effective ? "ok" : "neutral"}`}>{instantBook.effective ? "ON" : "OFF"}</span> : <span className="pt-muted">—</span>}
-          {instantBook?.label ? <span className="pt-muted"> · {esc(instantBook.label)}</span> : null}
-          <span className="pt-muted"> · set per listing or account in the <a href={`${dashboardUrl}/listings/${encodeURIComponent(id || "")}`} target="_blank" rel="noreferrer">dashboard</a></span>
+        <Row k="Booking mode">
+          {bookingMode ? (
+            <>
+              <span className={`pt-pill ${bookingMode.tone === "on" ? "ok" : bookingMode.tone === "info" ? "info" : "neutral"}`}>
+                {MODE_LABEL[bookingMode.effective]}
+              </span>
+              {/* No longer "set it in the dashboard" — this IS where it is set. */}
+              <BookingModeRow hubId={id} bookingMode={bookingMode} />
+            </>
+          ) : instantBook ? (
+            // Pre-D6 fallback for any caller not yet passing bookingMode.
+            <>
+              <span className={`pt-pill ${instantBook.effective ? "ok" : "neutral"}`}>{instantBook.effective ? "ON" : "OFF"}</span>
+              {instantBook?.label ? <span className="pt-muted"> · {esc(instantBook.label)}</span> : null}
+            </>
+          ) : <span className="pt-muted">—</span>}
         </Row>
         <Row k="Featured">
           <span className="pt-muted">Homepage featured set is curated in the dashboard (smilinghouse.ch homepage)</span>

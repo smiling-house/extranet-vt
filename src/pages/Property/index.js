@@ -51,6 +51,8 @@ import goBack from "../../assets/go-back.svg";
 import makeCalculations from "../../Hooks/makeCalculations.jsx";
 import { formatBookingTerms, smilingHouseCancellationCopy, cancellationForDates } from "../../Util/bookingTerms.js";
 import { instantBookState } from "../../Util/instantBook";
+import { bookingModeState } from "../../Util/bookingMode";
+import { storedPartner } from "../../Util/partner";
 import { UPSALE, AGENCY_COMMISION } from "../../Util/constants";
 import LoadingBox from '../../components/LoadingBox';
 import swal from "sweetalert";
@@ -675,7 +677,14 @@ property,
   };
   // Show the Instant Book button for BookingPal listings unless instant book is
   // explicitly turned OFF (mirrors the hub instant-book logic).
-  const _instantState = instantBookState({ xdata, hubId: property?._id });
+  // `partner` was MISSING here, and that was a real bug: without the account
+  // default an inheriting listing read "inherits account (OFF)" on this page
+  // while the listings list said ON. `storedPartner` is now shared with
+  // ListingViews rather than being a private helper there, so the two pages
+  // cannot resolve the same listing differently again.
+  const _partner = storedPartner();
+  const _instantState = instantBookState({ xdata, partner: _partner, hubId: property?._id });
+  const _bookingMode = bookingModeState({ xdata, partner: _partner, hubId: property?._id });
   const showInstant = String(property?._id || "").startsWith("BP-") && _instantState.override !== false;
 
   if (property && property !== undefined) {
@@ -854,7 +863,7 @@ property,
 
             {tab === "details" && (<>
             <div className="container pt-panel" style={{ paddingBottom: 0 }}>
-              <FlagsCard xdata={xdata} property={property} source={location?.state?.source || xdata?.source} instantBook={_instantState} tags={prop?.tags || []} />
+              <FlagsCard xdata={xdata} property={property} source={location?.state?.source || xdata?.source} instantBook={_instantState} bookingMode={_bookingMode} tags={prop?.tags || []} />
             </div>
             <div className="container">
               <div className="row m-5">

@@ -9,7 +9,10 @@
 import React, { useState } from "react";
 import { useHistory } from "react-router-dom";
 import { PATH_PROPERTY } from "../../../Util/constants";
-import { instantBookState, partnerInstantBookLabel } from "../../../Util/instantBook";
+import { instantBookState } from "../../../Util/instantBook";
+import { ACCOUNT_OPTIONS, MODE_HELP, scopeMode } from "../../../Util/bookingMode";
+import { setAccountBookingMode } from "../../../Util/bookingModeApi";
+import { storedPartner, storedAccountId, currentActor } from "../../../Util/partner";
 import { partnerStatusReason, partnerStatusReasonList, seasonalStatusLabel } from "../../../Util/statusReason";
 import PhotoManager from "../../../components/PhotoManager";
 import "./listings-redesign.css";
@@ -102,11 +105,79 @@ const isAdminRole = () => {
   } catch (e) { return false; }
 };
 
-/* Partner doc for the instant-book account default — the page stores it in
-   localStorage on drill-down; read per render so a partner switch (which
-   reloads or re-navigates) is always current. */
-const storedPartner = () => {
-  try { return JSON.parse(localStorage.getItem("partner")) || null; } catch (e) { return null; }
+/* storedPartner moved to Util/partner so the PROPERTY page can use the same
+   one. It could not before, which is why an inheriting listing read ON here
+   and "inherits account (OFF)" there. */
+
+/**
+ * The ACCOUNT-level booking mode (D6) — the default every listing without its
+ * own override inherits.
+ *
+ * Sits where the read-only "Instant Book default" badge used to, because that is
+ * where partners already look for it. Writes straight to the hub, which owns the
+ * setting; there is no local copy to keep in step.
+ *
+ * The confirmation line is not decoration. This one control moves EVERY
+ * inheriting listing on the account at once, and the hub replies with how many
+ * that actually was — so the partner sees the blast radius rather than the word
+ * "saved". `listingsWithOwnOverride` is reported too, because "why did 12 of my
+ * 40 properties not change?" is the immediate next question.
+ */
+const AccountBookingMode = ({ partner }) => {
+  const accountId = partner?.accountId || storedAccountId();
+  const [value, setValue] = useState(scopeMode(partner) || "");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState(null);
+  const [result, setResult] = useState(null);
+
+  if (!accountId) return null;
+
+  const change = async (next) => {
+    const previous = value;
+    setValue(next); setSaving(true); setError(null); setResult(null);
+    try {
+      const res = await setAccountBookingMode({ accountId, mode: next || null, actor: currentActor() });
+      setResult(res);
+      // Keep localStorage's partner doc in step so a navigation back to a
+      // property page inherits the value just set rather than the stale one.
+      try {
+        const p = JSON.parse(localStorage.getItem("partner")) || null;
+        if (p) {
+          p.bookingMode = next || undefined;
+          p.instantBook = next === "instant_book";
+          localStorage.setItem("partner", JSON.stringify(p));
+        }
+      } catch (e) { /* a stale badge is survivable; the hub is the truth */ }
+    } catch (e) {
+      setValue(previous);
+      setError(e?.response?.data?.error || e?.message || "the change did not save");
+    } finally { setSaving(false); }
+  };
+
+  return (
+    <div className="lr-sub lr-bm" title="Account-level default — listings without their own override inherit this.">
+      <label className="lr-bm-label" htmlFor="lr-bm-select">Booking mode for all properties</label>
+      <select
+        id="lr-bm-select"
+        className="lr-bm-select"
+        value={value}
+        disabled={saving}
+        onChange={(e) => change(e.target.value)}
+      >
+        <option value="">Not set (Request to book)</option>
+        {ACCOUNT_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+      </select>
+      {saving ? <span className="lr-bm-note">saving…</span> : null}
+      {error ? <span className="lr-bm-error">{error}</span> : null}
+      {result && !saving ? (
+        <span className="lr-bm-note">
+          {result.listingsAffected} of {result.listingsUnderAccount} properties now inherit this
+          {result.listingsWithOwnOverride ? ` · ${result.listingsWithOwnOverride} keep their own setting` : ""}
+        </span>
+      ) : null}
+      {value ? <div className="lr-bm-help">{MODE_HELP[value]}</div> : null}
+    </div>
+  );
 };
 
 /* normalise a raw listing item → flat fields the views render */
@@ -487,11 +558,7 @@ export const ListingsHeader = ({
           <span className="layers"><Icon d={I.layers} size={15} /></span>
           Displaying <b>{from}–{to}</b> of <b>{total != null ? total : "?"}</b> properties
         </div>
-        <div className="lr-sub" title="Account-level Instant Book default — listings without their own override inherit this.">
-          <span className={`lr-badge ${partner?.instantBook === true ? "ok" : "neutral"}`} style={{ marginTop: 6 }}>
-            <Icon d={I.sparkle} size={12} />{partnerInstantBookLabel(partner)}
-          </span>
-        </div>
+        <AccountBookingMode partner={partner} />
       </div>
       <ViewSwitcher value={viewMode} onChange={onViewMode} bare />
     </div>
