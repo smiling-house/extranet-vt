@@ -129,7 +129,12 @@ export const ensureHubSession = async (hubUrl) => {
     const origin = originOf(hubUrl)
     if (!origin) return null
     const s = getHubSession(origin)
-    if (s) {
+    const jToken = read('jToken')
+    const wantAdmin = isAdminLogin() && !!jToken
+    // A public session (e.g. picked up on a pre-login page, or while an admin exchange was
+    // refused) never stands in for a logged-in admin: the admin exchange is tried first
+    // (with the refusal backoff) and replaces it when it succeeds.
+    if (s && !(s.role === 'public' && wantAdmin)) {
         if (renewDue(s, origin)) {
             renewAttemptAt[origin] = Date.now()
             once(`renew:${origin}`, async () => {
@@ -137,16 +142,16 @@ export const ensureHubSession = async (hubUrl) => {
                 const cur = getHubSession(origin)
                 if (!cur || cur.token !== s.token) return
                 if (r.data) setHubSession(origin, { token: r.data.token, expiresAt: r.data.expiresAt, role: r.data.role || s.role })
-                else if (r.status === 401) clearHubSession(origin) // hub says the session is no longer valid (e.g. partner removed)
+                else if (r.status === 401) clearHubSession(origin) // hub says the session is no longer valid
             })
         }
         return s.token
     }
-    const jToken = read('jToken')
-    if (isAdminLogin() && jToken) {
+    if (wantAdmin) {
         const token = await exchange(`admin:${origin}`, origin, 'admin', { Authorization: `Bearer ${jToken}` }, 'admin')
         if (token) return token
     }
+    if (s) return s.token
     if (config.publicSessions) return exchange(`public:${origin}`, origin, 'public', null, 'public')
     return null
 }

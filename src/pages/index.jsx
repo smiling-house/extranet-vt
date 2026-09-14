@@ -330,9 +330,10 @@ if(partnerAccountId) {
   // LIVE 2026-09-14: partners are deny-by-default — any page outside the partner
   // journey redirects to their own home, on EVERY navigation (this used to be a
   // one-shot redirect after two API calls, and admin pages rendered meanwhile).
-  // A partner session from before server-side sessions (no hub session) logs in once;
+  // A partner session from before server-side sessions (no PARTNER hub session — a public
+  // session from a pre-login page does not count) logs in once;
   // the login form is prefilled with their account ID.
-  if (isPartnerSession() && !getHubSession(hubConstants.SHUB_URL) && !/^\/(login|qr|forgotPassword|verifycode|resetpassword|signup|welcome|signupthanks)(\/|$)/.test(location.pathname)) {
+  if (isPartnerSession() && (getHubSession(hubConstants.SHUB_URL) || {}).role !== 'partner' && !/^\/(login|qr|forgotPassword|verifycode|resetpassword|signup|welcome|signupthanks)(\/|$)/.test(location.pathname)) {
     try {
       const acc = localStorage.getItem('partnerLogin');
       if (acc) localStorage.setItem('partnerLoginAccountId', acc);

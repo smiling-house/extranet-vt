@@ -212,6 +212,29 @@ await t('fetch 401 on a request that carried a session triggers the check', asyn
   await new Promise((r) => setTimeout(r, 5))
   assert.equal(H.getHubSession(O), null)
 })
+await t('a logged-in admin holding a public session gets the admin exchange (public kept only while refused)', async () => {
+  const O = 'https://pub2adm.example'
+  H.configureHubSessions({ publicSessions: true })
+  H.setHubSession(O, { token: 'pub', expiresAt: later(12 * 3600e3), role: 'public' })
+  store.set('extranet-vt-logged-in-role', 'admin'); store.set('jToken', 'adm-jwt')
+  fetchReply = () => ({ ok: false, status: 502, json: async () => ({}) })
+  assert.equal(await H.ensureHubSession(O), 'pub')
+  assert.equal(await H.ensureHubSession(O), 'pub')
+  assert.equal(calls.filter((c) => c.url === `${O}/local/extranet/session/admin`).length, 1)
+  const O2 = 'https://pub2adm-ok.example'
+  H.setHubSession(O2, { token: 'pub', expiresAt: later(12 * 3600e3), role: 'public' })
+  fetchReply = () => ({ ok: true, status: 200, json: async () => ({ token: 'adm', expiresAt: later(12 * 3600e3) }) })
+  assert.equal(await H.ensureHubSession(O2), 'adm')
+  assert.equal(H.getHubSession(O2).role, 'admin')
+})
+await t('a partner or anonymous visitor keeps a stored public session (no exchange)', async () => {
+  const O = 'https://pubkeep.example'
+  H.configureHubSessions({ publicSessions: true })
+  H.setHubSession(O, { token: 'pub', expiresAt: later(12 * 3600e3), role: 'public' })
+  store.set('partnerLogin', 'RU-1'); store.set('extranet-vt-logged-in-role', 'partner')
+  assert.equal(await H.ensureHubSession(O), 'pub')
+  assert.equal(calls.length, 0)
+})
 await t('clearHubSession() clears every hub', () => {
   H.setHubSession(HUB, { token: 'a', role: 'admin' }); H.setHubSession('https://api.triangle.luxury', { token: 'b', role: 'admin' })
   H.clearHubSession()
