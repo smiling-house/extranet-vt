@@ -10,7 +10,8 @@ const Qr = () => {
     const partnerLoginEmail = queryParams.get('email');
     const partnerLoginAccountIdRev = queryParams.get('accountId');
 
-    const partnerLoginAccountId = partnerLoginAccountIdRev.split("").reverse().join("");
+    // A link without accountId used to crash the page (.split on null).
+    const partnerLoginAccountId = (partnerLoginAccountIdRev || "").split("").reverse().join("");
 
 	localStorage.setItem('partnerLoginEmail', partnerLoginEmail);
 	localStorage.setItem('partnerLoginAccountId', partnerLoginAccountId);

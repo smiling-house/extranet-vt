@@ -7,7 +7,8 @@ import Qr from "./Auth/Qr";
 
 import ResetPasswordPage from "./ResetPasswordPage/ResetPasswordPage";
 import SignupThanks from "./SignupThanks";
-import { Link, Route, Switch, useHistory, useLocation, useParams } from "react-router-dom";
+import { Link, Redirect, Route, Switch, useHistory, useLocation, useParams } from "react-router-dom";
+import { partnerRedirectFor } from "../Util/access";
 import Profile from "./Profile/Profile";
 import AgencyProfile from "./AgencyProfile/AgencyProfile";
 import Listings from "./Listings2";
@@ -267,18 +268,11 @@ const showOrHideSideBarMenu=()=> {
 const partnerAccountId = localStorage.getItem('partnerLogin');
 
 if(partnerAccountId) {
-  // Default to the Guesty PM home. AccountIds are not only 24-hex: G- twins
-  // (26 chars), RU-/BP- and other shapes exist, and an unmatched id used to
-  // leave GO_TO = '' — dumping the partner on an empty page right after a
-  // successful login, which reads as "my password doesn't work".
-  let GO_TO = PATH_PARTNERS;
-  if( /sh-ru|^RU-/i.test(partnerAccountId) === true ) {
-    GO_TO = PATH_PARTNERS_RU
-  } else if (/sh-bp|^BP-/i.test(partnerAccountId) === true) {
-    GO_TO = PATH_PARTNERS_BP
-  }
-
-  history.push(GO_TO);
+  // Partner home by account shape (src/Util/access.js). RU-/BP-/G- accounts land
+  // on /partners, which finds their own row; /partners-ru and /partners-bp are
+  // the sh-ru / sh-bp channel pages.
+  const goTo = partnerRedirectFor(window.location.pathname, partnerAccountId);
+  if (goTo) history.push(goTo);
 } 
 
       //history.push(PATH_HOME); //Default - for admins
@@ -330,6 +324,14 @@ if(partnerAccountId) {
       setActiveMenu((preValue) => !preValue);
     } else { setActiveMenu(false) }
   };
+
+  // LIVE 2026-09-14: partners are deny-by-default — any page outside the partner
+  // journey redirects to their own home, on EVERY navigation (this used to be a
+  // one-shot redirect after two API calls, and admin pages rendered meanwhile).
+  const partnerRedirect = partnerRedirectFor(location.pathname, undefined, location.search);
+  if (partnerRedirect) {
+    return <Redirect to={partnerRedirect} />;
+  }
 
   return (
     <>

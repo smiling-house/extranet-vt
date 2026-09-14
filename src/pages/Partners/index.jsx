@@ -67,6 +67,7 @@ import ClientOfferLog from "./ClientOfferLog";
 import Sidebar from "../../components/Sidebar";
 import LoadingBox from "../../components/LoadingBox";
 import { getStorageValue } from "../../Util/general.js";
+import { isPartnerSession, partnerLoginId, rememberPartnerAccounts, partnerOwnsAccount } from "../../Util/access";
 import BankDetails from "./BankDetails/index.js";
 
 import menuIcon from '../../assets/icons8-menu-50.png'
@@ -301,6 +302,8 @@ const [serialNumber, setSerialNumber] = useState(0);
  
 
 	const getAllPartners = async () => {
+		// LIVE 2026-09-14: a partner session never loads the unscoped list (the pager used to).
+		if (isPartnerSession()) return getSearchPartners();
 		setIsLoading(true)
 		const partnersResponse = await userRequest.get(`local/partners`,
 			{ params: { limit: constants.PAGING_PARTNERS_SIZE, skip: partnersPagingFrom - 1, provider:'guesty_channel_api' } },
@@ -349,6 +352,13 @@ if(extranet_vt_logged_in_role==='admin') {	//By Jaison 2025 July 11
 	delete params.source
 }			
 
+		// LIVE 2026-09-14: a partner session is pinned to its own account, whatever the
+		// search state says (an empty accountId used to fall through to ALL partners).
+		if (isPartnerSession()) {
+			for (const k of Object.keys(params)) delete params[k];
+			Object.assign(params, { limit: constants.PAGING_PARTNERS_SIZE, skip: 0, accountId: partnerLoginId() || '__none__', status: filterPropertyStatus });
+		}
+
 		console.log('loading search::::', params)
 
 
@@ -379,14 +389,20 @@ if(agent_role) {
 		// Partner logins: a PM can have a legacy account AND a RUDH (G-) twin
 		// on the same email. Whichever accountId they logged in with, widen the
 		// lookup to their email so BOTH accounts appear, clearly labelled below.
-		if (extranet_vt_logged_in_role === 'partner' && partnersToShow?.length) {
+		if (isPartnerSession()) {
+			// Only the login account itself may seed the email widening below.
+			partnersToShow = (partnersToShow || []).filter(pr => String(pr.accountId) === String(partnerLoginId()));
+			countToShow = partnersToShow.length;
+		}
+		if (isPartnerSession() && partnersToShow?.length) {
 			const partnerEmail = partnersToShow[0].email;
 			if (partnerEmail) {
 				try {
 					const byEmail = await userRequest.get(`local/partners`, { params: { email: partnerEmail } });
 					if (byEmail.data?.success && byEmail.data.partners?.length) {
 						const seen = new Set();
-						partnersToShow = byEmail.data.partners.filter(pr => {
+						const sameEmail = (e) => String(e || '').trim().toLowerCase() === String(partnerEmail).trim().toLowerCase();
+						partnersToShow = byEmail.data.partners.filter(pr => sameEmail(pr.email)).filter(pr => {
 							const key = `${pr.accountId}|${pr.source}`;
 							if (seen.has(key)) return false;
 							seen.add(key);
@@ -398,6 +414,7 @@ if(agent_role) {
 			}
 		}
 
+		if (isPartnerSession()) rememberPartnerAccounts((partnersToShow || []).map(pr => pr.accountId));
 		setIsLoading(false)
 		localStorage.setItem("partnerCount", countToShow);
 		setTotalPartners(parseInt(countToShow))
@@ -455,6 +472,7 @@ const fetchCurrenciesExchangeRates = async () => {
 	}, [searchInputes]);
 
 	const GoToPartnerListings = async(partner, accountId, propertyStatusToFilter='') => {
+if (!partnerOwnsAccount(accountId)) return; // LIVE 2026-09-14: a partner opens only their own accounts
 localStorage.setItem('property_status_to_filter_listings', propertyStatusToFilter);
 
 // G- twin listings live under channelSource 'VT', never 'G' — same twin
@@ -538,6 +556,7 @@ localStorage.setItem('partnerPropertiesUniqueZipcodes', JSON.stringify(partnerPr
 	};
 
 	const onEditPartner = (id, selectedPartner) => {
+		if (isPartnerSession()) return; // LIVE 2026-09-14: admin-only (Save replaces the partner record)
 		setEditClickedId(id)
 		setSelectedPartnerToEdit(selectedPartner);
 		clearEditMenu();

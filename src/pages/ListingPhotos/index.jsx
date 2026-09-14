@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom"
 import Layout from "../../components/Layout"
 import PhotoManager from "../../components/PhotoManager"
 import { getStorageValue } from "../../Util/general"
+import usePartnerListingGuard from "../../Util/usePartnerListingGuard"
 
 // Deep-linkable photo manager: /photos/:id  (dashboard + emails point here).
 const ListingPhotos = ({ agent, agency, token, screenSize, activeMenu, handleToggleMenu, setActiveMenu }) => {
@@ -10,6 +11,9 @@ const ListingPhotos = ({ agent, agency, token, screenSize, activeMenu, handleTog
     const role = localStorage.getItem('extranet-vt-logged-in-role')
     const partnerLogin = getStorageValue('partnerLogin')
     const agentData = (() => { try { return JSON.parse(localStorage.getItem('agent')) || {} } catch (e) { return {} } })()
+    // LIVE 2026-09-14: a partner session opens only its own listing's photos.
+    const listingAllowed = usePartnerListingGuard(id)
+    if (!listingAllowed) return null
     return (
         <Layout
             pageTitle="Photos"

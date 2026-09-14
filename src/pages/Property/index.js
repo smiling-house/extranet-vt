@@ -3,6 +3,7 @@ import PhotoManager from "../../components/PhotoManager";
 import { PropertyHeader, PropertyHero, TabBar, FlagsCard, CalendarTab, ReviewsTab, RawDataTab, SyncDataTab, isAdminUser, canSeeTab } from "./PropertyTabs";
 import { useDispatch, useSelector } from "react-redux";
 import { useLocation, useHistory } from "react-router-dom";
+import usePartnerListingGuard from "../../Util/usePartnerListingGuard";
 import LeafletMap from "../../components/LeafletMap";
 import picLeft from "../../assets/property/pic-left-dark.png";
 import picLeftOn from "../../assets/property/pic-left-on-dark.png";
@@ -685,6 +686,11 @@ property,
   // while the listings list said ON. `storedPartner` is now shared with
   // ListingViews rather than being a private helper there, so the two pages
   // cannot resolve the same listing differently again.
+  // LIVE 2026-09-14: a partner session renders a listing only once it is confirmed
+  // to be theirs (src/Util/usePartnerListingGuard.js); admins pass straight through.
+  const listingAllowed = usePartnerListingGuard(property?._id || new URLSearchParams(location.search || "").get("id"));
+  if (!listingAllowed) return null;
+
   const _partner = storedPartner();
   const _instantState = instantBookState({ xdata, partner: _partner, hubId: property?._id });
   const _bookingMode = bookingModeState({ xdata, partner: _partner, hubId: property?._id });

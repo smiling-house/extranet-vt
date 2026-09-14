@@ -68,6 +68,7 @@ import { BsChevronDown } from "react-icons/bs";
 import Sidebar from "../../components/Sidebar";
 import LoadingBox from "../../components/LoadingBox";
 import { getStorageValue } from "../../Util/general.js";
+import { isPartnerSession, partnerLoginId, rememberPartnerAccounts, partnerOwnsAccount } from "../../Util/access";
 //import BankDetails from "./BankDetails/index.js"; //COMMENTED OUT AS IT IS NOT USED
 
 import menuIcon from '../../assets/icons8-menu-50.png'
@@ -272,6 +273,8 @@ const [serialNumber, setSerialNumber] = useState(0);
     allZipcodes();
 
     const getAllPartners = async () => {
+        // LIVE 2026-09-14: a partner session never loads the unscoped list (the pager used to).
+        if (isPartnerSession()) return getSearchPartners();
         setIsLoading(true)
         const partnersResponse = await userRequest.get(`local/partners-ex`,
             { params: { limit: constants.PAGING_PARTNERS_SIZE, skip: partnersPagingFrom - 1, type:'RU' } },
@@ -318,6 +321,13 @@ if(extranet_vt_logged_in_role==='admin') {	//By Jaison 2025 July 11
     delete params.source
 }			
 
+        // LIVE 2026-09-14: a partner session is pinned to its own account.
+        if (isPartnerSession()) {
+            delete params.pmName;
+            params.accountId = partnerLoginId() || '__none__';
+            params.skip = 0;
+        }
+
         console.log('loading search::::', params)
 
 
@@ -342,9 +352,16 @@ if(agent_role) {
         );
         console.log()
         setIsLoading(false)
-        localStorage.setItem("partnerCount", partnersResponse.data.count);
-        setTotalPartners(parseInt(partnersResponse.data.count))
-        setPartners(partnersResponse.data.partners);
+        // Even if the hub ignores the accountId (it did for RU until 2026-09-14), a
+        // partner session only ever shows its own account.
+        const rowsToShow = isPartnerSession()
+            ? (partnersResponse.data.partners || []).filter(pr => String(pr.accountId) === String(partnerLoginId()))
+            : partnersResponse.data.partners;
+        const countToShow = isPartnerSession() ? rowsToShow.length : partnersResponse.data.count;
+        if (isPartnerSession()) rememberPartnerAccounts(rowsToShow.map(pr => pr.accountId));
+        localStorage.setItem("partnerCount", countToShow);
+        setTotalPartners(parseInt(countToShow))
+        setPartners(rowsToShow);
 
         console.log('partners console by jaison:',partnersResponse.data.partners);		
     };
@@ -367,6 +384,7 @@ const GoToDeclinedButListedOnRU = async() => {
 }
 
     const GoToPartnerListings = async(partner, accountId, property_status_to_filter='') => {
+if (!partnerOwnsAccount(accountId)) return; // LIVE 2026-09-14: a partner opens only their own accounts
 localStorage.setItem('property_status_to_filter_listings', property_status_to_filter);
 
 const responseDataUniqueZips = await userRequest.post(`local/partners/properties-unique-zipcodes`,
@@ -445,6 +463,7 @@ localStorage.setItem('partnerPropertiesUniqueZipcodes', JSON.stringify(partnerPr
     };
 
     const onEditPartner = (id, selectedPartner) => {
+        if (isPartnerSession()) return; // LIVE 2026-09-14: admin-only (Save replaces the partner record)
         seteditClickedId(id)
         setSelectedPartnerToEdit(selectedPartner);
         clearEditMenu();
@@ -984,7 +1003,7 @@ localStorage.setItem('partnerPropertiesUniqueZipcodes', JSON.stringify(partnerPr
 )}
 
 
-                        {<Paging perPage={constants.PAGING_PARTNERS_SIZE} totalItems={localStorage.getItem("partnerCount")} currentPage={pageNumber} onChangePage={onChangePage} />}
+                        {!isPartnerSession() && <Paging perPage={constants.PAGING_PARTNERS_SIZE} totalItems={localStorage.getItem("partnerCount")} currentPage={pageNumber} onChangePage={onChangePage} />}
                         <div className="table-responsive px-3">
                             <table class="table">
                                 <thead style={{ backgroundColor: "#f9f9f7" }} >
