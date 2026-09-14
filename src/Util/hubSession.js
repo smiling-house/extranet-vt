@@ -34,7 +34,11 @@ export const HUB_SESSION_PLACEHOLDER = '__HUB_SESSION__'
 const STORE_KEY = 'hubSessions'
 const ROLE_KEYS = ['extranet-vt-logged-in-role', 'extranet-sh-logged-in-role']
 const CRED_HEADERS = ['authorization', 'token', 'x-api-key']
-const RENEW_BEFORE_MS = 24 * 60 * 60 * 1000
+// Renew once a session is past half its lifetime, and at least daily for long sessions
+// (partner sessions slide while the partner keeps using the app). At most one renew
+// attempt per RENEW_RETRY_MS per hub.
+const RENEW_AFTER_MAX_MS = 24 * 60 * 60 * 1000
+const RENEW_RETRY_MS = 5 * 60 * 1000
 const REFUSAL_BACKOFF_MS = 60 * 1000
 const CHECK_INTERVAL_MS = 60 * 1000
 
@@ -61,7 +65,7 @@ export const setHubSession = (hubUrl, session) => {
     const origin = originOf(hubUrl)
     if (!origin || !session || !session.token) return
     const all = readAll()
-    all[origin] = { token: session.token, expiresAt: session.expiresAt || null, role: session.role || null }
+    all[origin] = { token: session.token, expiresAt: session.expiresAt || null, role: session.role || null, receivedAt: Date.now() }
     writeAll(all)
 }
 
@@ -98,6 +102,17 @@ const once = (key, fn) => {
     return inflight[key]
 }
 
+const renewAttemptAt = {}
+const renewDue = (s, origin) => {
+    if (!s.expiresAt) return false
+    const exp = Date.parse(s.expiresAt)
+    const got = Number(s.receivedAt) || 0
+    if (!got || !exp) return exp - Date.now() < RENEW_AFTER_MAX_MS
+    const after = Math.min(RENEW_AFTER_MAX_MS, (exp - got) / 2)
+    if (Date.now() - got < after) return false
+    return !(renewAttemptAt[origin] && Date.now() - renewAttemptAt[origin] < RENEW_RETRY_MS)
+}
+
 const refusedUntil = {}
 const exchange = async (key, origin, path, headers, role) => {
     if (refusedUntil[key] && Date.now() < refusedUntil[key]) return null
@@ -115,10 +130,14 @@ export const ensureHubSession = async (hubUrl) => {
     if (!origin) return null
     const s = getHubSession(origin)
     if (s) {
-        if (s.expiresAt && Date.parse(s.expiresAt) - Date.now() < RENEW_BEFORE_MS) {
+        if (renewDue(s, origin)) {
+            renewAttemptAt[origin] = Date.now()
             once(`renew:${origin}`, async () => {
-                const d = await postSession(origin, 'renew', { Authorization: `Bearer ${s.token}` })
-                if (d) setHubSession(origin, { token: d.token, expiresAt: d.expiresAt, role: d.role || s.role })
+                const r = await postSessionRaw(origin, 'renew', { Authorization: `Bearer ${s.token}` })
+                const cur = getHubSession(origin)
+                if (!cur || cur.token !== s.token) return
+                if (r.data) setHubSession(origin, { token: r.data.token, expiresAt: r.data.expiresAt, role: r.data.role || s.role })
+                else if (r.status === 401) clearHubSession(origin) // hub says the session is no longer valid (e.g. partner removed)
             })
         }
         return s.token

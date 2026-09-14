@@ -88,12 +88,52 @@ await t('public sessions only when configured (VT-FE)', async () => {
   assert.equal(await H.ensureHubSession(HUB), 'pub')
   assert.ok(calls.some((c) => c.url === `${HUB}/local/extranet/session/public`))
 })
-await t('a session close to expiry is renewed in the background', async () => {
-  H.setHubSession(HUB, { token: 'soon', expiresAt: later(3600e3), role: 'partner' })
-  fetchReply = () => ({ ok: true, json: async () => ({ token: 'renewed', expiresAt: later(30 * 864e5), role: 'partner' }) })
+const ageSession = (origin, ms) => {
+  const all = JSON.parse(store.get('hubSessions')); all[origin].receivedAt -= ms; store.set('hubSessions', JSON.stringify(all))
+}
+await t('a fresh session is NOT renewed on every request (12 h admin session, first hours)', async () => {
+  const O = 'https://fresh.example'
+  H.setHubSession(O, { token: 'adm', expiresAt: later(12 * 3600e3), role: 'admin' })
+  for (let i = 0; i < 5; i++) assert.equal(await H.ensureHubSession(O), 'adm')
+  assert.equal(calls.filter((c) => c.url.endsWith('/session/renew')).length, 0)
+})
+await t('past half its lifetime a session is renewed once in the background', async () => {
+  H.setHubSession(HUB, { token: 'soon', expiresAt: later(5 * 3600e3), role: 'admin' })
+  ageSession(HUB, 7 * 3600e3)
+  fetchReply = () => ({ ok: true, json: async () => ({ token: 'renewed', expiresAt: later(12 * 3600e3), role: 'admin' }) })
+  assert.equal(await H.ensureHubSession(HUB), 'soon')
   assert.equal(await H.ensureHubSession(HUB), 'soon')
   await new Promise((r) => setTimeout(r, 10))
   assert.equal(H.getHubSession(HUB).token, 'renewed')
+  assert.equal(calls.filter((c) => c.url.endsWith('/session/renew')).length, 1)
+})
+await t('a long partner session slides: renewed once it is a day old, not before', async () => {
+  const O = 'https://slide.example'
+  H.setHubSession(O, { token: 'p', expiresAt: later(365 * 864e5), role: 'partner' })
+  ageSession(O, 20 * 3600e3)
+  await H.ensureHubSession(O)
+  assert.equal(calls.filter((c) => c.url.startsWith(O)).length, 0)
+  ageSession(O, 5 * 3600e3)
+  fetchReply = () => ({ ok: true, json: async () => ({ token: 'p2', expiresAt: later(365 * 864e5), role: 'partner' }) })
+  await H.ensureHubSession(O)
+  await new Promise((r) => setTimeout(r, 10))
+  assert.equal(H.getHubSession(O).token, 'p2')
+})
+await t('a failed renew is retried at most every 5 minutes; a renew 401 drops the session', async () => {
+  const O = 'https://renewfail.example'
+  H.setHubSession(O, { token: 'x', expiresAt: later(365 * 864e5), role: 'partner' })
+  ageSession(O, 2 * 864e5)
+  fetchReply = () => { throw new Error('network') }
+  await H.ensureHubSession(O); await new Promise((r) => setTimeout(r, 10))
+  await H.ensureHubSession(O); await new Promise((r) => setTimeout(r, 10))
+  assert.equal(calls.filter((c) => c.url === `${O}/local/extranet/session/renew`).length, 1)
+  assert.equal(H.getHubSession(O).token, 'x')
+  const O2 = 'https://renewgone.example'
+  H.setHubSession(O2, { token: 'y', expiresAt: later(365 * 864e5), role: 'partner' })
+  ageSession(O2, 2 * 864e5)
+  fetchReply = () => ({ ok: false, status: 401, json: async () => ({ success: false }) })
+  await H.ensureHubSession(O2); await new Promise((r) => setTimeout(r, 10))
+  assert.equal(H.getHubSession(O2), null)
 })
 await t('axios.create instances and the default instance get the request interceptor', async () => {
   const inst = axios.create({ baseURL: HUB })
