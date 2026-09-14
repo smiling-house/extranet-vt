@@ -381,12 +381,9 @@ export const signInUnified = (user, chkRememberMe, callback) => {
 
 					// lastExtranetLogin is stamped by the hub when it issues the session.
 
-					// The VT-Backend session for partners is opened by the hub (shared internal account,
-					// credentials server-side) and returned with the hub session.
-					const vtbe = sessionRes.data.vtbe;
-					const result = vtbe && vtbe.token && vtbe.agent
-						? { ok: true, token: vtbe.token, agent: vtbe.agent }
-						: { ok: false };
+					// The VT-Backend session for partners (shared internal account) is issued by
+					// VT-Backend after it confirms this hub session with the hub — no password here.
+					const result = await userService.extranetPartnerSession('VT', sessionRes.data.token);
 					if (result.ok) {
 						localStorage.setItem("agent", JSON.stringify(result.agent));
 						localStorage.setItem("jToken", result.token);

@@ -58,6 +58,22 @@ export const signInSilent = async user => {
 	}
 };
 
+// Partner login: VT-Backend issues the partner's session (shared internal account) after
+// the hub confirms the partner session — no password in the bundle, no hub token.
+// Asana 1218458529003876.
+export const extranetPartnerSession = async (hub, token) => {
+	try {
+		const res = (await axios.post(`${constants.BASE_URL}/agent/extranet-partner-session`, { hub, token })).data;
+		if (res?.token && res?.agent) {
+			return { ok: true, agent: res.agent, token: res.token, message: res.message };
+		}
+		return { ok: false, status: 200, message: res?.message };
+	} catch (err) {
+		log.debug(err);
+		return { ok: false, status: err?.response?.status, message: err?.response?.data?.message };
+	}
+};
+
 export const signInEx = async user => {
 	log.debug("UserService -> signInEx -> Enter");
 
