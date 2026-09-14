@@ -8,7 +8,9 @@ import Qr from "./Auth/Qr";
 import ResetPasswordPage from "./ResetPasswordPage/ResetPasswordPage";
 import SignupThanks from "./SignupThanks";
 import { Link, Redirect, Route, Switch, useHistory, useLocation, useParams } from "react-router-dom";
-import { partnerRedirectFor } from "../Util/access";
+import { partnerRedirectFor, isPartnerSession } from "../Util/access";
+import { getHubSession } from "../Util/hubSession";
+import hubConstants from "../Util/constants";
 import Profile from "./Profile/Profile";
 import AgencyProfile from "./AgencyProfile/AgencyProfile";
 import Listings from "./Listings2";
@@ -328,6 +330,16 @@ if(partnerAccountId) {
   // LIVE 2026-09-14: partners are deny-by-default — any page outside the partner
   // journey redirects to their own home, on EVERY navigation (this used to be a
   // one-shot redirect after two API calls, and admin pages rendered meanwhile).
+  // A partner session from before server-side sessions (no hub session) logs in once;
+  // the login form is prefilled with their account ID.
+  if (isPartnerSession() && !getHubSession(hubConstants.SHUB_URL) && !/^\/(login|qr|forgotPassword|verifycode|resetpassword|signup|welcome|signupthanks)(\/|$)/.test(location.pathname)) {
+    try {
+      const acc = localStorage.getItem('partnerLogin');
+      if (acc) localStorage.setItem('partnerLoginAccountId', acc);
+      ['partnerLogin', 'partnerName', 'agent', 'agent_id', 'jToken', 'id', 'agency_id', 'partnerAccountIds', 'extranet-vt-logged-in-role'].forEach((k) => localStorage.removeItem(k));
+    } catch (e) { /* storage blocked */ }
+    return <Redirect to="/login" />;
+  }
   const partnerRedirect = partnerRedirectFor(location.pathname, undefined, location.search);
   if (partnerRedirect) {
     return <Redirect to={partnerRedirect} />;

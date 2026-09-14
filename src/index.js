@@ -1,3 +1,6 @@
+// Must stay the FIRST import: it wraps axios/fetch before any module creates an
+// instance, so hub calls carry a server-issued session (src/Util/hubSession.js).
+import './Util/hubSession';
 import React from "react";
 import axios from 'axios';
 

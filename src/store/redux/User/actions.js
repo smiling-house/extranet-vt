@@ -1,4 +1,5 @@
 import * as actionTypes from './actionTypes';
+import { clearHubSession, ensureHubSession, setHubSession } from "../../../Util/hubSession";
 import * as userService from './service'
 import axios from 'axios';
 import constants from '../../../Util/constants';
@@ -77,7 +78,7 @@ export const sendtwoFAcode = (user, chkRememberMe, callback) => {
 		// 		localStorage.setItem("partnerName", partner[0].pmName);
 		// 		const result = await userService.signIn({
 		// 			"email": "tech.smilinghouse@gmail.com",
-		// 			"password": "VT2024"
+		// 			"password": ""
 		// 		})
 		// 		if (result == null) {
 		// 			callback('failed');
@@ -149,8 +150,8 @@ export const signInEx = (user, chkRememberMe, callback) => {
 				
 				const result = await userService.signIn({
 					"email": "tech.smilinghouse@gmail.com",
-					//"password": "VT2024",
-					"password": "VT2026",
+					//"password": "",
+					"password": "",
 					"twofa":"extranetVT"
 				})
 				if (result == null) {
@@ -249,8 +250,8 @@ localStorage.setItem('extranet-vt-logged-in-role', 'partner');
 
 		const result = await userService.signIn({
 			"email": "tech.smilinghouse@gmail.com",
-			//"password": "VT2024",
-			"password": "VT2026",
+			//"password": "",
+			"password": "",
 			//"twofa":"extranetVT"
 		})
 		if (result == null) {
@@ -336,6 +337,10 @@ export const signInUnified = (user, chkRememberMe, callback) => {
 			localStorage.setItem("agent_id", adminResult.agent.agent_id);
 			localStorage.setItem("agency_id", adminResult.agent.agency_id);
 			localStorage.setItem('extranet-vt-logged-in-role', 'admin');
+			// Hub session for the admin, exchanged for the VT-Backend token (retried by the first
+			// hub call if the hub is briefly unreachable — src/Util/hubSession.js).
+			clearHubSession();
+			await ensureHubSession(constants.SHUB_URL);
 			await dispatch({
 				type: actionTypes.USER_LOGGED_IN,
 				data: user
@@ -353,19 +358,17 @@ export const signInUnified = (user, chkRememberMe, callback) => {
 		// also exist as an agent account (e.g. internal/dual-identity emails),
 		// so a wrong-agent-password response must not block the partner path.
 		try {
-			const shubRequest = axios.create({
-				baseURL: constants.SHUB_URL,
-				headers: {
-					Authorization: constants.SHUB_TOKEN,
-				},
-			});
-			const partnerRes = await shubRequest.get(`local/partners?accountId=${user.password}`,
-				{ accountId: user.password, limit: 200, skip: 0 },
+			// The HUB checks the email + account ID (the same exact match the browser used to do)
+			// and returns a session, plus the VT-Backend session it opens server-side. No hub
+			// credential and no shared-agent password is shipped in this bundle any more.
+			clearHubSession();
+			const sessionRes = await axios.post(`${constants.SHUB_URL}/local/extranet/session/partner`,
+				{ email: user.email, accountId: user.password },
+				{ validateStatus: () => true },
 			);
-			if (partnerRes.data?.success) {
-				const matches = partnerRes.data.partners.filter(
-					(partner) => (partner.accountId === user.password) && (partner.email === user.email)
-				);
+			if (sessionRes.data?.success && sessionRes.data.token && sessionRes.data.partner) {
+				setHubSession(constants.SHUB_URL, { token: sessionRes.data.token, expiresAt: sessionRes.data.expiresAt, role: 'partner' });
+				const matches = [sessionRes.data.partner];
 				if (matches.length) {
 					const partner = matches[0];
 					console.log('PARTNER is :', partner);
@@ -376,16 +379,14 @@ export const signInUnified = (user, chkRememberMe, callback) => {
 					// toast fired here dies with the full-page redirect before anyone sees it.
 					sessionStorage.setItem('extranet-welcome-toast', partner.pmName || '1');
 
-					// Fire-and-forget: stamp lastExtranetLogin on the partner record.
-					// Without this there is no server-side trace of WHICH partner
-					// logged in (the session below uses a shared internal account).
-					shubRequest.post(`local/partners/extranet-login/${partner.accountId}`)
-						.catch((e) => console.log('extranet-login stamp failed', e?.message));
+					// lastExtranetLogin is stamped by the hub when it issues the session.
 
-					const result = await userService.signInSilent({
-						"email": "tech.smilinghouse@gmail.com",
-						"password": "VT2026",
-					});
+					// The VT-Backend session for partners is opened by the hub (shared internal account,
+					// credentials server-side) and returned with the hub session.
+					const vtbe = sessionRes.data.vtbe;
+					const result = vtbe && vtbe.token && vtbe.agent
+						? { ok: true, token: vtbe.token, agent: vtbe.agent }
+						: { ok: false };
 					if (result.ok) {
 						localStorage.setItem("agent", JSON.stringify(result.agent));
 						localStorage.setItem("jToken", result.token);
@@ -406,6 +407,7 @@ export const signInUnified = (user, chkRememberMe, callback) => {
 					localStorage.removeItem("partnerLogin");
 					localStorage.removeItem("partnerName");
 					localStorage.removeItem('extranet-vt-logged-in-role');
+					clearHubSession();
 				}
 			}
 		} catch (e) {
@@ -460,6 +462,7 @@ export const signOut = () => {
 		log.debug("UserActions -> signOut -> Enter");
 
 		localStorage.removeItem("partnerAccountIds");
+		clearHubSession();
 		localStorage.removeItem("agent");
 		localStorage.removeItem("travelAgency");
 		localStorage.removeItem("agent_id");

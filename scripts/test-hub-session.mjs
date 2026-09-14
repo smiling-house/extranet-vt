@@ -1,0 +1,123 @@
+// ---------------------------------------------------------------------------
+// src/Util/hubSession.js — hub calls carry a server-issued session, never a bundled token.
+//
+//   node scripts/test-hub-session.mjs
+//
+// Offline: the module is copied to a temp .mjs with axios replaced by a tiny stub, and runs
+// against fake window / localStorage / fetch. Identical copies live in EXTRANET-VT,
+// EXTRANET-SH, SHUB-FE and VT-FE.
+// ---------------------------------------------------------------------------
+import assert from 'node:assert/strict'
+import { readFileSync, writeFileSync, mkdtempSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { pathToFileURL, fileURLToPath } from 'node:url'
+
+const src = readFileSync(fileURLToPath(new URL('../src/Util/hubSession.js', import.meta.url)), 'utf8')
+const dir = mkdtempSync(join(tmpdir(), 'hubsession-'))
+writeFileSync(join(dir, 'axios.mjs'), `
+const mk = () => ({ interceptors: { request: { handlers: [], use(fn) { this.handlers.push(fn) } }, response: { use() {} } } })
+const axios = mk()
+axios.create = (cfg) => { const i = mk(); i.defaults = cfg; return i }
+export default axios
+`)
+writeFileSync(join(dir, 'hubSession.mjs'), src.replace(/import axios from 'axios'/, "import axios from './axios.mjs'"))
+
+const store = new Map()
+globalThis.localStorage = { getItem: (k) => (store.has(k) ? store.get(k) : null), setItem: (k, v) => store.set(k, String(v)), removeItem: (k) => store.delete(k) }
+const calls = []
+let fetchReply = () => ({ ok: true, json: async () => ({ token: 'sess-public', expiresAt: new Date(Date.now() + 3600e3).toISOString() }) })
+globalThis.window = { location: { origin: 'https://extra.villatracker.com' }, fetch: async (url, init) => { calls.push({ url, init }); return fetchReply(url, init) } }
+const H = await import(pathToFileURL(join(dir, 'hubSession.mjs')).href)
+const axios = (await import(pathToFileURL(join(dir, 'axios.mjs')).href)).default
+
+let passed = 0
+const t = async (name, fn) => {
+  try { store.clear(); calls.length = 0; H.configureHubSessions({ publicSessions: false, isAdminLogin: null }); await fn(); passed += 1 }
+  catch (e) { console.error(`FAIL  ${name}\n      ${e.message}`); process.exitCode = 1 }
+}
+const HUB = 'https://api.villatracker.com'
+const later = (ms) => new Date(Date.now() + ms).toISOString()
+
+await t('placeholder Authorization → Bearer <session>', () => {
+  const r = H.rewriteCredentialHeaders({ Authorization: 'Bearer __HUB_SESSION__', 'Content-Type': 'x' }, 'abc')
+  assert.deepEqual(r.headers, { Authorization: 'Bearer abc', 'Content-Type': 'x' })
+})
+await t('placeholder x-api-key and token headers are removed and replaced by one Authorization', () => {
+  const r = H.rewriteCredentialHeaders({ 'x-api-key': '__HUB_SESSION__', authorization: 'Bearer some-vtbe-token' }, 'abc')
+  assert.deepEqual(r.headers, { Authorization: 'Bearer abc' })
+  assert.deepEqual(H.rewriteCredentialHeaders({ token: '__HUB_SESSION__' }, 'abc').headers, { Authorization: 'Bearer abc' })
+})
+await t('headers without the placeholder are never touched (VT-Backend, EPS, Guesty tokens)', () => {
+  const h = { Authorization: 'Bearer real-partner-token', token: 'Bearer jtoken' }
+  assert.deepEqual(H.rewriteCredentialHeaders(h, 'abc'), { headers: h, found: false })
+})
+await t('no session: the placeholder is stripped, nothing bundled is ever sent', () => {
+  assert.deepEqual(H.rewriteCredentialHeaders({ Authorization: 'Bearer __HUB_SESSION__' }, null).headers, {})
+})
+await t('stored partner session for the hub origin is used; other hubs are separate', async () => {
+  H.setHubSession(HUB, { token: 'p1', expiresAt: later(40 * 864e5), role: 'partner' })
+  assert.equal(await H.ensureHubSession(`${HUB}/local/listings?x=1`), 'p1')
+  assert.equal(await H.ensureHubSession('https://api.triangle.luxury/local/listings'), null)
+  assert.equal(H.hasPartnerSession(), true)
+})
+await t('expired session is ignored', async () => {
+  H.setHubSession(HUB, { token: 'old', expiresAt: new Date(Date.now() - 1000).toISOString(), role: 'partner' })
+  assert.equal(H.getHubSession(HUB), null)
+  assert.equal(await H.ensureHubSession(HUB), null)
+})
+await t('admin with a VT-Backend token is exchanged once, via Authorization Bearer', async () => {
+  store.set('extranet-vt-logged-in-role', 'admin'); store.set('jToken', 'vtbe-jwt')
+  fetchReply = () => ({ ok: true, json: async () => ({ token: 'adm', expiresAt: later(12 * 3600e3) }) })
+  const [a, b] = await Promise.all([H.ensureHubSession(HUB), H.ensureHubSession(HUB)])
+  assert.equal(a, 'adm'); assert.equal(b, 'adm')
+  const ex = calls.filter((c) => c.url.endsWith('/local/extranet/session/admin'))
+  assert.equal(ex.length, 1, `${ex.length} exchanges`)
+  assert.equal(ex[0].init.headers.Authorization, 'Bearer vtbe-jwt')
+  assert.equal(H.getHubSession(HUB).role, 'admin')
+})
+await t('a partner (partnerLogin set) is never exchanged as admin', async () => {
+  store.set('extranet-vt-logged-in-role', 'admin'); store.set('jToken', 'shared-agent'); store.set('partnerLogin', 'RU-1')
+  assert.equal(await H.ensureHubSession(HUB), null)
+  assert.equal(calls.length, 0)
+})
+await t('public sessions only when configured (VT-FE)', async () => {
+  assert.equal(await H.ensureHubSession(HUB), null)
+  H.configureHubSessions({ publicSessions: true })
+  fetchReply = () => ({ ok: true, json: async () => ({ token: 'pub', expiresAt: later(3600e3) }) })
+  assert.equal(await H.ensureHubSession(HUB), 'pub')
+  assert.ok(calls.some((c) => c.url === `${HUB}/local/extranet/session/public`))
+})
+await t('a session close to expiry is renewed in the background', async () => {
+  H.setHubSession(HUB, { token: 'soon', expiresAt: later(3600e3), role: 'partner' })
+  fetchReply = () => ({ ok: true, json: async () => ({ token: 'renewed', expiresAt: later(30 * 864e5), role: 'partner' }) })
+  assert.equal(await H.ensureHubSession(HUB), 'soon')
+  await new Promise((r) => setTimeout(r, 10))
+  assert.equal(H.getHubSession(HUB).token, 'renewed')
+})
+await t('axios.create instances and the default instance get the request interceptor', async () => {
+  const inst = axios.create({ baseURL: HUB })
+  assert.equal(inst.interceptors.request.handlers.length, 1)
+  assert.equal(axios.interceptors.request.handlers.length, 1)
+  H.setHubSession(HUB, { token: 'p9', expiresAt: later(40 * 864e5), role: 'partner' })
+  const cfg = await inst.interceptors.request.handlers[0]({ baseURL: HUB, url: 'local/partners', headers: { Authorization: 'Bearer __HUB_SESSION__' } })
+  assert.equal(cfg.headers.Authorization, 'Bearer p9')
+})
+await t('window.fetch is wrapped: placeholder swapped, other fetches untouched', async () => {
+  H.setHubSession(HUB, { token: 'f1', expiresAt: later(40 * 864e5), role: 'partner' })
+  fetchReply = () => ({ ok: true, json: async () => ({}) })
+  await window.fetch(`${HUB}/sync-villainstbarth-progress`, { headers: { Authorization: 'Bearer __HUB_SESSION__', 'x-api-key': '__HUB_SESSION__' } })
+  await window.fetch('https://backend.villatracker.com/agent/get-profile', { headers: { token: 'Bearer jt' } })
+  const [hubCall, beCall] = calls.slice(-2)
+  assert.deepEqual(hubCall.init.headers, { Authorization: 'Bearer f1' })
+  assert.deepEqual(beCall.init.headers, { token: 'Bearer jt' })
+})
+await t('clearHubSession() clears every hub', () => {
+  H.setHubSession(HUB, { token: 'a', role: 'admin' }); H.setHubSession('https://api.triangle.luxury', { token: 'b', role: 'admin' })
+  H.clearHubSession()
+  assert.equal(H.getHubSession(HUB), null); assert.equal(H.getHubSession('https://api.triangle.luxury'), null)
+})
+
+console.log(`\n${passed} assertions passed${process.exitCode ? ' — WITH FAILURES ABOVE' : ''}`)
+if (!process.exitCode) console.log('hub session transport OK')
+process.exit(process.exitCode || 0)

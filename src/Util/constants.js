@@ -124,9 +124,9 @@ const constants = {
 	// Refreshed 2026-07-02: previous token expired 2023-01-30 (exp 1675112806),
 	// causing "Wrong authorization token" on all Shub calls (login + Partners pages).
 	// This is the same valid token as ShubAuth in src/core/index.js (exp 2042).
-	SHUB_TOKEN: 'Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2NvdW50X29iamVjdF9pZCI6Mzk5MTU4NzUsInVzZXJfaWQiOiI0MDY2NTAyMSIsInVzZXJfbmFtZSI6InN5c3RlbStsdW5hLTh5NXljIiwic2NvcGUiOlsiYnJpdm8uYXBpIl0sImF0aSI6ImI5MTliYmJiLTA1ZWItNDlmOC05MjlhLWM0MTJlYzY3NWI2YyIsImlzc3VlZCI6IjE2NzUzNzA2NDMzNzMiLCJleHAiOjIyOTczMzM3MjcsInNlcnZpY2VfdG9rZW4iOm51bGwsImF1dGhvcml0aWVzIjpbIlJPTEVfU1VQRVJfQURNSU4iLCJST0xFX0FETUlOIl0sImp0aSI6IjExODQzYjg2LWIyYzUtNGMwNS1hYWZlLTcxZTI4NGIyNjNlOCIsImNsaWVudF9pZCI6IjkzOTFlYjVkLWUwNmUtNDY4MS1iNTdhLWQwZTU3NDhhM2RlZSIsIndoaXRlX2xpc3RlZCI6ZmFsc2V9.Mqmx7onIVz_EVAunhwqBAhAmlsGXMQ18hh_EV_61KQIpaGXlrgXgx1hOOdNWLFriG3Un6jfS7H7vwMAYmBT6-8yl9L7VB7Cpxva49XozuSJazQ42UDDlTOsnWAmatzmFna-Uzjc8MDfVQbR8AwMiFq_Jb9ViaJ4XBkj2KhEKs1g',
+	SHUB_TOKEN: 'Bearer __HUB_SESSION__', // placeholder: hub session attached per request (src/Util/hubSession.js)
 
-	X_API_KEY:'S994RQ5bl0yp6DGFqI79pwtnHmtYaMX2b5OmOUsl',
+	X_API_KEY: '__HUB_SESSION__', // placeholder: replaced by the hub session (src/Util/hubSession.js)
 	GUESTY_CHANNEL_SOURCE:'VT',
 
 	// ── BookingPal reserve: Flywire INSTANT + reservation-of-record ──────────
