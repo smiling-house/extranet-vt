@@ -478,7 +478,10 @@ localStorage.setItem('property_status_to_filter_listings', propertyStatusToFilte
 // G- twin listings live under channelSource 'VT', never 'G' — same twin
 // mapping as the hub count pipelines, otherwise every drill-down from a
 // G- row comes back empty.
-const drillChannelSource = partner.source === 'G' ? 'VT' : partner.source;
+// RU-* (rentalsunited_api) partners' listings live under 'VT' too — same mapping as
+// Listings2's cold-load; 'RU' here showed every RU partner "No listings found"
+// (measured 2026-09-14: all RU- listings on this hub carry channelSource VT).
+const drillChannelSource = (partner.source === 'G' || partner.source === 'RU') ? 'VT' : partner.source;
 const responseDataUniqueZips = await userRequest.post(`local/partners/properties-unique-zipcodes`,
 	{ accountId: accountId, channelSource: drillChannelSource },
 );
