@@ -4,8 +4,9 @@
 // Keep byte-identical in EXTRANET-VT and EXTRANET-SH. See src/Util/access.js.
 //
 // Admin sessions pass straight through (no request). A partner session renders
-// nothing until the hub confirms ownership, and is sent home when it is not theirs
-// or cannot be confirmed — fail closed.
+// nothing until the hub answers, and is sent home only when the hub says the listing
+// belongs to another account. A failed request or a doc without an account lets the
+// page load as it always did — a hiccup must never lock a partner out of their listing.
 // ---------------------------------------------------------------------------
 import { useEffect, useState } from 'react'
 import { useHistory } from 'react-router-dom'
@@ -21,7 +22,7 @@ const accountOf = (d) => {
     return (first && (first.accountId || (first.listing && first.listing.accountId))) || null
 }
 
-export default function usePartnerListingGuard (listingId) {
+export default function usePartnerListingGuard (listingId, fallbackAccountId) {
     const history = useHistory()
     const partner = isPartnerSession()
     const [allowed, setAllowed] = useState(!partner)
@@ -30,19 +31,25 @@ export default function usePartnerListingGuard (listingId) {
         if (!partner) return undefined
         let cancelled = false
         const goHome = () => { if (!cancelled) history.replace(partnerHomePath()) }
-        if (!listingId) { goHome(); return () => { cancelled = true } }
+        if (!listingId) {
+            // Some hub listings carry no data._id, so the page is reached with no id at all.
+            // Allow it only when the account the listings page acted for is the partner's own.
+            if (fallbackAccountId && partnerOwnsAccount(fallbackAccountId)) setAllowed(true)
+            else goHome()
+            return () => { cancelled = true }
+        }
         const req = axios.create({ baseURL: constants.SHUB_URL, headers: { Authorization: `Bearer ${ShubAuth}` } })
         req.get(`/local/listings?id=${encodeURIComponent(listingId)}`)
             .then((res) => {
                 const acc = accountOf(res && res.data)
                 if (cancelled) return
-                if (acc && partnerOwnsAccount(acc)) setAllowed(true)
+                if (!acc || partnerOwnsAccount(acc)) setAllowed(true)
                 else goHome()
             })
-            .catch(goHome)
+            .catch(() => { if (!cancelled) setAllowed(true) })
         return () => { cancelled = true }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [listingId, partner])
+    }, [listingId, fallbackAccountId, partner])
 
     return allowed
 }

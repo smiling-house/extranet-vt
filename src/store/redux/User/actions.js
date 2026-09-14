@@ -313,6 +313,8 @@ localStorage.setItem('extranet-vt-logged-in-role', 'partner');
 export const signInUnified = (user, chkRememberMe, callback) => {
 	return async (dispatch) => {
 		log.debug("UserActions -> signInUnified -> Enter");
+		// A previous partner's owned-accounts list must never carry into a new login (src/Util/access.js).
+		localStorage.removeItem("partnerAccountIds");
 		if (!user || !user.email || !user.password) {
 			callback('failed');
 			return;
@@ -457,6 +459,7 @@ export const signOut = () => {
 	return async (dispatch) => {
 		log.debug("UserActions -> signOut -> Enter");
 
+		localStorage.removeItem("partnerAccountIds");
 		localStorage.removeItem("agent");
 		localStorage.removeItem("travelAgency");
 		localStorage.removeItem("agent_id");

@@ -688,7 +688,7 @@ property,
   // cannot resolve the same listing differently again.
   // LIVE 2026-09-14: a partner session renders a listing only once it is confirmed
   // to be theirs (src/Util/usePartnerListingGuard.js); admins pass straight through.
-  const listingAllowed = usePartnerListingGuard(property?._id || new URLSearchParams(location.search || "").get("id"));
+  const listingAllowed = usePartnerListingGuard(property?._id || new URLSearchParams(location.search || "").get("id"), storedPartner()?.accountId);
   if (!listingAllowed) return null;
 
   const _partner = storedPartner();

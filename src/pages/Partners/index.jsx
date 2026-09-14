@@ -559,7 +559,7 @@ localStorage.setItem('partnerPropertiesUniqueZipcodes', JSON.stringify(partnerPr
 	};
 
 	const onEditPartner = (id, selectedPartner) => {
-		if (isPartnerSession()) return; // LIVE 2026-09-14: admin-only (Save replaces the partner record)
+		if (!partnerOwnsAccount(id)) return; // LIVE 2026-09-14: a partner edits only their own record (as before)
 		setEditClickedId(id)
 		setSelectedPartnerToEdit(selectedPartner);
 		clearEditMenu();
