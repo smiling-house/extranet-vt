@@ -23,6 +23,10 @@
 //   3. configureHubSessions({ publicSessions: true }) (VT-FE) → a public session;
 //   4. otherwise none — the request goes out without credentials and fails like any
 //      unauthenticated call (a partner is sent to /login once by the app).
+// A refused admin/public exchange is not retried for REFUSAL_BACKOFF_MS (the hub
+// rate-limits exchanges per IP). When a request that carried a session gets a 401, the
+// session is checked once with /renew: only if the hub says it is invalid is it dropped
+// (a route that 401s for another reason never logs anyone out).
 // ---------------------------------------------------------------------------
 import axios from 'axios'
 
@@ -31,6 +35,8 @@ const STORE_KEY = 'hubSessions'
 const ROLE_KEYS = ['extranet-vt-logged-in-role', 'extranet-sh-logged-in-role']
 const CRED_HEADERS = ['authorization', 'token', 'x-api-key']
 const RENEW_BEFORE_MS = 24 * 60 * 60 * 1000
+const REFUSAL_BACKOFF_MS = 60 * 1000
+const CHECK_INTERVAL_MS = 60 * 1000
 
 let config = { publicSessions: false, isAdminLogin: null }
 /** App-level options. isAdminLogin: () => boolean overrides the extranet role-key check. */
@@ -75,20 +81,32 @@ const isAdminLogin = () => {
 }
 
 const rawFetch = (...args) => (window.__hubOriginalFetch || window.fetch)(...args)
-const postSession = async (origin, path, headers) => {
+const postSessionRaw = async (origin, path, headers) => {
     try {
         const res = await rawFetch(`${origin}/local/extranet/session/${path}`, {
             method: 'POST', headers: { 'Content-Type': 'application/json', ...(headers || {}) }, body: '{}',
         })
         const data = await res.json().catch(() => ({}))
-        return res.ok && data && data.token ? data : null
-    } catch (e) { return null }
+        return { status: res.status, data: res.ok && data && data.token ? data : null }
+    } catch (e) { return { status: 0, data: null } }
 }
+const postSession = async (origin, path, headers) => (await postSessionRaw(origin, path, headers)).data
 
 const inflight = {}
 const once = (key, fn) => {
     if (!inflight[key]) inflight[key] = fn().finally(() => { setTimeout(() => { delete inflight[key] }, 0) })
     return inflight[key]
+}
+
+const refusedUntil = {}
+const exchange = async (key, origin, path, headers, role) => {
+    if (refusedUntil[key] && Date.now() < refusedUntil[key]) return null
+    return once(key, async () => {
+        const d = await postSession(origin, path, headers)
+        if (d) { delete refusedUntil[key]; setHubSession(origin, { token: d.token, expiresAt: d.expiresAt, role }); return d.token }
+        refusedUntil[key] = Date.now() + REFUSAL_BACKOFF_MS
+        return null
+    })
 }
 
 /** A valid session token for the hub a request goes to, or null. Never throws. */
@@ -107,21 +125,33 @@ export const ensureHubSession = async (hubUrl) => {
     }
     const jToken = read('jToken')
     if (isAdminLogin() && jToken) {
-        const token = await once(`admin:${origin}`, async () => {
-            const d = await postSession(origin, 'admin', { Authorization: `Bearer ${jToken}` })
-            if (d) { setHubSession(origin, { token: d.token, expiresAt: d.expiresAt, role: 'admin' }); return d.token }
-            return null
-        })
+        const token = await exchange(`admin:${origin}`, origin, 'admin', { Authorization: `Bearer ${jToken}` }, 'admin')
         if (token) return token
     }
-    if (config.publicSessions) {
-        return once(`public:${origin}`, async () => {
-            const d = await postSession(origin, 'public')
-            if (d) { setHubSession(origin, { token: d.token, expiresAt: d.expiresAt, role: 'public' }); return d.token }
-            return null
-        })
-    }
+    if (config.publicSessions) return exchange(`public:${origin}`, origin, 'public', null, 'public')
     return null
+}
+
+const checkedAt = {}
+/**
+ * A request that carried `token` for `origin` got a 401. Ask the hub (/renew) whether the
+ * session is still valid, at most once per CHECK_INTERVAL_MS per origin. Invalid (401) →
+ * drop it, so the next request re-exchanges (admin/public) or the app sends a partner to
+ * /login once. Valid → keep (refreshed). Hub unreachable / other status → keep.
+ */
+export const checkSessionAfter401 = (origin, token) => {
+    if (!origin || !token) return Promise.resolve()
+    if (checkedAt[origin] && Date.now() - checkedAt[origin] < CHECK_INTERVAL_MS) return Promise.resolve()
+    checkedAt[origin] = Date.now()
+    return once(`check:${origin}`, async () => {
+        const s = getHubSession(origin)
+        if (!s || s.token !== token) return
+        const r = await postSessionRaw(origin, 'renew', { Authorization: `Bearer ${token}` })
+        const cur = getHubSession(origin)
+        if (!cur || cur.token !== token) return
+        if (r.status === 401) clearHubSession(origin)
+        else if (r.data) setHubSession(origin, { token: r.data.token, expiresAt: r.data.expiresAt, role: r.data.role || cur.role })
+    })
 }
 
 const hasPlaceholder = (v) => typeof v === 'string' && v.includes(HUB_SESSION_PLACEHOLDER)
@@ -157,7 +187,9 @@ const axiosRequestInterceptor = async (cfg) => {
     const flat = {}
     for (const k of Object.keys(source)) if (typeof source[k] === 'string') flat[k] = source[k]
     if (!Object.keys(flat).some((k) => CRED_HEADERS.includes(k.toLowerCase()) && hasPlaceholder(flat[k]))) return cfg
-    const token = await ensureHubSession(axiosTarget(cfg))
+    const target = axiosTarget(cfg)
+    const token = await ensureHubSession(target)
+    if (token) cfg.__hubSessionUsed = { origin: originOf(target), token }
     const { headers } = rewriteCredentialHeaders(flat, token)
     for (const k of Object.keys(flat)) {
         if (!(k in headers)) { if (typeof h.delete === 'function') h.delete(k); else delete h[k] }
@@ -166,15 +198,23 @@ const axiosRequestInterceptor = async (cfg) => {
     return cfg
 }
 
+const axiosErrorInterceptor = (err) => {
+    const used = err && err.config && err.config.__hubSessionUsed
+    if (used && err.response && err.response.status === 401) checkSessionAfter401(used.origin, used.token)
+    return Promise.reject(err)
+}
+
 let installed = false
 export const installHubSessionTransport = () => {
     if (installed || typeof window === 'undefined') return
     installed = true
     axios.interceptors.request.use(axiosRequestInterceptor)
+    axios.interceptors.response.use(undefined, axiosErrorInterceptor)
     const origCreate = axios.create.bind(axios)
     axios.create = (cfg) => {
         const inst = origCreate(cfg)
         inst.interceptors.request.use(axiosRequestInterceptor)
+        inst.interceptors.response.use(undefined, axiosErrorInterceptor)
         return inst
     }
     if (typeof window.fetch === 'function') {
@@ -189,7 +229,9 @@ export const installHubSessionTransport = () => {
             if (!Object.keys(flat).some((k) => CRED_HEADERS.includes(k.toLowerCase()) && hasPlaceholder(flat[k]))) return origFetch(input, init)
             const url = typeof input === 'string' ? input : (input && input.url) || ''
             const token = await ensureHubSession(url)
-            return origFetch(input, { ...init, headers: rewriteCredentialHeaders(flat, token).headers })
+            const res = await origFetch(input, { ...init, headers: rewriteCredentialHeaders(flat, token).headers })
+            if (token && res && res.status === 401) checkSessionAfter401(originOf(url), token)
+            return res
         }
     }
 }

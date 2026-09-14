@@ -16,7 +16,7 @@ import { pathToFileURL, fileURLToPath } from 'node:url'
 const src = readFileSync(fileURLToPath(new URL('../src/Util/hubSession.js', import.meta.url)), 'utf8')
 const dir = mkdtempSync(join(tmpdir(), 'hubsession-'))
 writeFileSync(join(dir, 'axios.mjs'), `
-const mk = () => ({ interceptors: { request: { handlers: [], use(fn) { this.handlers.push(fn) } }, response: { use() {} } } })
+const mk = () => ({ interceptors: { request: { handlers: [], use(fn) { this.handlers.push(fn) } }, response: { handlers: [], use(ok, fail) { this.handlers.push({ ok, fail }) } } } })
 const axios = mk()
 axios.create = (cfg) => { const i = mk(); i.defaults = cfg; return i }
 export default axios
@@ -111,6 +111,66 @@ await t('window.fetch is wrapped: placeholder swapped, other fetches untouched',
   const [hubCall, beCall] = calls.slice(-2)
   assert.deepEqual(hubCall.init.headers, { Authorization: 'Bearer f1' })
   assert.deepEqual(beCall.init.headers, { token: 'Bearer jt' })
+})
+await t('a refused admin exchange is not retried for 60 s (hub rate-limits exchanges per IP)', async () => {
+  const O = 'https://refused.example'
+  store.set('extranet-vt-logged-in-role', 'admin'); store.set('jToken', 'stale-jwt')
+  fetchReply = () => ({ ok: false, status: 401, json: async () => ({ success: false }) })
+  assert.equal(await H.ensureHubSession(O), null)
+  await new Promise((r) => setTimeout(r, 5))
+  assert.equal(await H.ensureHubSession(O), null)
+  assert.equal(await H.ensureHubSession(`${O}/local/partners`), null)
+  assert.equal(calls.filter((c) => c.url === `${O}/local/extranet/session/admin`).length, 1)
+})
+await t('401 on a session the hub says is invalid (/renew 401) → session dropped', async () => {
+  const O = 'https://invalid.example'
+  H.setHubSession(O, { token: 'dead', expiresAt: later(20 * 864e5), role: 'partner' })
+  fetchReply = () => ({ ok: false, status: 401, json: async () => ({ success: false }) })
+  await H.checkSessionAfter401(O, 'dead')
+  assert.equal(H.getHubSession(O), null)
+  const renew = calls.filter((c) => c.url === `${O}/local/extranet/session/renew`)
+  assert.equal(renew.length, 1); assert.equal(renew[0].init.headers.Authorization, 'Bearer dead')
+})
+await t('401 from a route while the session is valid (/renew 200) → session kept (nobody logged out)', async () => {
+  const O = 'https://valid.example'
+  H.setHubSession(O, { token: 'live', expiresAt: later(20 * 864e5), role: 'partner' })
+  fetchReply = () => ({ ok: true, status: 200, json: async () => ({ token: 'live2', expiresAt: later(30 * 864e5), role: 'partner' }) })
+  await H.checkSessionAfter401(O, 'live')
+  assert.equal(H.getHubSession(O).token, 'live2')
+})
+await t('hub unreachable during the check → session kept; checks are capped at one per minute per hub', async () => {
+  const O = 'https://down.example'
+  H.setHubSession(O, { token: 'keep', expiresAt: later(20 * 864e5), role: 'admin' })
+  fetchReply = () => { throw new Error('network') }
+  await H.checkSessionAfter401(O, 'keep')
+  assert.equal(H.getHubSession(O).token, 'keep')
+  fetchReply = () => ({ ok: false, status: 401, json: async () => ({}) })
+  await H.checkSessionAfter401(O, 'keep')
+  assert.equal(H.getHubSession(O).token, 'keep')
+})
+await t('axios 401 on a request that carried a session triggers the check; 403 does not', async () => {
+  const O = 'https://axios401.example'
+  const inst = axios.create({ baseURL: O })
+  H.setHubSession(O, { token: 'ax', expiresAt: later(20 * 864e5), role: 'partner' })
+  const cfg = await inst.interceptors.request.handlers[0]({ baseURL: O, url: 'local/partners', headers: { Authorization: 'Bearer __HUB_SESSION__' } })
+  fetchReply = () => ({ ok: false, status: 401, json: async () => ({}) })
+  const fail = inst.interceptors.response.handlers[0].fail
+  await assert.rejects(fail({ config: cfg, response: { status: 403 } }))
+  await new Promise((r) => setTimeout(r, 5))
+  assert.equal(H.getHubSession(O).token, 'ax')
+  await assert.rejects(fail({ config: cfg, response: { status: 401 } }))
+  await new Promise((r) => setTimeout(r, 5))
+  assert.equal(H.getHubSession(O), null)
+  assert.equal(axios.interceptors.response.handlers.length, 1)
+})
+await t('fetch 401 on a request that carried a session triggers the check', async () => {
+  const O = 'https://fetch401.example'
+  H.setHubSession(O, { token: 'fx', expiresAt: later(20 * 864e5), role: 'admin' })
+  fetchReply = () => ({ ok: false, status: 401, json: async () => ({}) })
+  const res = await window.fetch(`${O}/local/partners`, { headers: { Authorization: 'Bearer __HUB_SESSION__' } })
+  assert.equal(res.status, 401)
+  await new Promise((r) => setTimeout(r, 5))
+  assert.equal(H.getHubSession(O), null)
 })
 await t('clearHubSession() clears every hub', () => {
   H.setHubSession(HUB, { token: 'a', role: 'admin' }); H.setHubSession('https://api.triangle.luxury', { token: 'b', role: 'admin' })
