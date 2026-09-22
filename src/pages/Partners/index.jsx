@@ -481,7 +481,9 @@ localStorage.setItem('property_status_to_filter_listings', propertyStatusToFilte
 // RU-* (rentalsunited_api) partners' listings live under 'VT' too — same mapping as
 // Listings2's cold-load; 'RU' here showed every RU partner "No listings found"
 // (measured 2026-09-14: all RU- listings on this hub carry channelSource VT).
-const drillChannelSource = (partner.source === 'G' || partner.source === 'RU') ? 'VT' : partner.source;
+// Hostaway (HW-*) partners' listings carry channelSource "Hostaway" (the Hostaway sync's
+// step_hwUpsertIntoListings), not the partner's source "HW" — "HW" found no listings.
+const drillChannelSource = (partner.source === 'G' || partner.source === 'RU') ? 'VT' : (partner.source === 'HW' ? 'Hostaway' : partner.source);
 const responseDataUniqueZips = await userRequest.post(`local/partners/properties-unique-zipcodes`,
 	{ accountId: accountId, channelSource: drillChannelSource },
 );

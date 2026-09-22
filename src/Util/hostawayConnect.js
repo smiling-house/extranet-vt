@@ -61,11 +61,13 @@ export const buildHostawayConnectPayload = ({ accountId, clientSecret, vtAccount
  */
 export const existingLoginConflict = (rows, email) => {
   const wanted = normalizePartnerEmail(email)
-  const existingEmails = [...new Set((Array.isArray(rows) ? rows : [])
-    .map((r) => normalizePartnerEmail(r && r.email))
-    .filter(Boolean))]
-  if (!wanted || existingEmails.length === 0) return { conflict: false, existingEmails }
-  return { conflict: !existingEmails.includes(wanted), existingEmails }
+  const list = (Array.isArray(rows) ? rows : []).filter(Boolean)
+  const existingEmails = [...new Set(list.map((r) => normalizePartnerEmail(r.email)).filter(Boolean))]
+  // The hub matches an existing login on email only, so a row with NO email would still get a
+  // second row next to it. Treat it as a conflict as well.
+  const rowWithoutEmail = list.some((r) => !normalizePartnerEmail(r.email))
+  if (!wanted || list.length === 0) return { conflict: false, existingEmails, rowWithoutEmail: false }
+  return { conflict: rowWithoutEmail || !existingEmails.includes(wanted), existingEmails, rowWithoutEmail }
 }
 
 export default { normalizePartnerEmail, hwAccountId, buildHostawayConnectPayload, existingLoginConflict }

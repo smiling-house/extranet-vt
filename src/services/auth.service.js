@@ -41,6 +41,8 @@ const listHostawayPartners = async () => {
 // email that would create a second login (Asana 1218719984465196).
 const findPartnerLoginRows = async (hwAccountId) => {
     const res = await userRequest.get(constants.SHUB_URL + `/local/partners?accountId=${encodeURIComponent(hwAccountId)}&limit=20&skip=0`)
+    // The hub answers a failed query with HTTP 200 + success:false; that is a failed lookup.
+    if (res?.data?.success !== true) throw new Error(res?.data?.error || 'partner lookup failed')
     const rows = Array.isArray(res?.data?.partners) ? res.data.partners : []
     return rows.filter((r) => r && r.accountId === hwAccountId)
 }

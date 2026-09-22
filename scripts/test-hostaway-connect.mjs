@@ -47,13 +47,17 @@ t('same normalisation as the hub helper (hostawayPartnerUser.normalizePartnerEma
   assert.equal(H.hwAccountId(40343), 'HW-40343'); assert.equal(H.hwAccountId('HW-40343'), 'HW-40343'); assert.equal(H.hwAccountId(''), '')
 })
 t('existing login with a DIFFERENT email is a conflict (the hub would create a second row)', () => {
-  assert.deepEqual(H.existingLoginConflict([{ email: 'old@x.com' }], 'new@x.com'), { conflict: true, existingEmails: ['old@x.com'] })
+  assert.deepEqual(H.existingLoginConflict([{ email: 'old@x.com' }], 'new@x.com'), { conflict: true, existingEmails: ['old@x.com'], rowWithoutEmail: false })
 })
-t('same email (any case), no rows, or rows without email are not a conflict', () => {
+t('an existing login row with NO email is a conflict too (the hub matches on email only)', () => {
+  const r = H.existingLoginConflict([{ email: '' }], 'a@b.co')
+  assert.equal(r.conflict, true); assert.equal(r.rowWithoutEmail, true)
+  assert.equal(H.existingLoginConflict([{ email: 'a@b.co' }, {}], 'a@b.co').conflict, true)
+})
+t('same email (any case) or no rows at all is not a conflict', () => {
   assert.equal(H.existingLoginConflict([{ email: 'Yanis@PremiumBooking.ca' }], 'yanis@premiumbooking.ca').conflict, false)
   assert.equal(H.existingLoginConflict([], 'a@b.co').conflict, false)
   assert.equal(H.existingLoginConflict(null, 'a@b.co').conflict, false)
-  assert.equal(H.existingLoginConflict([{ email: '' }, {}], 'a@b.co').conflict, false)
 })
 
 console.log(`\n${passed} passed${process.exitCode ? ' — WITH FAILURES ABOVE' : ''}`)

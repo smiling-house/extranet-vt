@@ -39,7 +39,9 @@ const EditPartner = ({ onClose }) => {
         swal({
           icon: "error",
           title: "This account already has a login",
-          text: `${hwAccountId(payload.accountId)} already signs in as ${check.existingEmails.join(", ")}. Reconnect with that email, or ask tech to change the partner's email first.`,
+          text: check.rowWithoutEmail
+            ? `${hwAccountId(payload.accountId)} already has a login with no email on file. Ask tech to fix that login before reconnecting.`
+            : `${hwAccountId(payload.accountId)} already signs in as ${check.existingEmails.join(", ")}. Reconnect with that email, or ask tech to change the partner's email first.`,
         })
         setSubmitting(false)
         return
@@ -61,7 +63,7 @@ const EditPartner = ({ onClose }) => {
         swal({
           icon: "success",
           title: "Connected!",
-          text: `Hostaway account ${res.data.accountId} connected. ${payload.email} is the partner's Extranet login (${hwAccountId(res.data.accountId)}) and receives the onboarding email (sent once; reconnecting does not resend it). Click "Sync now" on its row to pull listings.`,
+          text: `Hostaway account ${res.data.accountId} connected. ${payload.email} is the partner's Extranet login (${hwAccountId(res.data.accountId)}) and receives the onboarding email unless the account is on hold (sent once; reconnecting does not resend it). Click "Sync now" on its row to pull listings.`,
         })
         setTimeout(() => onClose(true), 1200)
       } else {
