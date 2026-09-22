@@ -37,8 +37,15 @@ const hostawayRequest = axios.create({
 const listHostawayPartners = async () => {
     return hostawayRequest.get(constants.SHUB_URL + `/hostaway-accounts`)
 }
+// The account's existing Extranet login rows (HW-<id>), so the connect form can refuse an
+// email that would create a second login (Asana 1218719984465196).
+const findPartnerLoginRows = async (hwAccountId) => {
+    const res = await userRequest.get(constants.SHUB_URL + `/local/partners?accountId=${encodeURIComponent(hwAccountId)}&limit=20&skip=0`)
+    const rows = Array.isArray(res?.data?.partners) ? res.data.partners : []
+    return rows.filter((r) => r && r.accountId === hwAccountId)
+}
 const connectHostawayPartner = async (payload) => {
-    // payload: { accountId: number, clientSecret: string, vtAccountId?: string }
+    // payload: { accountId: number, clientSecret: string, vtAccountId?: string, email: string, pmName?: string }
     return hostawayRequest.post(constants.SHUB_URL + `/hostaway-connect`, payload)
 }
 const triggerHostawaySync = async (accountId) => {
@@ -732,6 +739,7 @@ const AuthService = {
     ForgotPasswordApiVTHUB,
     listHostawayPartners,
     connectHostawayPartner,
+    findPartnerLoginRows,
     triggerHostawaySync,
     createHostawayBooking,
     cancelHostawayBooking,
