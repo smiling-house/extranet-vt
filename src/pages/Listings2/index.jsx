@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react"
+import { partnerListingChannel } from "../../Util/partnerListingChannel";
 import { Dialog, DialogActions, DialogContent, DialogTitle, Stack, } from "@mui/material"
 import Icon from 'react-web-vector-icons'
 import { useDispatch, useSelector } from "react-redux";
@@ -191,7 +192,8 @@ const goToPartnersPage = () => {
                     if (p && p.accountId) {
                         // Guesty-DH (G) and RU partners' listings live under this
                         // hub's own channelSource (see PartnersListView drill-down).
-                        if (p.source === 'G' || p.source === 'RU') p.source = 'VT';
+                        // Hostaway (HW) partners' listings live under "Hostaway" (src/Util/partnerListingChannel.js).
+                        p.source = partnerListingChannel(p.source, 'VT');
                         localStorage.setItem('partner', JSON.stringify(p));
                         localStorage.setItem('accountId', String(p.accountId));
                         window.location.reload();

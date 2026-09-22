@@ -1,4 +1,5 @@
 import React, { useRef, useState } from "react"
+import { partnerListingChannel } from "../../Util/partnerListingChannel";
 import { useHistory } from "react-router-dom"
 import axios from "axios"
 import Layout from "../../components/Layout"
@@ -174,7 +175,8 @@ const MasterSearch = ({ mode = 'properties', agent, agency, token, screenSize, a
         // G / RU, but the hub writes BOTH Guesty-DH and RU listings under its
         // own channelSource (SH on SHub, VT on VTHub — see PartnersListView and
         // PartnersRuDH). BP partners have their own listings page.
-        const drillChannelSource = (partnerDoc.source === 'G' || partnerDoc.source === 'RU') ? OWN_HUB : partnerDoc.source
+        // Hostaway (HW) partners' listings live under "Hostaway" (src/Util/partnerListingChannel.js).
+        const drillChannelSource = partnerListingChannel(partnerDoc.source, OWN_HUB)
         const partner = { ...partnerDoc, source: drillChannelSource }
         localStorage.setItem('partner', JSON.stringify(partner))
         localStorage.setItem('accountId', String(accountId))
