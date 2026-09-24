@@ -142,6 +142,27 @@ await assert.rejects(
 )
 assert.equal(seen.length, 1, 'the route said 401, the session is fine — nothing to retry')
 
+// 11b. a PARTNER is not handed a public session either — the mirror of the staff case, and
+//      the one that actually bites: the partner HAS a session, the route 401s, /renew says
+//      it is dead, and the public exchange then succeeds. That public token is a different
+//      token, so a plain "it changed" test would spend the single replay on a session the
+//      partner's route will refuse just the same.
+const HUB11B = 'https://replay11b.example'
+await tick(); H.clearHubSession(); seen.length = 0; statuses = [401]
+store.delete('extranet-vt-logged-in-role'); store.delete('jToken'); store.set('partnerLogin', 'RU-558318')
+H.configureHubSessions({ publicSessions: true })
+H.setHubSession(HUB11B, { token: 'PARTNERTOK', expiresAt: later(30 * 864e5), role: 'partner' })
+useExchange(async (url) => (String(url).endsWith('/renew')
+  ? { ok: false, status: 401, json: async () => ({}) }                                  // the hub: that session is dead
+  : { ok: true, status: 200, json: async () => ({ token: 'PUBLIC', expiresAt: later(12 * 3600e3) }) }))
+await assert.rejects(
+  axios.get(`${HUB11B}/local/listings`, { headers: { Authorization: 'Bearer __HUB_SESSION__' } }),
+  (e) => e.response.status === 401,
+)
+assert.equal(seen.length, 1, 'no replay — a public session cannot answer for a logged-in partner')
+assert.deepEqual(auth(seen[0].headers), [['Authorization', 'Bearer PARTNERTOK']])
+H.configureHubSessions({ publicSessions: false }); store.delete('partnerLogin')
+
 // 11. a DECLINED exchange (4xx) is NOT waited for: the read fails fast rather than hanging
 //     on a hub that is refusing us for the next minute.
 const HUB11 = 'https://replay11.example'
@@ -155,4 +176,4 @@ await assert.rejects(
 assert.equal(seen.length, 1, 'no replay — there is no session to be had')
 assert.ok(Date.now() - startedAt < 500, `gave up in ${Date.now() - startedAt} ms, should not wait out a refusal`)
 
-console.log(`${app}: axios ${JSON.parse(readFileSync(join(app, 'node_modules/axios/package.json'))).version} real-axios transport OK (11 cases)`)
+console.log(`${app}: axios ${JSON.parse(readFileSync(join(app, 'node_modules/axios/package.json'))).version} real-axios transport OK (12 cases)`)

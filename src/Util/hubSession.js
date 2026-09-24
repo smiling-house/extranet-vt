@@ -51,6 +51,9 @@ const REFUSAL_BACKOFF_MS = 60 * 1000
 // A hub that is down gets a short pause, not the refusal backoff: long enough that a
 // restarting hub is not hit by every call on every open tab, short enough that one failed
 // read waits it out and repairs itself (waitForSession below).
+// What it costs: a read that cannot be repaired now reaches the page as an error up to this
+// much later than it otherwise would. That is the price of the self-heal — if you are
+// measuring a slow error on a dead hub, this is where the time goes.
 const DOWN_BACKOFF_MS = 2 * 1000
 const CHECK_INTERVAL_MS = 60 * 1000
 
@@ -159,17 +162,20 @@ const shortRetryWait = (origin) => {
     return wait > 0 && wait <= DOWN_BACKOFF_MS ? wait + 25 : 0
 }
 
+/** Someone is signed in here, as staff or as a partner (VT-FE's visitors are neither). */
+const someoneIsLoggedIn = () => isAdminLogin() || Boolean(read('partnerLogin'))
+
 /**
  * A session worth retrying a failed read with: present, not the one that just failed, and
- * not a public session standing in for a staff login. That last case is why this is not a
- * plain token comparison — a public session that /renew refreshed is a DIFFERENT token
- * that the hub will refuse on the same admin route, and spending the one replay on it
- * wastes the retry the admin exchange was about to earn.
+ * not a public session standing in for a login. That last case is why this is not a plain
+ * token comparison — a public session that /renew refreshed is a DIFFERENT token that the
+ * hub will refuse on the same route, and spending the one replay on it wastes the retry the
+ * real exchange was about to earn. It holds for a partner exactly as it does for staff.
  */
 const usableSession = (origin, token, unusable) => {
     if (!token || token === unusable) return false
     const stored = getHubSession(origin)
-    return !(isAdminLogin() && stored && stored.role === 'public')
+    return !(someoneIsLoggedIn() && stored && stored.role === 'public')
 }
 
 /**
@@ -180,7 +186,10 @@ const waitForSession = async (origin, unusable) => {
     const token = await ensureHubSession(origin)
     if (usableSession(origin, token, unusable)) return token
     const wait = shortRetryWait(origin)
-    if (!wait) return token
+    // Nothing usable and nothing worth waiting for: null, never the unusable token. Handing
+    // that back would let the caller's "the token changed" test pass and spend the replay
+    // on a session the route has already refused.
+    if (!wait) return null
     await new Promise((r) => setTimeout(r, wait))
     const next = await ensureHubSession(origin)
     return usableSession(origin, next, unusable) ? next : null
