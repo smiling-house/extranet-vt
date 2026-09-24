@@ -16,7 +16,7 @@
 // equals listing.data._id for every source (verified against live data).
 // ---------------------------------------------------------------------------
 
-const BOOKABLE_SOURCES = ['G', 'RU', 'BP', 'HW']
+const BOOKABLE_SOURCES = ['G', 'RU', 'BP', 'HW', 'SM']
 
 export function detectSource(hubId, fallbackSource) {
   const id = String(hubId || '')
@@ -24,6 +24,7 @@ export function detectSource(hubId, fallbackSource) {
   if (id.startsWith('RU-')) return 'RU'
   if (id.startsWith('BP-')) return 'BP'
   if (id.startsWith('HW-')) return 'HW'
+  if (id.startsWith('SM-')) return 'SM'
   return String(fallbackSource || '') || null
 }
 
