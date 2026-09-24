@@ -162,28 +162,32 @@ await t('a refused admin exchange is not retried for 60 s (hub rate-limits excha
   assert.equal(await H.ensureHubSession(`${O}/local/partners`), null)
   assert.equal(calls.filter((c) => c.url === `${O}/local/extranet/session/admin`).length, 1)
 })
-await t('a hub that is DOWN is retried on the next request, not backed off for 60 s', async () => {
+await t('a hub that is DOWN pauses briefly, then is retried — not written off for 60 s', async () => {
   // Asana 1218810480646362: VTHub restarted, every page that loaded in that window backed
-  // off for a minute and stayed empty long after the hub was answering again.
+  // off for a minute and stayed empty long after the hub was answering again. The pause is
+  // short (DOWN_BACKOFF_MS) so a restarting hub is not hit by every tab at once.
   const O = 'https://hubdown.example'
   store.set('extranet-vt-logged-in-role', 'admin'); store.set('jToken', 'jwt')
   fetchReply = () => ({ ok: false, status: 503, json: async () => ({}) })
   assert.equal(await H.ensureHubSession(O), null)
   await new Promise((r) => setTimeout(r, 5))
   fetchReply = () => ({ ok: true, status: 200, json: async () => ({ token: 'adm', expiresAt: later(12 * 3600e3) }) })
-  assert.equal(await H.ensureHubSession(O), 'adm')
+  assert.equal(await H.ensureHubSession(O), null, 'inside the short pause')
+  assert.equal(calls.filter((c) => c.url === `${O}/local/extranet/session/admin`).length, 1)
+  await new Promise((r) => setTimeout(r, 2100))
+  assert.equal(await H.ensureHubSession(O), 'adm', 'retried once the pause is over')
   assert.equal(calls.filter((c) => c.url === `${O}/local/extranet/session/admin`).length, 2)
 })
-await t('an unreachable hub (fetch throws) is retried too', async () => {
+await t('an unreachable hub (fetch throws) gets the same short pause, not the long one', async () => {
   const O = 'https://unreachable.example'
   store.set('extranet-vt-logged-in-role', 'admin'); store.set('jToken', 'jwt')
   fetchReply = () => { throw new Error('network') }
   assert.equal(await H.ensureHubSession(O), null)
-  await new Promise((r) => setTimeout(r, 5))
+  await new Promise((r) => setTimeout(r, 2100))
   fetchReply = () => ({ ok: true, status: 200, json: async () => ({ token: 'adm', expiresAt: later(12 * 3600e3) }) })
   assert.equal(await H.ensureHubSession(O), 'adm')
 })
-await t('a REFUSED exchange (401 / 429) still backs off — the hub rate-limits per IP', async () => {
+await t('a DECLINED exchange (any 4xx) still backs off for a minute — the hub rate-limits per IP', async () => {
   const O = 'https://ratelimited.example'
   store.set('extranet-vt-logged-in-role', 'admin'); store.set('jToken', 'jwt')
   fetchReply = () => ({ ok: false, status: 429, json: async () => ({}) })
@@ -191,6 +195,8 @@ await t('a REFUSED exchange (401 / 429) still backs off — the hub rate-limits 
   await new Promise((r) => setTimeout(r, 5))
   fetchReply = () => ({ ok: true, status: 200, json: async () => ({ token: 'adm', expiresAt: later(12 * 3600e3) }) })
   assert.equal(await H.ensureHubSession(O), null, 'still inside the backoff')
+  await new Promise((r) => setTimeout(r, 2100))
+  assert.equal(await H.ensureHubSession(O), null, 'a minute, not the hub-is-down pause')
   assert.equal(calls.filter((c) => c.url === `${O}/local/extranet/session/admin`).length, 1)
 })
 await t('401 on a session the hub says is invalid (/renew 401) → session dropped', async () => {
@@ -251,10 +257,10 @@ await t('a logged-in admin holding a public session gets the admin exchange (pub
   fetchReply = () => ({ ok: false, status: 502, json: async () => ({}) })
   assert.equal(await H.ensureHubSession(O), 'pub')
   assert.equal(await H.ensureHubSession(O), 'pub')
-  // 502 = the hub was down, not refusing us, so the second request tries the exchange
-  // again (see the hub-down test above). What this test pins is that the public session
-  // is kept meanwhile and never stands in for the admin one.
-  assert.equal(calls.filter((c) => c.url === `${O}/local/extranet/session/admin`).length, 2)
+  // 502 = the hub was down, so it gets the short pause; both calls fall inside it. What
+  // this test pins is that the public session is kept meanwhile and never stands in for
+  // the admin one.
+  assert.equal(calls.filter((c) => c.url === `${O}/local/extranet/session/admin`).length, 1)
   const O2 = 'https://pub2adm-ok.example'
   H.setHubSession(O2, { token: 'pub', expiresAt: later(12 * 3600e3), role: 'public' })
   fetchReply = () => ({ ok: true, status: 200, json: async () => ({ token: 'adm', expiresAt: later(12 * 3600e3) }) })

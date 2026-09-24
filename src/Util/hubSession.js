@@ -1,7 +1,12 @@
 // ---------------------------------------------------------------------------
 // Hub session — browser apps talk to the hubs with SERVER-ISSUED session tokens,
 // never with a token shipped in the bundle. Asana 1218458529003876.
-// Keep byte-identical in EXTRANET-VT, EXTRANET-SH, SHUB-FE and VT-FE.
+//
+// FOUR COPIES: EXTRANET-VT, EXTRANET-SH, SHUB-FE, VT-FE. They were byte-identical until
+// Asana 1218810480646362 added the one-replay and the refusal-backoff rules below.
+// EXTRANET-VT and EXTRANET-SH now carry those; SHUB-FE and VT-FE are BEHIND and must be
+// brought forward — never the reverse. Copying an older copy over this one silently
+// removes the replay and reintroduces the bug (a hub blip rendering as an empty list).
 //
 // Contract with the hubs (VTHub api.villatracker.com, SHub api.triangle.luxury):
 //   POST /local/extranet/session/partner  {email, accountId}         → {success, token, expiresAt, partner, vtbe?}
@@ -43,6 +48,10 @@ const CRED_HEADERS = ['authorization', 'token', 'x-api-key']
 const RENEW_AFTER_MAX_MS = 24 * 60 * 60 * 1000
 const RENEW_RETRY_MS = 5 * 60 * 1000
 const REFUSAL_BACKOFF_MS = 60 * 1000
+// A hub that is down gets a short pause, not the refusal backoff: long enough that a
+// restarting hub is not hit by every call on every open tab, short enough that one failed
+// read waits it out and repairs itself (waitForSession below).
+const DOWN_BACKOFF_MS = 2 * 1000
 const CHECK_INTERVAL_MS = 60 * 1000
 
 let config = { publicSessions: false, isAdminLogin: null }
@@ -124,19 +133,57 @@ const renewDue = (s, origin) => {
 }
 
 const refusedUntil = {}
-// The backoff exists because the hub rate-limits exchanges per IP, so it applies when the
-// hub REFUSED us (429, or a credential it will keep rejecting). A hub that is restarting or
-// unreachable has not refused anything — backing off there left every page that loaded in
-// that window empty for a minute after the hub was healthy again (Asana 1218810480646362).
-const refusalIsOurFault = (status) => status === 429 || (status >= 400 && status < 500)
+// The long backoff exists because the hub rate-limits exchanges per IP, so it belongs to
+// the case where the hub DECLINED us — any 4xx: a rate limit, or a credential it will keep
+// rejecting. A hub that is restarting or unreachable (5xx, or no answer at all) has declined
+// nothing; giving that the full minute left every page that loaded in the window empty long
+// after the hub was healthy again (Asana 1218810480646362).
+const hubDeclined = (status) => status >= 400 && status < 500
 const exchange = async (key, origin, path, headers, role) => {
     if (refusedUntil[key] && Date.now() < refusedUntil[key]) return null
     return once(key, async () => {
         const { status, data } = await postSessionRaw(origin, path, headers)
         if (data) { delete refusedUntil[key]; setHubSession(origin, { token: data.token, expiresAt: data.expiresAt, role }); return data.token }
-        if (refusalIsOurFault(status)) refusedUntil[key] = Date.now() + REFUSAL_BACKOFF_MS
+        refusedUntil[key] = Date.now() + (hubDeclined(status) ? REFUSAL_BACKOFF_MS : DOWN_BACKOFF_MS)
         return null
     })
+}
+
+/**
+ * How long until another exchange for this hub is allowed, when that is soon enough to be
+ * worth waiting for (the hub-is-down pause, not the refusal backoff). 0 = do not wait.
+ */
+const shortRetryWait = (origin) => {
+    const until = Math.max(refusedUntil[`admin:${origin}`] || 0, refusedUntil[`public:${origin}`] || 0)
+    const wait = until - Date.now()
+    return wait > 0 && wait <= DOWN_BACKOFF_MS ? wait + 25 : 0
+}
+
+/**
+ * A session worth retrying a failed read with: present, not the one that just failed, and
+ * not a public session standing in for a staff login. That last case is why this is not a
+ * plain token comparison — a public session that /renew refreshed is a DIFFERENT token
+ * that the hub will refuse on the same admin route, and spending the one replay on it
+ * wastes the retry the admin exchange was about to earn.
+ */
+const usableSession = (origin, token, unusable) => {
+    if (!token || token === unusable) return false
+    const stored = getHubSession(origin)
+    return !(isAdminLogin() && stored && stored.role === 'public')
+}
+
+/**
+ * A session for this hub, waiting out a hub-is-down pause once if that is what stands in
+ * the way. Bounded by DOWN_BACKOFF_MS — a refused exchange is never waited for.
+ */
+const waitForSession = async (origin, unusable) => {
+    const token = await ensureHubSession(origin)
+    if (usableSession(origin, token, unusable)) return token
+    const wait = shortRetryWait(origin)
+    if (!wait) return token
+    await new Promise((r) => setTimeout(r, wait))
+    const next = await ensureHubSession(origin)
+    return usableSession(origin, next, unusable) ? next : null
 }
 
 /** A valid session token for the hub a request goes to, or null. Never throws. */
@@ -269,7 +316,7 @@ const axiosErrorInterceptor = async (err) => {
         if (replayable(cfg, status)) await checked
     }
     if (!replayable(cfg, status)) return Promise.reject(err)
-    const token = await ensureHubSession(cfg.__hubCall.origin)
+    const token = await waitForSession(cfg.__hubCall.origin, cfg.__hubCall.token)
     if (!token || token === cfg.__hubCall.token) return Promise.reject(err)
     return axios.request({
         ...cfg,
@@ -313,7 +360,7 @@ export const installHubSessionTransport = () => {
                 if (mayReplay) await checked
             }
             if (!mayReplay) return res
-            const fresh = await ensureHubSession(url)
+            const fresh = await waitForSession(originOf(url), token)
             if (!fresh || fresh === token) return res
             return origFetch(input, { ...init, headers: rewriteCredentialHeaders(flat, fresh).headers })
         }

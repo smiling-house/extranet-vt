@@ -115,28 +115,44 @@ const tick = () => new Promise((r) => setTimeout(r, 0))
 
 // 8. a WRITE is never replayed — it may already have landed on the hub
 await tick(); H.clearHubSession(); seen.length = 0; statuses = [400, 200]; exchangeToken = 'SESS3'; exchangeCalls = 0
+const HUB8 = 'https://replay8.example'
 await assert.rejects(
-  axios.post(`${REPLAY_HUB}/local/update/RU-1`, { a: 1 }, { headers: { Authorization: 'Bearer __HUB_SESSION__' } }),
+  axios.post(`${HUB8}/local/update/RU-1`, { a: 1 }, { headers: { Authorization: 'Bearer __HUB_SESSION__' } }),
   (e) => e.response.status === 400,
 )
 assert.equal(seen.length, 1, 'the POST was sent once and not repeated')
 
 // 9. at most ONE replay: a second failure is the caller's to handle
 await tick(); H.clearHubSession(); seen.length = 0; statuses = [400, 400]; exchangeToken = 'SESS4'; exchangeCalls = 0
+const HUB9 = 'https://replay9.example'
 await assert.rejects(
-  axios.get(`${REPLAY_HUB}/local/external-partners`, { headers: { Authorization: 'Bearer __HUB_SESSION__' } }),
+  axios.get(`${HUB9}/local/external-partners`, { headers: { Authorization: 'Bearer __HUB_SESSION__' } }),
   (e) => e.response.status === 400,
 )
 assert.equal(seen.length, 2, 'one original, one replay, then it gives up')
 
 // 10. a 401 while holding a session the hub still accepts is NOT replayed (no new token)
-await tick(); H.setHubSession(REPLAY_HUB, { token: 'GOOD', expiresAt: later(12 * 3600e3), role: 'admin' })
+const HUB10 = 'https://replay10.example'
+await tick(); H.setHubSession(HUB10, { token: 'GOOD', expiresAt: later(12 * 3600e3), role: 'admin' })
 seen.length = 0; statuses = [401]
 useExchange(async () => ({ ok: true, status: 200, json: async () => ({ token: 'GOOD', expiresAt: later(12 * 3600e3), role: 'admin' }) }))
 await assert.rejects(
-  axios.get(`${REPLAY_HUB}/local/external-partners`, { headers: { Authorization: 'Bearer __HUB_SESSION__' } }),
+  axios.get(`${HUB10}/local/external-partners`, { headers: { Authorization: 'Bearer __HUB_SESSION__' } }),
   (e) => e.response.status === 401,
 )
 assert.equal(seen.length, 1, 'the route said 401, the session is fine — nothing to retry')
 
-console.log(`${app}: axios ${JSON.parse(readFileSync(join(app, 'node_modules/axios/package.json'))).version} real-axios transport OK (10 cases)`)
+// 11. a DECLINED exchange (4xx) is NOT waited for: the read fails fast rather than hanging
+//     on a hub that is refusing us for the next minute.
+const HUB11 = 'https://replay11.example'
+await tick(); H.clearHubSession(); seen.length = 0; statuses = [400, 200]
+useExchange(async () => ({ ok: false, status: 429, json: async () => ({}) }))
+const startedAt = Date.now()
+await assert.rejects(
+  axios.get(`${HUB11}/local/external-partners`, { headers: { Authorization: 'Bearer __HUB_SESSION__' } }),
+  (e) => e.response.status === 400,
+)
+assert.equal(seen.length, 1, 'no replay — there is no session to be had')
+assert.ok(Date.now() - startedAt < 500, `gave up in ${Date.now() - startedAt} ms, should not wait out a refusal`)
+
+console.log(`${app}: axios ${JSON.parse(readFileSync(join(app, 'node_modules/axios/package.json'))).version} real-axios transport OK (11 cases)`)

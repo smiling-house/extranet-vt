@@ -142,10 +142,15 @@ const EPartners = (props) => {
 				setTotalEPartners(0);
 				// Not written to EpartnerCount: a failed read must not overwrite the last
 				// known count with 0 for every other page that reads it.
+				// 403 is not a login problem: the hub took the session and refused the
+				// account. Telling an admin to sign in again would send them after the
+				// wrong thing.
 				setLoadError(
-					status === 400 || status === 401 || status === 403
-						? "Your session with the hub was not accepted. Sign out and back in, then try again."
-						: "Could not load external partners. The hub did not answer."
+					status === 403
+						? "Your account is not allowed to read the external partner list."
+						: status === 400 || status === 401
+							? "Your session with the hub was not accepted. Sign out and back in, then try again."
+							: "Could not load external partners. The hub did not answer."
 				);
 			}
 			setIsLoading(false);
