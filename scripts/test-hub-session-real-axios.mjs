@@ -65,4 +65,78 @@ assert.equal(seen.at(-1).headers['X-Actor'], 'partner:RU-1')
 await axios.get('https://api.triangle.luxury/xchange', { headers: { Authorization: 'Bearer __HUB_SESSION__' } })
 assert.deepEqual(auth(seen.at(-1).headers), [])
 
-console.log(`${app}: axios ${JSON.parse(readFileSync(join(app, 'node_modules/axios/package.json'))).version} real-axios transport OK (6 cases)`)
+// ---------------------------------------------------------------------------
+// The one replay (Asana 1218810480646362). A hub READ that went out without a usable
+// session must not leave the page empty once a session can be had.
+// ---------------------------------------------------------------------------
+H.clearHubSession()
+const REPLAY_HUB = 'https://replay.example'
+let statuses = []
+let exchangeToken = null
+const replayAdapter = async (config) => {
+  const h = typeof config.headers.toJSON === 'function' ? config.headers.toJSON() : config.headers
+  seen.push({ url: config.url, headers: { ...h } })
+  const status = statuses.length ? statuses.shift() : 200
+  const response = { data: { ok: status === 200 }, status, statusText: '', headers: {}, config, request: {} }
+  // A custom adapter has to settle for itself — axios only applies validateStatus inside
+  // its own xhr/http adapters.
+  if (status >= 400) {
+    const err = new Error(`Request failed with status code ${status}`)
+    err.config = config; err.response = response; err.isAxiosError = true
+    throw err
+  }
+  return response
+}
+axios.defaults.adapter = replayAdapter
+// The session exchange: the hub is down for the first attempt (as during a restart) and
+// answers from the second on — exactly the window that produced the empty page.
+let exchangeCalls = 0
+const exchangeDownThenUp = async () => {
+  exchangeCalls += 1
+  if (exchangeCalls === 1) return { ok: false, status: 503, json: async () => ({}) }
+  return { ok: true, status: 200, json: async () => ({ token: exchangeToken, expiresAt: later(12 * 3600e3) }) }
+}
+// Both: the transport calls window.__hubOriginalFetch (captured when it installed).
+const useExchange = (fn) => { globalThis.window.fetch = fn; globalThis.window.__hubOriginalFetch = fn }
+useExchange(exchangeDownThenUp)
+
+// 7. GET 400 with no session → replayed once, with the session the retry obtained
+seen.length = 0; statuses = [400, 200]; exchangeToken = 'SESS2'; exchangeCalls = 0
+store.set('extranet-vt-logged-in-role', 'admin'); store.set('jToken', 'jwt')
+const replayed = await axios.get(`${REPLAY_HUB}/local/external-partners`, { headers: { Authorization: 'Bearer __HUB_SESSION__' } })
+assert.equal(replayed.status, 200, 'the caller sees the successful replay, not the 400')
+assert.equal(seen.length, 2, `${seen.length} requests, expected the original plus one replay`)
+assert.deepEqual(auth(seen[0].headers), [], 'the first attempt carried no credential')
+assert.deepEqual(auth(seen[1].headers), [['Authorization', 'Bearer SESS2']])
+
+// A real request always crosses a macrotask, so the coalescing cache in once() has lapsed
+// before the next one starts; these cases have to say so explicitly.
+const tick = () => new Promise((r) => setTimeout(r, 0))
+
+// 8. a WRITE is never replayed — it may already have landed on the hub
+await tick(); H.clearHubSession(); seen.length = 0; statuses = [400, 200]; exchangeToken = 'SESS3'; exchangeCalls = 0
+await assert.rejects(
+  axios.post(`${REPLAY_HUB}/local/update/RU-1`, { a: 1 }, { headers: { Authorization: 'Bearer __HUB_SESSION__' } }),
+  (e) => e.response.status === 400,
+)
+assert.equal(seen.length, 1, 'the POST was sent once and not repeated')
+
+// 9. at most ONE replay: a second failure is the caller's to handle
+await tick(); H.clearHubSession(); seen.length = 0; statuses = [400, 400]; exchangeToken = 'SESS4'; exchangeCalls = 0
+await assert.rejects(
+  axios.get(`${REPLAY_HUB}/local/external-partners`, { headers: { Authorization: 'Bearer __HUB_SESSION__' } }),
+  (e) => e.response.status === 400,
+)
+assert.equal(seen.length, 2, 'one original, one replay, then it gives up')
+
+// 10. a 401 while holding a session the hub still accepts is NOT replayed (no new token)
+await tick(); H.setHubSession(REPLAY_HUB, { token: 'GOOD', expiresAt: later(12 * 3600e3), role: 'admin' })
+seen.length = 0; statuses = [401]
+useExchange(async () => ({ ok: true, status: 200, json: async () => ({ token: 'GOOD', expiresAt: later(12 * 3600e3), role: 'admin' }) }))
+await assert.rejects(
+  axios.get(`${REPLAY_HUB}/local/external-partners`, { headers: { Authorization: 'Bearer __HUB_SESSION__' } }),
+  (e) => e.response.status === 401,
+)
+assert.equal(seen.length, 1, 'the route said 401, the session is fine — nothing to retry')
+
+console.log(`${app}: axios ${JSON.parse(readFileSync(join(app, 'node_modules/axios/package.json'))).version} real-axios transport OK (10 cases)`)

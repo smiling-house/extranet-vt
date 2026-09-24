@@ -26,6 +26,7 @@ import {
 	FiChevronRight,
 	FiChevronLeft,
 	FiPlus,
+	FiAlertTriangle,
 } from "react-icons/fi";
 
 import Layout from "../../components/Layout";
@@ -84,6 +85,10 @@ const EPartners = (props) => {
 	const [isLoading, setIsLoading] = useState(false);
 	const [isRefetching, setIsRefetching] = useState(false);
 	const [pageNumber, setPageNumber] = useState(0);
+	// The load failed, as opposed to succeeding with nothing to show. Asana 1218810480646362:
+	// a hub blip used to render as "No external partners found" — the page stated, with
+	// confidence and no way to tell otherwise, that 18 partners did not exist.
+	const [loadError, setLoadError] = useState(null);
 
 	// Debounced server-side search (partnerName wins over partnerId, matching
 	// the legacy getSearchEPartners behaviour).
@@ -122,14 +127,26 @@ const EPartners = (props) => {
 			try {
 				const res = await userRequest.get(`local/external-partners`, { params });
 				const data = res?.data || {};
+				// success:false is how the hub reports a failed read too (external-partners.js
+				// getAll) — it carries the same empty array as a genuinely empty result.
+				if (data.success === false) throw new Error(data.error || "the hub could not read the partner list");
 				setEPartners(Array.isArray(data.partners) ? data.partners : []);
 				const count = parseInt(data.count) || 0;
 				setTotalEPartners(count);
+				setLoadError(null);
 				localStorage.setItem("EpartnerCount", String(count));
 			} catch (e) {
-				console.error("local/external-partners failed", e?.message || e);
+				const status = e?.response?.status;
+				console.error("local/external-partners failed", status || "", e?.message || e);
 				setEPartners([]);
 				setTotalEPartners(0);
+				// Not written to EpartnerCount: a failed read must not overwrite the last
+				// known count with 0 for every other page that reads it.
+				setLoadError(
+					status === 400 || status === 401 || status === 403
+						? "Your session with the hub was not accepted. Sign out and back in, then try again."
+						: "Could not load external partners. The hub did not answer."
+				);
 			}
 			setIsLoading(false);
 			setIsRefetching(false);
@@ -217,7 +234,8 @@ const EPartners = (props) => {
 	};
 
 	const hasActiveFilters = !!(searchName || searchId);
-	const showEmpty = !isLoading && EPartners.length === 0;
+	const showError = !isLoading && !!loadError;
+	const showEmpty = !isLoading && !loadError && EPartners.length === 0;
 	const serialBase = pageNumber * constants.PAGING_EPARTNERS_SIZE;
 
 	// Shared / connected / pending / disconnected counts from the ids map.
@@ -505,6 +523,23 @@ const EPartners = (props) => {
 											</tr>
 										);
 									})}
+
+								{showError && (
+									<tr>
+										<td colSpan={15} style={{ padding: 0 }}>
+											<div className="empty-state">
+												<div className="empty-state-icon">
+													<FiAlertTriangle />
+												</div>
+												<h3 className="empty-state-title">Could not load external partners</h3>
+												<p className="empty-state-hint">{loadError}</p>
+												<button type="button" className="empty-state-action" onClick={() => loadEPartners(true)}>
+													Try again
+												</button>
+											</div>
+										</td>
+									</tr>
+								)}
 
 								{showEmpty && (
 									<tr>

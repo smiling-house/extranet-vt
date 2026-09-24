@@ -24,9 +24,12 @@
 //   4. otherwise none — the request goes out without credentials and fails like any
 //      unauthenticated call (a partner is sent to /login once by the app).
 // A refused admin/public exchange is not retried for REFUSAL_BACKOFF_MS (the hub
-// rate-limits exchanges per IP). When a request that carried a session gets a 401, the
-// session is checked once with /renew: only if the hub says it is invalid is it dropped
-// (a route that 401s for another reason never logs anyone out).
+// rate-limits exchanges per IP) — but only when the hub actually refused us; a hub that is
+// restarting or unreachable is retried on the next request. When a request that carried a
+// session gets a 401, the session is checked once with /renew: only if the hub says it is
+// invalid is it dropped (a route that 401s for another reason never logs anyone out).
+// A hub GET that failed 400/401 for want of a session is re-sent ONCE after one is
+// obtained, so a blip cannot leave a list page looking empty until the user reloads.
 // ---------------------------------------------------------------------------
 import axios from 'axios'
 
@@ -94,11 +97,18 @@ const postSessionRaw = async (origin, path, headers) => {
         return { status: res.status, data: res.ok && data && data.token ? data : null }
     } catch (e) { return { status: 0, data: null } }
 }
-const postSession = async (origin, path, headers) => (await postSessionRaw(origin, path, headers)).data
 
 const inflight = {}
+// Concurrent callers share one exchange. A FAILED one is dropped as soon as it settles
+// rather than a tick later, so the caller that reacts to the failure (the replay below)
+// starts a fresh attempt instead of being handed the failure again. What stops a retry
+// storm is refusedUntil, not this cache.
 const once = (key, fn) => {
-    if (!inflight[key]) inflight[key] = fn().finally(() => { setTimeout(() => { delete inflight[key] }, 0) })
+    if (!inflight[key]) {
+        inflight[key] = fn()
+            .then((v) => { if (!v) delete inflight[key]; return v }, (e) => { delete inflight[key]; throw e })
+            .finally(() => { setTimeout(() => { delete inflight[key] }, 0) })
+    }
     return inflight[key]
 }
 
@@ -114,12 +124,17 @@ const renewDue = (s, origin) => {
 }
 
 const refusedUntil = {}
+// The backoff exists because the hub rate-limits exchanges per IP, so it applies when the
+// hub REFUSED us (429, or a credential it will keep rejecting). A hub that is restarting or
+// unreachable has not refused anything — backing off there left every page that loaded in
+// that window empty for a minute after the hub was healthy again (Asana 1218810480646362).
+const refusalIsOurFault = (status) => status === 429 || (status >= 400 && status < 500)
 const exchange = async (key, origin, path, headers, role) => {
     if (refusedUntil[key] && Date.now() < refusedUntil[key]) return null
     return once(key, async () => {
-        const d = await postSession(origin, path, headers)
-        if (d) { delete refusedUntil[key]; setHubSession(origin, { token: d.token, expiresAt: d.expiresAt, role }); return d.token }
-        refusedUntil[key] = Date.now() + REFUSAL_BACKOFF_MS
+        const { status, data } = await postSessionRaw(origin, path, headers)
+        if (data) { delete refusedUntil[key]; setHubSession(origin, { token: data.token, expiresAt: data.expiresAt, role }); return data.token }
+        if (refusalIsOurFault(status)) refusedUntil[key] = Date.now() + REFUSAL_BACKOFF_MS
         return null
     })
 }
@@ -213,6 +228,9 @@ const axiosRequestInterceptor = async (cfg) => {
     if (!Object.keys(flat).some((k) => CRED_HEADERS.includes(k.toLowerCase()) && hasPlaceholder(flat[k]))) return cfg
     const target = axiosTarget(cfg)
     const token = await ensureHubSession(target)
+    // Recorded even when no token was available: that is exactly the case the replay below
+    // repairs (the request went out unauthenticated and the hub answered 400).
+    cfg.__hubCall = { origin: originOf(target), token: token || null }
     if (token) cfg.__hubSessionUsed = { origin: originOf(target), token }
     const { headers } = rewriteCredentialHeaders(flat, token)
     for (const k of Object.keys(flat)) {
@@ -222,10 +240,43 @@ const axiosRequestInterceptor = async (cfg) => {
     return cfg
 }
 
-const axiosErrorInterceptor = (err) => {
-    const used = err && err.config && err.config.__hubSessionUsed
-    if (used && err.response && err.response.status === 401) checkSessionAfter401(used.origin, used.token)
-    return Promise.reject(err)
+/**
+ * One replay, for hub READS only. A GET that failed because this browser had no usable
+ * session (none yet, or one the hub has since rejected) is re-sent once — and only once —
+ * after a session is obtained. Without it a single blip while the hub restarts leaves a
+ * list page empty until the user reloads, which reads as "there is nothing here"
+ * (Asana 1218810480646362). Never for a write: a POST/PUT/DELETE may already have landed.
+ */
+const REPLAY_STATUSES = [400, 401]
+const replayable = (cfg, status) => Boolean(cfg && cfg.__hubCall) && !cfg.__hubReplayed &&
+    String(cfg.method || 'get').toLowerCase() === 'get' && REPLAY_STATUSES.includes(status)
+
+const withFreshAuth = (headers, token) => {
+    const source = headers && typeof headers.toJSON === 'function' ? headers.toJSON() : { ...(headers || {}) }
+    const out = {}
+    for (const k of Object.keys(source)) if (k.toLowerCase() !== 'authorization') out[k] = source[k]
+    out.Authorization = `Bearer ${token}`
+    return out
+}
+
+const axiosErrorInterceptor = async (err) => {
+    const cfg = err && err.config
+    const status = err && err.response && err.response.status
+    const used = cfg && cfg.__hubSessionUsed
+    if (used && status === 401) {
+        // Awaited only when a replay may follow, so every other 401 rejects exactly as before.
+        const checked = checkSessionAfter401(used.origin, used.token)
+        if (replayable(cfg, status)) await checked
+    }
+    if (!replayable(cfg, status)) return Promise.reject(err)
+    const token = await ensureHubSession(cfg.__hubCall.origin)
+    if (!token || token === cfg.__hubCall.token) return Promise.reject(err)
+    return axios.request({
+        ...cfg,
+        headers: withFreshAuth(cfg.headers, token),
+        __hubReplayed: true,
+        __hubCall: { ...cfg.__hubCall, token },
+    })
 }
 
 let installed = false
@@ -254,8 +305,17 @@ export const installHubSessionTransport = () => {
             const url = typeof input === 'string' ? input : (input && input.url) || ''
             const token = await ensureHubSession(url)
             const res = await origFetch(input, { ...init, headers: rewriteCredentialHeaders(flat, token).headers })
-            if (token && res && res.status === 401) checkSessionAfter401(originOf(url), token)
-            return res
+            // Same one-replay rule as the axios path, reads only; everything else returns
+            // exactly as before, including the fire-and-forget session check on a 401.
+            const mayReplay = res && REPLAY_STATUSES.includes(res.status) && String(init.method || 'GET').toUpperCase() === 'GET'
+            if (token && res && res.status === 401) {
+                const checked = checkSessionAfter401(originOf(url), token)
+                if (mayReplay) await checked
+            }
+            if (!mayReplay) return res
+            const fresh = await ensureHubSession(url)
+            if (!fresh || fresh === token) return res
+            return origFetch(input, { ...init, headers: rewriteCredentialHeaders(flat, fresh).headers })
         }
     }
 }

@@ -162,6 +162,37 @@ await t('a refused admin exchange is not retried for 60 s (hub rate-limits excha
   assert.equal(await H.ensureHubSession(`${O}/local/partners`), null)
   assert.equal(calls.filter((c) => c.url === `${O}/local/extranet/session/admin`).length, 1)
 })
+await t('a hub that is DOWN is retried on the next request, not backed off for 60 s', async () => {
+  // Asana 1218810480646362: VTHub restarted, every page that loaded in that window backed
+  // off for a minute and stayed empty long after the hub was answering again.
+  const O = 'https://hubdown.example'
+  store.set('extranet-vt-logged-in-role', 'admin'); store.set('jToken', 'jwt')
+  fetchReply = () => ({ ok: false, status: 503, json: async () => ({}) })
+  assert.equal(await H.ensureHubSession(O), null)
+  await new Promise((r) => setTimeout(r, 5))
+  fetchReply = () => ({ ok: true, status: 200, json: async () => ({ token: 'adm', expiresAt: later(12 * 3600e3) }) })
+  assert.equal(await H.ensureHubSession(O), 'adm')
+  assert.equal(calls.filter((c) => c.url === `${O}/local/extranet/session/admin`).length, 2)
+})
+await t('an unreachable hub (fetch throws) is retried too', async () => {
+  const O = 'https://unreachable.example'
+  store.set('extranet-vt-logged-in-role', 'admin'); store.set('jToken', 'jwt')
+  fetchReply = () => { throw new Error('network') }
+  assert.equal(await H.ensureHubSession(O), null)
+  await new Promise((r) => setTimeout(r, 5))
+  fetchReply = () => ({ ok: true, status: 200, json: async () => ({ token: 'adm', expiresAt: later(12 * 3600e3) }) })
+  assert.equal(await H.ensureHubSession(O), 'adm')
+})
+await t('a REFUSED exchange (401 / 429) still backs off — the hub rate-limits per IP', async () => {
+  const O = 'https://ratelimited.example'
+  store.set('extranet-vt-logged-in-role', 'admin'); store.set('jToken', 'jwt')
+  fetchReply = () => ({ ok: false, status: 429, json: async () => ({}) })
+  assert.equal(await H.ensureHubSession(O), null)
+  await new Promise((r) => setTimeout(r, 5))
+  fetchReply = () => ({ ok: true, status: 200, json: async () => ({ token: 'adm', expiresAt: later(12 * 3600e3) }) })
+  assert.equal(await H.ensureHubSession(O), null, 'still inside the backoff')
+  assert.equal(calls.filter((c) => c.url === `${O}/local/extranet/session/admin`).length, 1)
+})
 await t('401 on a session the hub says is invalid (/renew 401) → session dropped', async () => {
   const O = 'https://invalid.example'
   H.setHubSession(O, { token: 'dead', expiresAt: later(20 * 864e5), role: 'partner' })
@@ -220,7 +251,10 @@ await t('a logged-in admin holding a public session gets the admin exchange (pub
   fetchReply = () => ({ ok: false, status: 502, json: async () => ({}) })
   assert.equal(await H.ensureHubSession(O), 'pub')
   assert.equal(await H.ensureHubSession(O), 'pub')
-  assert.equal(calls.filter((c) => c.url === `${O}/local/extranet/session/admin`).length, 1)
+  // 502 = the hub was down, not refusing us, so the second request tries the exchange
+  // again (see the hub-down test above). What this test pins is that the public session
+  // is kept meanwhile and never stands in for the admin one.
+  assert.equal(calls.filter((c) => c.url === `${O}/local/extranet/session/admin`).length, 2)
   const O2 = 'https://pub2adm-ok.example'
   H.setHubSession(O2, { token: 'pub', expiresAt: later(12 * 3600e3), role: 'public' })
   fetchReply = () => ({ ok: true, status: 200, json: async () => ({ token: 'adm', expiresAt: later(12 * 3600e3) }) })
