@@ -20,7 +20,26 @@
 // ---------------------------------------------------------------------------
 const DELAYS_MS = [900, 2400]
 
+// None of these axios clients sets a timeout, so a backend that accepts the connection
+// and then never answers leaves the page on its spinner for ever — no error is thrown,
+// so nothing below would retry. Each attempt is given a deadline instead: the hung
+// request is abandoned (it is a GET; nothing depends on its outcome), the next attempt
+// starts, and a backend that stays silent ends as an honest error rather than a spinner.
+const ATTEMPT_TIMEOUT_MS = 20000
+
 const wait = (ms) => new Promise((r) => setTimeout(r, ms))
+
+const withDeadline = (promise, ms) => {
+  let timer
+  const deadline = new Promise((_resolve, reject) => {
+    timer = setTimeout(() => {
+      const e = new Error(`read timed out after ${ms}ms`)
+      e.isTimeout = true
+      reject(e)
+    }, ms)
+  })
+  return Promise.race([promise, deadline]).finally(() => clearTimeout(timer))
+}
 
 export const shouldRetryRead = (error) => {
   const status = error && error.response && error.response.status
@@ -35,10 +54,11 @@ export const shouldRetryRead = (error) => {
  */
 export const retryRead = async (read, opts = {}) => {
   const delays = opts.delays || DELAYS_MS
+  const timeoutMs = opts.timeoutMs || ATTEMPT_TIMEOUT_MS
   let lastError
   for (let attempt = 0; attempt <= delays.length; attempt += 1) {
     try {
-      return await read(attempt)
+      return await withDeadline(Promise.resolve(read(attempt)), timeoutMs)
     } catch (e) {
       lastError = e
       if (attempt === delays.length || !shouldRetryRead(e)) break
