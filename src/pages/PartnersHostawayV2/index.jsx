@@ -31,6 +31,7 @@ import {
 import Layout from "../../components/Layout";
 import AuthService from "../../services/auth.service";
 import { readErrorMessage } from "../../Util/readError.js";
+import { retryRead } from "../../Util/retryRead.js";
 import EditPartner from "../PartnersHostaway/EditPartner";
 import BookingDemo from "../PartnersHostaway/BookingDemo";
 import { PATH_LISTINGS } from "../../Util/constants";
@@ -78,7 +79,7 @@ const PartnersHostawayV2 = (props) => {
   const loadPartners = async () => {
     setIsLoading(true);
     try {
-      const res = await AuthService.listHostawayPartners();
+      const res = await retryRead(() => AuthService.listHostawayPartners());
       setPartners(res?.data?.accounts || []);
       setLoadError(null);
     } catch (e) {

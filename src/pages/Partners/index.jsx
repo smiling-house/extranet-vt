@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { partnerListingChannel } from "../../Util/partnerListingChannel";
 import { readErrorMessage } from "../../Util/readError.js";
+import { retryRead } from "../../Util/retryRead.js";
 import { useLocation, useHistory } from "react-router-dom";
 
 import Icon from 'react-web-vector-icons';
@@ -165,9 +166,9 @@ const showOrHideSideBarMenu=()=> {
 		setReconnectList(null);
 		setReconnectError(null);
 		try {
-			const res = await userRequest.get(`local/partners/reconnect-listings/${item.accountId}`, {
+			const res = await retryRead(() => userRequest.get(`local/partners/reconnect-listings/${item.accountId}`, {
 				params: { channelSource: item.source === 'G' ? 'VT' : item.source },
-			});
+			}));
 			setReconnectList(res.data?.listings || []);
 		} catch (e) {
 			// Asana 1218855318680702: this used to render as "Nothing to reconnect.", which is

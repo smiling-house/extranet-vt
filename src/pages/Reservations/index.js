@@ -13,6 +13,7 @@ import { IoIosSearch, IoMdClose } from "react-icons/io";
 
 import Layout from "../../components/Layout/index.js";
 import { readErrorMessage } from "../../Util/readError.js";
+import { retryRead } from "../../Util/retryRead.js";
 import Paging from "../../components/Paging";
 // Reuse the PMS pages' design system (hero / toolbar / view-switcher / table /
 // grid / pills / paging), then a few reservation-specific overrides.
@@ -119,7 +120,7 @@ const Reservations = (props) => {
 
   const loadReservations = () => {
     setIsLoading(true);
-    AuthService.GetReservation("")
+    retryRead(() => AuthService.GetReservation(""))
       .then((response) => {
         setData(Array.isArray(response?.reservations) ? response.reservations : []);
         setLoadError(null);

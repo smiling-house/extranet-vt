@@ -8,6 +8,7 @@ import LoadingBox from "../../components/LoadingBox";
 import Paging from "../../components/Paging";
 import constants from "../../Util/constants";
 import { readErrorMessage } from "../../Util/readError.js";
+import { retryRead } from "../../Util/retryRead.js";
 import { PATH_PARTNERS_BOOKINGPAL } from "../../Util/constants";
 import ReservationDemo from "../PartnersBookingpal/ReservationDemo";
 
@@ -80,7 +81,7 @@ const ListingsBookingpal = (props) => {
       };
       if (status && status !== "") params.status = status;
 
-      const response = await userRequest.get(`local/listings-bookingpal`, { params });
+      const response = await retryRead(() => userRequest.get(`local/listings-bookingpal`, { params }));
       setListings(response.data?.listings || []);
       setCount(parseInt(response.data?.count || 0));
       setLoadError(null);

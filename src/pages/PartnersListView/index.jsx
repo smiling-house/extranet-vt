@@ -41,6 +41,7 @@ import Paging from "../../components/Paging";
 import { PATH_LISTINGS } from "../../Util/constants";
 import constants from "../../Util/constants";
 import { readErrorMessage } from "../../Util/readError";
+import { retryRead } from "../../Util/retryRead";
 import "./PartnersListView.scss";
 
 // ---------------------------------------------------------------------------
@@ -220,11 +221,16 @@ const PartnersListView = (props) => {
         pmName: searchInput || undefined,
       };
       try {
-        const res = await userRequest.get(endpoint, { params });
+        // Retried inside, so a 502 or a dropped connection reloads itself instead of
+        // parking on an error the user has to clear.
+        const res = await retryRead(async () => {
+          const r = await userRequest.get(endpoint, { params });
+          // The hub reports a failed read as success:false with the same empty array a
+          // genuinely empty cohort carries — without this it renders as "none exist".
+          if (r?.data?.success === false) throw new Error(r.data.error || "the hub could not read the partner list");
+          return r;
+        });
         const data = res?.data || {};
-        // The hub reports a failed read as success:false with the same empty array a
-        // genuinely empty cohort carries — without this it renders as "none exist".
-        if (data.success === false) throw new Error(data.error || "the hub could not read the partner list");
         const rows = Array.isArray(data.partners) ? data.partners : [];
         const count = Number(data.count) || 0;
         setPartners(rows);

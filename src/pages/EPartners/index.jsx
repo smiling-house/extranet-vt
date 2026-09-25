@@ -39,6 +39,7 @@ import constants, {
 	PATH_EPS_EPARTNER_MANAGE,
 } from "../../Util/constants.js";
 import { readErrorMessage } from "../../Util/readError.js";
+import { retryRead } from "../../Util/retryRead.js";
 
 import "../PartnersListView/PartnersListView.scss";
 import "./EPartner.scss";
@@ -126,11 +127,14 @@ const EPartners = (props) => {
 			if (searchName) params.partnerName = searchName;
 			else if (searchId) params.partnerId = searchId;
 			try {
-				const res = await userRequest.get(`local/external-partners`, { params });
+				const res = await retryRead(async () => {
+					const r = await userRequest.get(`local/external-partners`, { params });
+					// success:false is how the hub reports a failed read too (external-partners.js
+					// getAll) — it carries the same empty array as a genuinely empty result.
+					if (r?.data?.success === false) throw new Error(r.data.error || "the hub could not read the partner list");
+					return r;
+				});
 				const data = res?.data || {};
-				// success:false is how the hub reports a failed read too (external-partners.js
-				// getAll) — it carries the same empty array as a genuinely empty result.
-				if (data.success === false) throw new Error(data.error || "the hub could not read the partner list");
 				setEPartners(Array.isArray(data.partners) ? data.partners : []);
 				const count = parseInt(data.count) || 0;
 				setTotalEPartners(count);
