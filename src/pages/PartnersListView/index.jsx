@@ -40,17 +40,8 @@ import Layout from "../../components/Layout/index.js";
 import Paging from "../../components/Paging";
 import { PATH_LISTINGS } from "../../Util/constants";
 import constants from "../../Util/constants";
+import { hubReadErrorMessage } from "../../Util/hubReadError";
 import "./PartnersListView.scss";
-
-// What to tell an admin when the cohort could not be read. 403 is not a login
-// problem — the hub took the session and refused the account — so it must not send
-// them after a sign-in they do not need. Asana 1218855318680702.
-const loadErrorMessage = (status) =>
-  status === 403
-    ? "Your account is not allowed to read this partner list."
-    : status === 400 || status === 401
-      ? "Your session with the hub was not accepted. Sign out and back in, then try again."
-      : "Could not load partners. The hub did not answer.";
 
 // ---------------------------------------------------------------------------
 // Module-scope caches — survive component unmount/mount and cross-page
@@ -247,7 +238,7 @@ const PartnersListView = (props) => {
         setTotalPartners(0);
         // partnerCount is deliberately NOT written: a failed read must not tell every
         // other page that there are zero partners (Asana 1218855318680702).
-        setLoadError(loadErrorMessage(status));
+        setLoadError(hubReadErrorMessage(status, "this partner list"));
       }
       setIsLoading(false);
       setIsRefetching(false);
