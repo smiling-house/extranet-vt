@@ -204,10 +204,18 @@ const ListingsBookingpal = (props) => {
                   </td>
                 </tr>
               )}
-              {!loadError && (!listings || listings.length === 0) && !isLoading && (
+              {!loadError && !accountId && !isLoading && (
                 <tr>
                   <td className="px-4 p-3" colSpan={columns.length}>
-                    <h4>No BookingPal listings found{accountId ? ` for ${accountId}` : ""}.</h4>
+                    <h4>No partner selected</h4>
+                    <div>Open this page from a BookingPal partner to see their listings.</div>
+                  </td>
+                </tr>
+              )}
+              {!loadError && accountId && (!listings || listings.length === 0) && !isLoading && (
+                <tr>
+                  <td className="px-4 p-3" colSpan={columns.length}>
+                    <h4>No BookingPal listings found for {accountId}.</h4>
                   </td>
                 </tr>
               )}

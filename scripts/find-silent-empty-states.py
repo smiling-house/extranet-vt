@@ -17,6 +17,17 @@
 # fire-and-forget log need not.
 #
 # Re-run this after adding a page that reads a backend.
+#
+# WHAT A ZERO HERE DOES NOT MEAN. Three shapes this cannot see by construction, none of
+# which exists in either app today (reviewer, round 4) — so read a zero as "no silent catch
+# blocks", not as "nothing can be wrong":
+#   1. Emptying through a helper or an action — reset…()/clear…() are matched now, but a
+#      dispatch(clearX()) or a rename is not.
+#   2. A list that is empty because the fetch NEVER HAPPENED. ListingsBookingpal returns
+#      early when no account is selected; a page that renders "none found" having asked
+#      nothing makes the same false statement with no catch involved.
+#   3. A count that another page zeroed — page A writes a total to localStorage, page B
+#      renders it. Invisible to a per-catch scan.
 # ---------------------------------------------------------------------------
 import io
 import os
@@ -24,7 +35,9 @@ import re
 import sys
 
 PAT_CATCH = re.compile(r'catch\s*\(')
-EMPTY = re.compile(r'set[A-Za-z_]*\(\s*(\[\]|0|null)\s*\)')
+# set…([]) is the common shape; reset…()/clear…() empty a list through a helper and would
+# otherwise be invisible (reviewer, round 4). Both need the same judgement pass.
+EMPTY = re.compile(r'set[A-Za-z_]*\(\s*(\[\]|0|null)\s*\)|(reset[A-Za-z_]*|clear[A-Za-z_]*)\(\s*\)')
 # set\w*Error catches setLoadError, setReconnectError, setErr… — the first version of
 # this script missed setReconnectError and reported a fixed page as still silent.
 TELLS_USER = re.compile(r'swal|toast|alert\(|set[A-Za-z_]*Error')
