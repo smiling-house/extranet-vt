@@ -33,6 +33,7 @@ import {
   FiList,
   FiGrid,
   FiColumns,
+  FiAlertTriangle,
 } from "react-icons/fi";
 
 import Layout from "../../components/Layout/index.js";
@@ -40,6 +41,16 @@ import Paging from "../../components/Paging";
 import { PATH_LISTINGS } from "../../Util/constants";
 import constants from "../../Util/constants";
 import "./PartnersListView.scss";
+
+// What to tell an admin when the cohort could not be read. 403 is not a login
+// problem — the hub took the session and refused the account — so it must not send
+// them after a sign-in they do not need. Asana 1218855318680702.
+const loadErrorMessage = (status) =>
+  status === 403
+    ? "Your account is not allowed to read this partner list."
+    : status === 400 || status === 401
+      ? "Your session with the hub was not accepted. Sign out and back in, then try again."
+      : "Could not load partners. The hub did not answer.";
 
 // ---------------------------------------------------------------------------
 // Module-scope caches — survive component unmount/mount and cross-page
@@ -152,6 +163,10 @@ const PartnersListView = (props) => {
   const [partners, setPartners] = useState([]);
   const [totalPartners, setTotalPartners] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+  // The load failed, as opposed to succeeding with nothing to show. Without this the
+  // page states, with confidence and no way to tell otherwise, that a cohort of 142
+  // partners does not exist (Asana 1218855318680702).
+  const [loadError, setLoadError] = useState(null);
   const [isRefetching, setIsRefetching] = useState(false);
 
   // View mode — persisted across page navigation so switching between
@@ -216,15 +231,23 @@ const PartnersListView = (props) => {
       try {
         const res = await userRequest.get(endpoint, { params });
         const data = res?.data || {};
+        // The hub reports a failed read as success:false with the same empty array a
+        // genuinely empty cohort carries — without this it renders as "none exist".
+        if (data.success === false) throw new Error(data.error || "the hub could not read the partner list");
         const rows = Array.isArray(data.partners) ? data.partners : [];
         const count = Number(data.count) || 0;
         setPartners(rows);
         setTotalPartners(count);
+        setLoadError(null);
         localStorage.setItem("partnerCount", String(count));
       } catch (e) {
-        console.error(`${endpoint} failed`, e?.message || e);
+        const status = e?.response?.status;
+        console.error(`${endpoint} failed`, status || "", e?.message || e);
         setPartners([]);
         setTotalPartners(0);
+        // partnerCount is deliberately NOT written: a failed read must not tell every
+        // other page that there are zero partners (Asana 1218855318680702).
+        setLoadError(loadErrorMessage(status));
       }
       setIsLoading(false);
       setIsRefetching(false);
@@ -316,7 +339,8 @@ const PartnersListView = (props) => {
   };
 
   const hasActiveFilters = !!(searchInput || filterPropertyStatus);
-  const showEmpty = !isLoading && partners.length === 0;
+  const showError = !isLoading && !!loadError;
+  const showEmpty = !isLoading && !loadError && partners.length === 0;
   const serialBase = pageNumber * constants.PAGING_PARTNERS_SIZE;
 
   return (
@@ -529,6 +553,23 @@ const PartnersListView = (props) => {
                   </div>
                 ))}
 
+              {showError && (
+                <div className="empty-state partners-grid-empty">
+                  <div className="empty-state-icon">
+                    <FiAlertTriangle />
+                  </div>
+                  <h3 className="empty-state-title">Could not load partners</h3>
+                  <p className="empty-state-hint">{loadError}</p>
+                  <button
+                    type="button"
+                    className="empty-state-action"
+                    onClick={() => loadPartners(true)}
+                  >
+                    Try again
+                  </button>
+                </div>
+              )}
+
               {showEmpty && (
                 <div className="empty-state partners-grid-empty">
                   <div className="empty-state-icon">
@@ -666,6 +707,27 @@ const PartnersListView = (props) => {
                         )}
                       </tr>
                     ))}
+
+                  {showError && (
+                    <tr>
+                      <td colSpan={viewMode === "table" ? 9 : 10} style={{ padding: 0 }}>
+                        <div className="empty-state">
+                          <div className="empty-state-icon">
+                            <FiAlertTriangle />
+                          </div>
+                          <h3 className="empty-state-title">Could not load partners</h3>
+                          <p className="empty-state-hint">{loadError}</p>
+                          <button
+                            type="button"
+                            className="empty-state-action"
+                            onClick={() => loadPartners(true)}
+                          >
+                            Try again
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
 
                   {showEmpty && (
                     <tr>
