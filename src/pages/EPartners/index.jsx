@@ -38,7 +38,7 @@ import constants, {
 	PATH_EPS_LISTINGS,
 	PATH_EPS_EPARTNER_MANAGE,
 } from "../../Util/constants.js";
-import { hubReadErrorMessage } from "../../Util/hubReadError.js";
+import { readErrorMessage } from "../../Util/readError.js";
 
 import "../PartnersListView/PartnersListView.scss";
 import "./EPartner.scss";
@@ -143,7 +143,7 @@ const EPartners = (props) => {
 				setTotalEPartners(0);
 				// Not written to EpartnerCount: a failed read must not overwrite the last
 				// known count with 0 for every other page that reads it.
-				setLoadError(hubReadErrorMessage(status, "the external partner list"));
+				setLoadError(readErrorMessage(status, "the external partner list"));
 			}
 			setIsLoading(false);
 			setIsRefetching(false);

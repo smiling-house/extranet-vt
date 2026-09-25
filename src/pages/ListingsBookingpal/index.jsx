@@ -7,6 +7,7 @@ import Layout from "../../components/Layout";
 import LoadingBox from "../../components/LoadingBox";
 import Paging from "../../components/Paging";
 import constants from "../../Util/constants";
+import { readErrorMessage } from "../../Util/readError.js";
 import { PATH_PARTNERS_BOOKINGPAL } from "../../Util/constants";
 import ReservationDemo from "../PartnersBookingpal/ReservationDemo";
 
@@ -57,6 +58,8 @@ const ListingsBookingpal = (props) => {
   const [listings, setListings] = useState([]);
   const [count, setCount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+  // The read failed, as opposed to the PM having no listings. Asana 1218855318680702.
+  const [loadError, setLoadError] = useState(null);
   const [pageNumber, setPageNumber] = useState(0);
   const [serialNumber, setSerialNumber] = useState(0);
   const [reserveListing, setReserveListing] = useState(null);
@@ -80,10 +83,13 @@ const ListingsBookingpal = (props) => {
       const response = await userRequest.get(`local/listings-bookingpal`, { params });
       setListings(response.data?.listings || []);
       setCount(parseInt(response.data?.count || 0));
+      setLoadError(null);
     } catch (err) {
-      console.log("error reading local/listings-bookingpal", err?.message);
+      const status = err?.response?.status;
+      console.error("error reading local/listings-bookingpal", status || "", err?.message || err);
       setListings([]);
       setCount(0);
+      setLoadError(readErrorMessage(status, "this PM's BookingPal listings"));
     }
     setIsLoading(false);
   };
@@ -186,7 +192,18 @@ const ListingsBookingpal = (props) => {
                   </td>
                 </tr>
               ))}
-              {(!listings || listings.length === 0) && !isLoading && (
+              {loadError && !isLoading && (
+                <tr>
+                  <td className="px-4 p-3" colSpan={columns.length}>
+                    <h4>Could not load BookingPal listings</h4>
+                    <div style={{ margin: "6px 0 12px" }}>{loadError}</div>
+                    <button type="button" className="btn btn-primary" onClick={() => getListings(pageNumber)}>
+                      Try again
+                    </button>
+                  </td>
+                </tr>
+              )}
+              {!loadError && (!listings || listings.length === 0) && !isLoading && (
                 <tr>
                   <td className="px-4 p-3" colSpan={columns.length}>
                     <h4>No BookingPal listings found{accountId ? ` for ${accountId}` : ""}.</h4>

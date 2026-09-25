@@ -40,7 +40,7 @@ import Layout from "../../components/Layout/index.js";
 import Paging from "../../components/Paging";
 import { PATH_LISTINGS } from "../../Util/constants";
 import constants from "../../Util/constants";
-import { hubReadErrorMessage } from "../../Util/hubReadError";
+import { readErrorMessage } from "../../Util/readError";
 import "./PartnersListView.scss";
 
 // ---------------------------------------------------------------------------
@@ -238,7 +238,7 @@ const PartnersListView = (props) => {
         setTotalPartners(0);
         // partnerCount is deliberately NOT written: a failed read must not tell every
         // other page that there are zero partners (Asana 1218855318680702).
-        setLoadError(hubReadErrorMessage(status, "this partner list"));
+        setLoadError(readErrorMessage(status, "this partner list"));
       }
       setIsLoading(false);
       setIsRefetching(false);

@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import AuthService from "../../services/auth.service";
 import {
   FiCalendar,
+  FiAlertTriangle,
   FiChevronLeft,
   FiChevronRight,
   FiList,
@@ -11,6 +12,7 @@ import {
 import { IoIosSearch, IoMdClose } from "react-icons/io";
 
 import Layout from "../../components/Layout/index.js";
+import { readErrorMessage } from "../../Util/readError.js";
 import Paging from "../../components/Paging";
 // Reuse the PMS pages' design system (hero / toolbar / view-switcher / table /
 // grid / pills / paging), then a few reservation-specific overrides.
@@ -103,6 +105,8 @@ const Reservations = (props) => {
 
   const [data, setData] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  // The load failed, as opposed to there being no reservations. Asana 1218855318680702.
+  const [loadError, setLoadError] = useState(null);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [pageNumber, setPageNumber] = useState(0);
@@ -118,10 +122,13 @@ const Reservations = (props) => {
     AuthService.GetReservation("")
       .then((response) => {
         setData(Array.isArray(response?.reservations) ? response.reservations : []);
+        setLoadError(null);
       })
       .catch((e) => {
-        console.log(e);
+        const status = e?.response?.status;
+        console.error("reservations load failed", status || "", e?.message || e);
         setData([]);
+        setLoadError(readErrorMessage(status, "the reservations list", "Villa Tracker's backend"));
       })
       .finally(() => setIsLoading(false));
   };
@@ -155,7 +162,8 @@ const Reservations = (props) => {
   );
   const pagingFrom = totalItems ? safePage * RES_PAGE_SIZE + 1 : 0;
   const pagingTo = Math.min((safePage + 1) * RES_PAGE_SIZE, totalItems);
-  const showEmpty = !isLoading && totalItems === 0;
+  const showError = !isLoading && !!loadError;
+  const showEmpty = !isLoading && !loadError && totalItems === 0;
   const hasActiveFilters = !!(search || statusFilter);
 
   const changeViewMode = (next) => {
@@ -272,6 +280,19 @@ const Reservations = (props) => {
     ) : (
       <span className="res-action-empty">—</span>
     );
+
+  const errorState = (
+    <div className="empty-state">
+      <div className="empty-state-icon">
+        <FiAlertTriangle />
+      </div>
+      <h3 className="empty-state-title">Could not load reservations</h3>
+      <p className="empty-state-hint">{loadError}</p>
+      <button type="button" className="empty-state-action" onClick={loadReservations}>
+        Try again
+      </button>
+    </div>
+  );
 
   const emptyState = (
     <div className="empty-state">
@@ -467,6 +488,7 @@ const Reservations = (props) => {
                   </div>
                 ))}
 
+              {showError && <div className="partners-grid-empty">{errorState}</div>}
               {showEmpty && <div className="partners-grid-empty">{emptyState}</div>}
             </div>
           ) : (
@@ -528,6 +550,14 @@ const Reservations = (props) => {
                         <td data-label="Action">{cancelButton(iteam)}</td>
                       </tr>
                     ))}
+
+                  {showError && (
+                    <tr>
+                      <td colSpan={10} style={{ padding: 0 }}>
+                        {errorState}
+                      </td>
+                    </tr>
+                  )}
 
                   {showEmpty && (
                     <tr>

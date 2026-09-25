@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { partnerListingChannel } from "../../Util/partnerListingChannel";
+import { readErrorMessage } from "../../Util/readError.js";
 import { useLocation, useHistory } from "react-router-dom";
 
 import Icon from 'react-web-vector-icons';
@@ -156,19 +157,25 @@ const showOrHideSideBarMenu=()=> {
 	const [reconnectFor, setReconnectFor] = useState(null);   // partner row
 	const [showInactiveAccounts, setShowInactiveAccounts] = useState(false);
 	const [reconnectList, setReconnectList] = useState(null); // fetched listings
+	const [reconnectError, setReconnectError] = useState(null); // the fetch failed, vs nothing to reconnect
 
 	const openReconnectList = async (item) => {
 		if (!(item.reconnect_properties_count > 0)) return;
 		setReconnectFor(item);
 		setReconnectList(null);
+		setReconnectError(null);
 		try {
 			const res = await userRequest.get(`local/partners/reconnect-listings/${item.accountId}`, {
 				params: { channelSource: item.source === 'G' ? 'VT' : item.source },
 			});
 			setReconnectList(res.data?.listings || []);
 		} catch (e) {
-			console.log('reconnect-listings fetch failed', e?.message);
+			// Asana 1218855318680702: this used to render as "Nothing to reconnect.", which is
+			// the opposite of the truth when the read is what failed.
+			const status = e?.response?.status;
+			console.error('reconnect-listings fetch failed', status || '', e?.message || e);
 			setReconnectList([]);
+			setReconnectError(readErrorMessage(status, "this partner's listings to reconnect"));
 		}
 	};
 	const [partnerToDisApprove, setPartnerToDisApprove] = useState(null);
@@ -901,7 +908,14 @@ localStorage.setItem('partnerPropertiesUniqueZipcodes', JSON.stringify(partnerPr
 															<td><span className={`status-chip status-chip--${(l.status || '').toLowerCase()}`}>{l.status || '—'}</span></td>
 														</tr>
 													))}
-													{reconnectList.length === 0 && <tr><td colSpan={4}>Nothing to reconnect.</td></tr>}
+													{reconnectList.length === 0 && !reconnectError && <tr><td colSpan={4}>Nothing to reconnect.</td></tr>}
+													{reconnectList.length === 0 && reconnectError && (
+														<tr><td colSpan={4}>
+															<strong>Could not load this partner's listings.</strong>
+															<div style={{ margin: '6px 0' }}>{reconnectError}</div>
+															<button type="button" className="btn btn-primary" onClick={() => openReconnectList(reconnectFor)}>Try again</button>
+														</td></tr>
+													)}
 												</tbody>
 											</table>
 										</div>
