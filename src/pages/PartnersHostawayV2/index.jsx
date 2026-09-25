@@ -30,6 +30,7 @@ import {
 
 import Layout from "../../components/Layout";
 import AuthService from "../../services/auth.service";
+import { readErrorMessage } from "../../Util/readError.js";
 import EditPartner from "../PartnersHostaway/EditPartner";
 import BookingDemo from "../PartnersHostaway/BookingDemo";
 import { PATH_LISTINGS } from "../../Util/constants";
@@ -59,6 +60,8 @@ const PartnersHostawayV2 = (props) => {
 
   const [partners, setPartners] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  // The load failed, as opposed to nobody being onboarded. Asana 1218855318680702.
+  const [loadError, setLoadError] = useState(null);
   const [showConnect, setShowConnect] = useState(false);
   const [showBookingDemo, setShowBookingDemo] = useState(null);
   const [syncingId, setSyncingId] = useState(null);
@@ -77,7 +80,14 @@ const PartnersHostawayV2 = (props) => {
     try {
       const res = await AuthService.listHostawayPartners();
       setPartners(res?.data?.accounts || []);
+      setLoadError(null);
     } catch (e) {
+      // The dialog alone was not enough: dismiss it and the page behind still read
+      // "No Hostaway partners onboarded yet", which is a statement about the data when
+      // the truth is that we could not read it. Asana 1218855318680702.
+      const status = e?.response?.status;
+      setPartners([]);
+      setLoadError(readErrorMessage(status, "the Hostaway partner list"));
       swal({
         icon: "error",
         title: "Failed to load Hostaway partners",
@@ -341,7 +351,20 @@ const PartnersHostawayV2 = (props) => {
                   </div>
                 ))}
 
-              {!isLoading && filteredPartners.length === 0 && (
+              {!isLoading && loadError && (
+                <div className="empty-state partners-grid-empty">
+                  <div className="empty-state-icon">
+                    <span className="hostaway-h-badge lg">H</span>
+                  </div>
+                  <h3 className="empty-state-title">Could not load Hostaway partners</h3>
+                  <p className="empty-state-hint">{loadError}</p>
+                  <button type="button" className="empty-state-action" onClick={loadPartners}>
+                    Try again
+                  </button>
+                </div>
+              )}
+
+              {!isLoading && !loadError && filteredPartners.length === 0 && (
                 <div className="empty-state partners-grid-empty">
                   <div className="empty-state-icon">
                     <span className="hostaway-h-badge lg">H</span>
@@ -493,7 +516,24 @@ const PartnersHostawayV2 = (props) => {
                     </tr>
                   ))}
 
-                {!isLoading && filteredPartners.length === 0 && (
+                {!isLoading && loadError && (
+                  <tr>
+                    <td colSpan={9} style={{ padding: 0 }}>
+                      <div className="empty-state">
+                        <div className="empty-state-icon">
+                          <span className="hostaway-h-badge lg">H</span>
+                        </div>
+                        <h3 className="empty-state-title">Could not load Hostaway partners</h3>
+                        <p className="empty-state-hint">{loadError}</p>
+                        <button type="button" className="empty-state-action" onClick={loadPartners}>
+                          Try again
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+
+                {!isLoading && !loadError && filteredPartners.length === 0 && (
                   <tr>
                     <td colSpan={9} style={{ padding: 0 }}>
                       <div className="empty-state">
